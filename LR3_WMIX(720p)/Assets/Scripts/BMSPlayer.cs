@@ -43,7 +43,7 @@ public class BMSPlayer : BMSReader {
                     //Debug.Log("add");
                     bgm_source.playOnAwake = false;
                     bgm_source.loop = false;
-                    bgm_source.clip = audioClips[(int)bgm_note_table.Rows[bgm_table_row]["clipNum"]];
+                    bgm_source.clip = audioClips[(ushort)bgm_note_table.Rows[bgm_table_row]["clipNum"]];
                     try{
                         bgm_source.outputAudioMixerGroup = mixerGroup;
                         //bgm_source.outputAudioMixerGroup = mixer.outputAudioMixerGroup;
@@ -60,10 +60,18 @@ public class BMSPlayer : BMSReader {
             if (bgm_table_row <= bgm_note_table.Rows.Count){
                 bgm_sources = BGM_Section.GetComponents<AudioSource>();
                 for (int i = 0; i < bgm_sources.Length; i++){
-                    bgm_source = bgm_sources[i];
-                    if (bgm_source.clip == null || !bgm_source.isPlaying || bgm_source.time >= bgm_source.clip.length){
-                        Destroy(bgm_source);
-                        break;
+                    if(bgm_sources.Length > 1){
+                        bgm_source = bgm_sources[i];
+                        if (bgm_source.clip == null || !bgm_source.isPlaying || bgm_source.time >= bgm_source.clip.length){
+                            Destroy(bgm_source);
+                            break;
+                        }
+                    }else{
+                        bgm_source = bgm_sources[0];
+                        if (bgm_source.clip == null || !bgm_source.isPlaying || bgm_source.time >= bgm_source.clip.length){
+                            bgm_source.Stop();
+                            break;
+                        }
                     }
                 }
             }
@@ -84,7 +92,7 @@ public class BMSPlayer : BMSReader {
                         default: channel = 80; break;
                     }
                     if (channel >= 0 && channel < 8){
-                        audioSources[channel].clip = audioClips[(int)note_dataTable.Rows[row_key]["clipNum"]];
+                        audioSources[channel].clip = audioClips[(ushort)note_dataTable.Rows[row_key]["clipNum"]];
                         audioSources[channel].loop = false;
                         audioSources[channel].time = 0f;
                         audioSources[channel].Play();
@@ -116,8 +124,8 @@ public class BMSPlayer : BMSReader {
     IEnumerator NoteTableClear(){
         note_dataTable = null;
         bgm_note_table = null;
-        //audioClips.Initialize();
-        audioClips = null;
+        ArrayList.Repeat(null, audioClips.Length).CopyTo(audioClips);
+        //audioClips = null;
         GC.Collect();
         //GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true);
         row_key = 0;

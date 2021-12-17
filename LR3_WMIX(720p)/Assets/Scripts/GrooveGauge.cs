@@ -20,8 +20,7 @@ public class GrooveGauge : MonoBehaviour {
         EX_DAN=21,
         EXHARD_DAN=22
     }
-    enum NoteJudge
-    {
+    enum NoteJudge{
         PG=4,
         GR=3,
         GD=2,

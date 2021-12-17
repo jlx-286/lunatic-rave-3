@@ -105,9 +105,13 @@ public class WAV {
     
     public static AudioClip WavToClip(byte[] data, JObject jObject){
         WAV wav = new WAV(data, jObject);
-        AudioClip audioClip = AudioClip.Create("wavclip", wav.SampleCount, wav.ChannelCount, wav.SampleRate, false);;
-        audioClip.SetData(wav.TotalChannel, 0);
-        return audioClip;
+        try{
+            AudioClip audioClip = AudioClip.Create("wavclip", wav.SampleCount, wav.ChannelCount, wav.SampleRate, false); ;
+            audioClip.SetData(wav.TotalChannel, 0);
+            return audioClip;
+        }catch {
+            return null;
+        }
     }
     #region mp3 to clip
     public static AudioClip Mp3ToClip(byte[] data, JObject jObject){
@@ -115,9 +119,13 @@ public class WAV {
         Mp3FileReader p3Reader = new Mp3FileReader(stream);
         WaveStream waveStream = WaveFormatConversionStream.CreatePcmStream(p3Reader);
         WAV wav = new WAV(AudioMemStream(waveStream).ToArray(), jObject);
-        AudioClip audioClip = AudioClip.Create("mp3clip", wav.SampleCount, wav.ChannelCount, wav.SampleRate, false);
-        audioClip.SetData(wav.TotalChannel, 0);
-        return audioClip;
+        try{
+            AudioClip audioClip = AudioClip.Create("mp3clip", wav.SampleCount, wav.ChannelCount, wav.SampleRate, false);
+            audioClip.SetData(wav.TotalChannel, 0);
+            return audioClip;
+        }catch {
+            return null;
+        }
     }
     private static MemoryStream AudioMemStream(WaveStream waveStream){
         MemoryStream outputStream = new MemoryStream();
@@ -137,10 +145,14 @@ public class WAV {
         MemoryStream oggstream = new MemoryStream(data);
         vorbis = new VorbisReader(oggstream, true);
         int sampleCount = (int)(vorbis.SampleRate * vorbis.TotalTime.TotalSeconds);
-        AudioClip audioClip = AudioClip.Create("oggclip", sampleCount,
-            vorbis.Channels, vorbis.SampleRate, true, OnAudioRead);
-        //vorbis.Dispose();
-        return audioClip;
+        try{
+            AudioClip audioClip = AudioClip.Create("oggclip", sampleCount,
+                vorbis.Channels, vorbis.SampleRate, true, OnAudioRead);
+            //vorbis.Dispose();
+            return audioClip;
+        }catch {
+            return null;
+        }
     }
     static void OnAudioRead(float[] data){
         float[] f = new float[data.Length];

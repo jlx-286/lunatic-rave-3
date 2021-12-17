@@ -1,0 +1,19 @@
+#RANDOM 4
+#IF 1
+    #GENRE BASS KICK
+#ENDIF
+#IF 2
+    #RANDOM 2
+    #GENRE UK Hardcore
+    #IF 2
+        #ARTIST L.T.B.K.
+    #ENDIF
+#ENDIF
+#RANDOM 5
+#RANDOM 3
+#IF 1
+    #TITLE L E T  T H E  B A S S  K I C K
+#ENDIF
+#IF 2
+    #TITLE B.B.K.K.B.K.K.
+#ENDIF

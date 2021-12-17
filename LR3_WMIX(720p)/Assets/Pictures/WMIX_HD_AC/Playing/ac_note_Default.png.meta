@@ -2,21 +2,21 @@ fileFormatVersion: 2
 guid: 46ed47d36888e7d4ead65914f88cdc7e
 TextureImporter:
   fileIDToRecycleName:
-    21300000: ac_note_Default_0
-    21300002: ac_note_Default_1
-    21300004: ac_note_Default_2
-    21300006: ac_note_Default_3
+    21300000: red
+    21300002: gray
+    21300004: blue
+    21300006: green
     21300008: ac_note_Default_4
     21300010: ac_note_Default_5
     21300012: ac_note_Default_6
     21300014: ac_note_Default_7
-    21300016: ac_note_Default_8
-    21300018: ac_note_Default_9
-    21300020: ac_note_Default_10
-    21300022: ac_note_Default_11
-    21300024: ac_note_Default_12
-    21300026: ac_note_Default_13
-    21300028: ac_note_Default_14
+    21300016: spin end
+    21300018: ln2
+    21300020: ln4
+    21300022: yellow
+    21300024: spin start
+    21300026: ln1
+    21300028: ln3
     21300030: ac_note_Default_15
     21300032: ac_note_Default_16
     21300034: ac_note_Default_17
@@ -25,7 +25,7 @@ TextureImporter:
     21300040: ac_note_Default_20
     21300042: ac_note_Default_21
     21300044: ac_note_Default_22
-    21300046: ac_note_Default_23
+    21300046: ln bad
   externalObjects: {}
   serializedVersion: 6
   mipmaps:
@@ -130,7 +130,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: ac_note_Default_0
+      name: red
       rect:
         serializedVersion: 2
         x: 0
@@ -150,7 +150,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ac_note_Default_1
+      name: gray
       rect:
         serializedVersion: 2
         x: 61
@@ -170,7 +170,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ac_note_Default_2
+      name: blue
       rect:
         serializedVersion: 2
         x: 96
@@ -190,7 +190,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ac_note_Default_3
+      name: green
       rect:
         serializedVersion: 2
         x: 123
@@ -210,87 +210,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ac_note_Default_4
-      rect:
-        serializedVersion: 2
-        x: 0
-        y: 108
-        width: 60
-        height: 8
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 0cdb18ee838e02e49a01e6e2c64b9c2f
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: ac_note_Default_5
-      rect:
-        serializedVersion: 2
-        x: 61
-        y: 108
-        width: 34
-        height: 8
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 69a07a4fd49f4bb4aa3890187ba9b88f
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: ac_note_Default_6
-      rect:
-        serializedVersion: 2
-        x: 96
-        y: 108
-        width: 26
-        height: 8
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 271a4e557b92f424d863d7b5337ff53f
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: ac_note_Default_7
-      rect:
-        serializedVersion: 2
-        x: 123
-        y: 108
-        width: 60
-        height: 8
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: cd263bff3a9802c4da65d0b751ef16e8
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: ac_note_Default_8
+      name: spin end
       rect:
         serializedVersion: 2
         x: 0
@@ -310,7 +230,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ac_note_Default_9
+      name: ln2
       rect:
         serializedVersion: 2
         x: 61
@@ -330,7 +250,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ac_note_Default_10
+      name: ln4
       rect:
         serializedVersion: 2
         x: 96
@@ -350,13 +270,13 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ac_note_Default_11
+      name: yellow
       rect:
         serializedVersion: 2
         x: 123
-        y: 74
+        y: 82
         width: 60
-        height: 16
+        height: 8
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -370,7 +290,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ac_note_Default_12
+      name: spin start
       rect:
         serializedVersion: 2
         x: 0
@@ -390,7 +310,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ac_note_Default_13
+      name: ln1
       rect:
         serializedVersion: 2
         x: 61
@@ -410,7 +330,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ac_note_Default_14
+      name: ln3
       rect:
         serializedVersion: 2
         x: 96
@@ -425,26 +345,6 @@ TextureImporter:
       tessellationDetail: 0
       bones: []
       spriteID: 94717ffef4a511c4c8e5bf8c72ec556f
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: ac_note_Default_15
-      rect:
-        serializedVersion: 2
-        x: 123
-        y: 57
-        width: 60
-        height: 16
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: b6434c855462bdd4dbdc60d3c88891f3
       vertices: []
       indices: 
       edges: []
@@ -510,26 +410,6 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ac_note_Default_19
-      rect:
-        serializedVersion: 2
-        x: 123
-        y: 36
-        width: 60
-        height: 11
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 00d5183c0601c2643bc5cba8d9a6eeae
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
       name: ac_note_Default_20
       rect:
         serializedVersion: 2
@@ -590,13 +470,13 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ac_note_Default_23
+      name: ln bad
       rect:
         serializedVersion: 2
         x: 123
         y: 24
         width: 60
-        height: 12
+        height: 24
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
