@@ -1,5 +1,6 @@
 using NAudio;
 using NAudio.Wave;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NVorbis;
 using System;
@@ -98,9 +99,7 @@ public class WAV {
         }
     }
     public override string ToString(){
-        return string.Format(
-            "[WAV: LeftChannel={0}, RightChannel={1}, ChannelCount={2}, SampleCount={3}, SampleRate={4}]",
-            LeftChannel, RightChannel, ChannelCount, SampleCount, SampleRate);
+        return $"[WAV: LeftChannel={LeftChannel}, RightChannel={RightChannel}, ChannelCount={ChannelCount}, SampleCount={SampleCount}, SampleRate={SampleRate}]";
     }
     
     public static AudioClip WavToClip(byte[] data, JObject jObject){
@@ -134,7 +133,7 @@ public class WAV {
             waveStream.Position = 0;
             waveStream.Read(bytes, 0, Convert.ToInt32(waveStream.Length));
             waveFileWriter.Write(bytes, 0, bytes.Length);
-            waveFileWriter.Flush();
+            waveFileWriter.Flush(); waveFileWriter.Close();
         }
         return outputStream;
     }

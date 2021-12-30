@@ -1,8 +1,7 @@
 ﻿using FFmpeg.NET;
 using Microsoft.Scripting.Hosting;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-//using IronPython;
-//using IronPython.Hosting;
 using Shell32;
 using System;
 using System.Collections;
@@ -14,13 +13,12 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Ude;
 //using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.SceneManagement;
-using UnityEngine.Video;
 using Debug = UnityEngine.Debug;
-//using Python = IronPython.Hosting.Python;
 
 public class MainVars : MonoBehaviour {
     public static string bms_file_path;
@@ -32,8 +30,8 @@ public class MainVars : MonoBehaviour {
     public static byte delay, delay_level;
     public static byte flanger, flanger_level;
     public static byte chorus, chorus_level;
-    public static JObject FXs;
-    private JObject jObject;
+    private Dictionary<string,object> dict;
+    public static Dictionary<string,Dictionary<string,object>> FXs;
     public AudioMixer mixer;
     public AudioSource bgmAudioSource;
     public AudioSource keyAudioSource;
@@ -48,22 +46,21 @@ public class MainVars : MonoBehaviour {
         master_vol = bgm_vol = key_vol = 100;
         mixer.SetFloat("freq", Mathf.Pow(2f, freq / 12f));
         mixer.SetFloat("pitch", Mathf.Pow(2f, pitch / 12f));
-        jObject = new JObject{
+        dict = new Dictionary<string, object>{
             { "enabled", false },
             { "value", (byte)0 },
             { "level", (byte)0 }
         };
-        FXs = new JObject{
-            { "reverb", jObject },
-            { "hipass", jObject },
-            { "lowpass", jObject },
-            { "chorus", jObject },
-            { "flanger", jObject },
-            { "distortion", jObject },
-            { "delay", jObject }
+        FXs = new Dictionary<string, Dictionary<string, object>>{
+            { "reverb", dict },
+            { "hipass", dict },
+            { "lowpass", dict },
+            { "chorus", dict },
+            { "flanger", dict },
+            { "distortion", dict },
+            { "delay", dict }
         };
         //mixerGroup = mixer.outputAudioMixerGroup;
-        //SceneManager.LoadScene("Select", LoadSceneMode.Additive);
     }
 	
 	// Update is called once per frame
@@ -88,61 +85,73 @@ public class MainVars : MonoBehaviour {
 
     public static string Convert10To36(ushort u){
         StringBuilder result = new StringBuilder();
-        string digits = "0123456789abcdefghijklmnopqrstuvwxyz";
+        string digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         result.Append(digits[u / 36]).Append(digits[u % 36]);
         return result.ToString();
     }
+
     public static AudioClip GetAudioClipByFilePath(string path){
         string jString = string.Empty;
-        Process process = new Process();
-        process.StartInfo.CreateNoWindow = true;
-        process.StartInfo.UseShellExecute = false;
-        process.StartInfo.RedirectStandardInput = true;
-        process.StartInfo.RedirectStandardOutput = true;
-        process.StartInfo.RedirectStandardError = true;
-        if(Application.platform == RuntimePlatform.WindowsEditor
-            || Application.platform == RuntimePlatform.WindowsPlayer
-            //|| Application.platform == RuntimePlatform.WindowsServer
-        ){
-            process.StartInfo.FileName = "cmd";
-            process.StartInfo.Arguments = "cmd /c start /b \"\" "
-                + "\"" + Path.GetFullPath("./Assets/Plugins/Windows/ffprobe.exe") + "\""
-                + " -v quiet -print_format json -show_format -show_streams "
-                + "\"" + path + "\"";
-        }
-        //#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-        //#endif
-        process.StartInfo.Arguments = process.StartInfo.Arguments.Replace('\\', '/');
-        process.Start();
         try{
-            jString = process.StandardOutput.ReadToEnd();
-            //process.WaitForExit();
-            process.Close();
-            process.Dispose();
+            using (Process process = new Process()){
+                string arguments = string.Empty;
+                string programFile = string.Empty;
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.RedirectStandardInput = true;
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                if(Application.platform == RuntimePlatform.WindowsEditor
+                    || Application.platform == RuntimePlatform.WindowsPlayer
+                    //|| Application.platform == RuntimePlatform.WindowsServer
+                ){
+                    process.StartInfo.FileName = "cmd";
+                    programFile = "Windows/ffmpeg/ffprobe.exe";
+                }
+                else if (Application.platform == RuntimePlatform.LinuxEditor
+                    || Application.platform == RuntimePlatform.LinuxPlayer
+                ){
+                    process.StartInfo.FileName = "/bin/bash";
+                    programFile = "Linux/ffmpeg/ffprobe";
+                }
+                else if (Application.platform == RuntimePlatform.OSXEditor
+                    || Application.platform == RuntimePlatform.OSXPlayer
+                ){
+                    //process.StartInfo.FileName = "/bin/bash";
+                    process.StartInfo.FileName = "/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal";
+                    programFile = "Mac/ffmpeg/ffprobe";
+                }
+                else { return null; }
+                arguments =
+                    //"ffprobe"
+                    $"\"{Application.dataPath}/Programs/{programFile}\""
+                    + $" -v quiet -print_format json -show_format -show_streams \"{path}\"";
+                //#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+                //#endif
+                //process.StartInfo.Arguments = process.StartInfo.Arguments.Replace('\\', '/');
+                process.Start();
+                process.StandardInput.WriteLine(arguments);
+                process.StandardInput.Close();
+                jString = process.StandardOutput.ReadToEnd();
+                jString = jString.Substring(jString.IndexOf('{'), jString.LastIndexOf('}') - jString.IndexOf('{') + 1);
+                //process.WaitForExit();
+                process.Close();
+            }
         }
         catch (Exception e){
             Debug.Log(e.Message);
             return null;
         }
         JObject jObject = JObject.Parse(jString);
-        if (jObject == null){
-            Debug.LogError("JObject null");
-            return null;
-        }
-        if (jObject["streams"] == null){
-            return null;
-        }
-        if (jObject["streams"][0] == null){
-            return null;
-        }
-        if (jObject["streams"][0]["codec_name"] == null){
-            return null;
-        }
+        if (jObject == null
+            || jObject["streams"] == null
+            || jObject["streams"][0] == null
+            || jObject["streams"][0]["codec_name"] == null
+        ){ return null; }
         string extension = string.Empty;
         extension = jObject["streams"][0]["codec_name"].ToString().ToLower();
         AudioClip audioClip = null;
-        byte[] data;
-        data = File.ReadAllBytes(path);
+        byte[] data = File.ReadAllBytes(path);
         if (extension.StartsWith("mp3")){
             audioClip = WAV.Mp3ToClip(data, jObject);
         }else if (extension.StartsWith("pcm")){
@@ -153,93 +162,78 @@ public class MainVars : MonoBehaviour {
         return audioClip;
     }
 
-    public static VideoClip GetVideoCLipByFilePath(string path){
-        string jString = string.Empty;
-        Process process = new Process();
-        process.StartInfo.CreateNoWindow = true;
-        process.StartInfo.UseShellExecute = false;
-        process.StartInfo.RedirectStandardInput = true;
-        process.StartInfo.RedirectStandardOutput = true;
-        process.StartInfo.RedirectStandardError = true;
-        if (Application.platform == RuntimePlatform.WindowsEditor
-            || Application.platform == RuntimePlatform.WindowsPlayer
-            //|| Application.platform == RuntimePlatform.WindowsServer
-        ){
-            process.StartInfo.FileName = "cmd";
-            process.StartInfo.Arguments = "cmd /c start /b \"\" "
-                + "\"" + Path.GetFullPath("./Assets/Plugins/Windows/ffprobe.exe") + "\""
-                + " -v quiet -print_format json -show_format -show_streams "
-                + "\"" + path + "\""; 
+    public static bool ConvertVideoByFilePath(string input, string output){
+        try{
+            using (Process process = new Process()){
+                string arguments = string.Empty;
+                string programFile = string.Empty;
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.RedirectStandardInput = true;
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                if (Application.platform == RuntimePlatform.WindowsEditor
+                    || Application.platform == RuntimePlatform.WindowsPlayer
+                    //|| Application.platform == RuntimePlatform.WindowsServer
+                ){
+                    process.StartInfo.FileName = "cmd";
+                    programFile = "Windows/ffmpeg.exe";
+                }
+                else if (Application.platform == RuntimePlatform.LinuxEditor
+                    || Application.platform == RuntimePlatform.LinuxPlayer
+                ){
+                    process.StartInfo.FileName = "/bin/bash";
+                    programFile = "Linux/ffmpeg";
+                }
+                else if (Application.platform == RuntimePlatform.OSXEditor
+                    || Application.platform == RuntimePlatform.OSXPlayer
+                ){
+                    //process.StartInfo.FileName = "/bin/bash";
+                    process.StartInfo.FileName = "/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal";
+                    programFile = "Mac/ffmpeg";
+                }
+                else { return false; }
+                arguments =
+                    "ffmpeg" +
+                    //$"\"{Application.dataPath}/Programs/{programFile}\"" +
+                    $" -i \"{input}\" \"{output}\"";
+                //#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+                //#endif
+                arguments = arguments.Replace('\\', '/');
+                process.Start();
+                process.StandardInput.WriteLine(arguments);
+                process.StandardInput.Close();
+                //jString = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+                process.Close();
+                return true;
+            }
+        } catch (Exception e){
+            Debug.Log("no ffmpeg?");
+            return false;
         }
-        //#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-        //#endif
-        process.StartInfo.Arguments = process.StartInfo.Arguments.Replace('\\', '/');
-        process.Start();
-        jString = process.StandardOutput.ReadToEnd();
-        //process.WaitForExit();
-        process.Close();
-        process.Dispose();
-        JObject jObject = JObject.Parse(jString);
-        if (jObject == null){
-            return null;
+    }
+    public static Encoding GetEncodingByFilePath(string bms_path){
+        CharsetDetector detector = new CharsetDetector();
+        Debug.Log(Application.systemLanguage);
+        Debug.Log(Encoding.Default);
+        using (FileStream fileStream = File.OpenRead(bms_path)){
+            detector.Feed(fileStream);
+            detector.DataEnd();
+            fileStream.Flush();
+            fileStream.Close();
         }
-        if (jObject["streams"] == null){
-            return null;
-        }
-        //List<JObject> streams = new List<JObject>();
-        //streams.AddRange(jObject["streams"]);
-        JArray streams = new JArray(jObject["streams"]);
-        for(int i = 0; i < streams.Count; i++){
-            if (streams[i]["codec_type"].ToString().ToLower() == "video"){
-                jObject.RemoveAll();
-                jObject = new JObject(streams[i]);
-                break;
+        if(!string.IsNullOrEmpty(detector.Charset)){
+            Debug.Log($"charset:{detector.Charset},confidence:{detector.Confidence}");
+            if (detector.Confidence < 0.6f){
+                //return Encoding.Default;
+                return Encoding.GetEncoding("shift_jis");
+            }else if (detector.Confidence >= 0.98f){
+                return Encoding.GetEncoding(detector.Charset);
+            }else {
+                return Encoding.GetEncoding("gb18030");
             }
         }
-        return null;
-    }
-    public static string GetEncodingByFilePath(string bms_path){
-        string encoding = string.Empty;
-        Process process = new Process();
-        process.StartInfo.CreateNoWindow = true;
-        process.StartInfo.UseShellExecute = false;
-        process.StartInfo.RedirectStandardInput = true;
-        process.StartInfo.RedirectStandardOutput = true;
-        process.StartInfo.RedirectStandardError = true;
-        if (Application.platform == RuntimePlatform.WindowsEditor
-            || Application.platform == RuntimePlatform.WindowsPlayer
-        //|| Application.platform == RuntimePlatform.WindowsServer
-        ){
-            process.StartInfo.FileName = "cmd";
-            process.StartInfo.Arguments = "cmd /c start /b \"\" "
-                + "python "
-                + "\"" + Path.GetFullPath("./Assets/Scripts/GetEncoding.py") + "\""
-                + "\"" + bms_path + "\"";
-        }
-        else if (Application.platform == RuntimePlatform.LinuxEditor
-           || Application.platform == RuntimePlatform.LinuxPlayer
-           || Application.platform == RuntimePlatform.OSXEditor
-           || Application.platform == RuntimePlatform.OSXPlayer
-        ){
-            process.StartInfo.Arguments = "python3 "
-                + "\"" + Path.GetFullPath("./Assets/Scripts/GetEncoding.py") + "\""
-                + "\"" + bms_path + "\""; ;
-        }
-        //#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-        //#endif
-        process.StartInfo.Arguments = process.StartInfo.Arguments.Replace('\\', '/');
-        process.Start();
-        encoding = process.StandardOutput.ReadToEnd().Split()[0];
-        process.WaitForExit();
-        process.Close();
-        process.Dispose();
-        //ScriptEngine scriptEngine = Python.CreateEngine();
-        //dynamic py = scriptEngine.ExecuteFile("GetEncoding.py");
-        //encoding = py;
-        //Debug.Log(encoding);
-        if (string.IsNullOrEmpty(encoding)){
-            encoding = "shift_jis";
-        }
-        return encoding;
+        else { return Encoding.GetEncoding("shift_jis"); }
     }
 }

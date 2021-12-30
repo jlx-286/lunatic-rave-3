@@ -74,5 +74,5 @@ crashlytics-build.properties
 !/*/[Ll]ibrary/*.asset
 
 # ignore ffmpeg.exe and ffprobe.exe
-/*/[Aa]ssets/[Pp]lugins/[Ww]indows/[Ff]*.exe
-/*/[Aa]ssets/[Pp]lugins/[Ww]indows/[Ff]*.exe.meta
+[Ff]*.exe
+[Ff]*.exe.meta

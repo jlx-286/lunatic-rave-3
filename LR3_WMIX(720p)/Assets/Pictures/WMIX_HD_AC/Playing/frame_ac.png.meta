@@ -216,26 +216,6 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: null
-      rect:
-        serializedVersion: 2
-        x: 1475
-        y: 695
-        width: 192
-        height: 266
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: fc164112ea3b5754dac7d69a1d2e0f8c
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
       name: right_exsc
       rect:
         serializedVersion: 2

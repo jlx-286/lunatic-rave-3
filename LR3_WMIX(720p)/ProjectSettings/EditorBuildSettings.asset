@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/CreateClip.unity
+    guid: c302432c7240b9349bc94b5f36bf64a7
+  - enabled: 1
     path: Assets/Scenes/Main.unity
     guid: e8a9052410aa1654e9e7e006b5b115df
   - enabled: 1
@@ -23,9 +26,6 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Decide.unity
     guid: 717bb9320f953844c9976df9b41ec56f
-  - enabled: 1
-    path: Assets/Scenes/CreateClip.unity
-    guid: c302432c7240b9349bc94b5f36bf64a7
   - enabled: 1
     path: Assets/Scenes/9k_wide_play.unity
     guid: 9ea0774dfabf94e48b557b422fd24b9d
