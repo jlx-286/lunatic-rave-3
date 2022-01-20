@@ -9,8 +9,10 @@ using UnityEngine.UI;
 using UnityEngine.Video;
 
 public class BMSPlayer : BMSReader {
+    private BMSReader BMSReader;
     private bool isPlaying;
-    public AudioSource[] audioSources;
+    //public AudioSource[] audioSources;
+    public GameObject[] lanes;
     public RenderTexture[] renderTextureForms;
     //public RawImage BGA_base;
     //public RawImage BGA_layer;
@@ -26,15 +28,21 @@ public class BMSPlayer : BMSReader {
     private bool no_bgi;
     private ushort num;
     private float video_speed;
-    private double playing_bga_time;
+    public AudioSource audioSourceForm;
+    private AudioSource currSrc;
+    private ushort currClipNum;
+    [HideInInspector] public Dictionary<ushort, AudioSource> totalSrcs;
+    //private double playing_bga_time;
+    private bool escaped;
     // Use this for initialization
-    void Start () {
+    private void Start () {
+        BMSReader = this.GetComponent<BMSReader>();
         isPlaying = false;
         no_key_notes = false;
         no_bgm_notes = false;
         no_bgi = false;
-        playing_bga_time = double.Epsilon / 2;
-        video_speed = Mathf.Pow(2f, freq / 12f);
+        //playing_bga_time = double.Epsilon / 2;
+        video_speed = Mathf.Pow(2f, MainVars.freq / 12f);
         videoPlayers = new VideoPlayer[rawImages.Length];
         for (int i = 0; i < rawImages.Length; i++){
             videoPlayers[i] = rawImages[i].GetComponentInChildren<VideoPlayer>();
@@ -44,114 +52,98 @@ public class BMSPlayer : BMSReader {
             videoPlayers[i].frame = 0L;
             videoPlayers[i].time = double.Epsilon / 2;
         }
-        //table_loaded = false;
+        currSrc = null;
+        currClipNum = 0;
+        totalSrcs = new Dictionary<ushort, AudioSource>();
+        escaped = false;
+        //BMSReader.table_loaded = false;
     }
 
     private void FixedUpdate(){
-        if (!table_loaded){
+        if (escaped) { return; }
+        if (Input.GetKeyUp(KeyCode.Escape) && !escaped){
+            //StartCoroutine(NoteTableClear());
+            NoteTableClear();
+            escaped = true;
+            SceneManager.UnloadSceneAsync(MainVars.cur_scene_name);
+            SceneManager.LoadScene("Select", LoadSceneMode.Additive);
             return;
         }
-        if (!no_bgm_notes && !no_key_notes){
-            if (row_key >= note_dataTable.Rows.Count && bgm_table_row >= bgm_note_table.Rows.Count){
-                no_bgm_notes = no_key_notes = true;
+        if (!BMSReader.table_loaded){
+            return;
+        }
+        if (!no_bgm_notes && !no_key_notes && !no_bgi){
+            if (BMSReader.row_key >= BMSReader.note_dataTable.Rows.Count && BMSReader.bgm_table_row >= BMSReader.bgm_note_table.Rows.Count && BMSReader.bga_table_row >= BMSReader.bga_table.Rows.Count){
+                no_bgm_notes = no_key_notes = no_bgi = true;
                 Debug.Log("last note");
             }
-            while (bgm_table_row < bgm_note_table.Rows.Count){
-                if ((double)bgm_note_table.Rows[bgm_table_row]["time"] - playing_time <= Time.fixedDeltaTime
-                    && (double)bgm_note_table.Rows[bgm_table_row]["time"] - playing_time > -double.Epsilon
+            while (BMSReader.bgm_table_row < BMSReader.bgm_note_table.Rows.Count){
+                if ((double)BMSReader.bgm_note_table.Rows[BMSReader.bgm_table_row]["time"] - BMSReader.playing_time <= Time.fixedDeltaTime
+                    && (double)BMSReader.bgm_note_table.Rows[BMSReader.bgm_table_row]["time"] - BMSReader.playing_time > -double.Epsilon
                 ){
-                    bgm_source = BGM_Section.AddComponent<AudioSource>();
-                    //Debug.Log("add");
-                    bgm_source.playOnAwake = false;
-                    bgm_source.loop = false;
-                    bgm_source.clip = audioClips[(ushort)bgm_note_table.Rows[bgm_table_row]["clipNum"]];
-                    try{
-                        bgm_source.outputAudioMixerGroup = mixerGroup;
-                        //bgm_source.outputAudioMixerGroup = mixer.outputAudioMixerGroup;
-                    }catch (Exception e){
-                        Debug.Log(e);
+                    currClipNum = (ushort)BMSReader.bgm_note_table.Rows[BMSReader.bgm_table_row]["clipNum"];
+                    if (totalSrcs.ContainsKey(currClipNum)){
+                        DestroyImmediate(totalSrcs[currClipNum].gameObject);
+                        totalSrcs.Remove(currClipNum);
                     }
-                    bgm_source.time = 0f;
-                    bgm_source.Play();
-                    bgm_table_row++;
+                    currSrc = Instantiate(audioSourceForm, BGM_Section.GetComponent<RectTransform>());
+                    currSrc.clip = BMSReader.audioClips[currClipNum];
+                    totalSrcs.Add(currClipNum, currSrc);
+                    DelAudio delAudio = currSrc.gameObject.GetComponent<DelAudio>();
+                    delAudio.clipNum = currClipNum;
+                    delAudio.hasClip = true;
+                    BMSReader.bgm_table_row++;
                 }else{
                     break;
                 }
             }
-            if (bgm_table_row <= bgm_note_table.Rows.Count){
-                bgm_sources = BGM_Section.GetComponents<AudioSource>();
-                for (int i = 0; i < bgm_sources.Length; i++){
-                    if(bgm_sources.Length > 1){
-                        bgm_source = bgm_sources[i];
-                        if (bgm_source.clip == null || !bgm_source.isPlaying || bgm_source.time >= bgm_source.clip.length){
-                            Destroy(bgm_source);
-                            break;
-                        }
-                    }else{
-                        bgm_source = bgm_sources[0];
-                        if (bgm_source.clip == null || !bgm_source.isPlaying || bgm_source.time >= bgm_source.clip.length){
-                            bgm_source.Stop();
-                            break;
-                        }
-                    }
-                }
-            }
-            while (row_key < note_dataTable.Rows.Count){
-                if ((double)note_dataTable.Rows[row_key]["time"] - playing_time <= Time.fixedDeltaTime
-                    && (double)note_dataTable.Rows[row_key]["time"] - playing_time > -double.Epsilon
+            while (BMSReader.row_key < BMSReader.note_dataTable.Rows.Count){
+                if ((double)BMSReader.note_dataTable.Rows[BMSReader.row_key]["time"] - BMSReader.playing_time <= Time.fixedDeltaTime
+                    && (double)BMSReader.note_dataTable.Rows[BMSReader.row_key]["time"] - BMSReader.playing_time > -double.Epsilon
                 ){
-                    switch (note_dataTable.Rows[row_key]["channel"].ToString()){
-                        case "11": case "21": case "51": case "61": channel = 1; break;//1
-                        case "12": case "22": case "52": case "62": channel = 2; break;//2
-                        case "13": case "23": case "53": case "63": channel = 3; break;//3
-                        case "14": case "24": case "54": case "64": channel = 4; break;//4
-                        case "15": case "25": case "55": case "65": channel = 5; break;//5
-                        case "16": case "26": case "56": case "66": channel = 0; break;//scratch
-                        case "18": case "28": case "58": case "68": channel = 6; break;//6
-                        case "19": case "29": case "59": case "69": channel = 7; break;//7
-                        //case 1: channel = 8; break;
-                        default: channel = 80; break;
+                    switch (BMSReader.note_dataTable.Rows[BMSReader.row_key]["channel"].ToString()){
+                        case "11": case "21": case "51": case "61": BMSReader.channel = 1; break;//1
+                        case "12": case "22": case "52": case "62": BMSReader.channel = 2; break;//2
+                        case "13": case "23": case "53": case "63": BMSReader.channel = 3; break;//3
+                        case "14": case "24": case "54": case "64": BMSReader.channel = 4; break;//4
+                        case "15": case "25": case "55": case "65": BMSReader.channel = 5; break;//5
+                        case "16": case "26": case "56": case "66": BMSReader.channel = 0; break;//scratch
+                        case "18": case "28": case "58": case "68": BMSReader.channel = 6; break;//6
+                        case "19": case "29": case "59": case "69": BMSReader.channel = 7; break;//7
+                        //case 1: BMSReader.channel = 8; break;
+                        default: BMSReader.channel = -1; break;
                     }
-                    if (channel >= 0 && channel < 8){
-                        audioSources[channel].clip = audioClips[(ushort)note_dataTable.Rows[row_key]["clipNum"]];
-                        audioSources[channel].loop = false;
-                        audioSources[channel].time = 0f;
-                        audioSources[channel].Play();
+                    if (BMSReader.channel >= 0 && BMSReader.channel < 8){
+                        currClipNum = (ushort)BMSReader.note_dataTable.Rows[BMSReader.row_key]["clipNum"];
+                        if (totalSrcs.ContainsKey(currClipNum)){
+                            DestroyImmediate(totalSrcs[currClipNum].gameObject);
+                            totalSrcs.Remove(currClipNum);
+                        }
+                        currSrc = Instantiate(audioSourceForm, lanes[BMSReader.channel].GetComponent<RectTransform>());
+                        currSrc.clip = BMSReader.audioClips[currClipNum];
+                        totalSrcs.Add(currClipNum, currSrc);
+                        DelAudio delAudio = currSrc.gameObject.GetComponent<DelAudio>();
+                        delAudio.clipNum = currClipNum;
+                        delAudio.hasClip = true;
                     }
-                    if (row_key >= note_dataTable.Rows.Count - 10){
+                    if (BMSReader.row_key >= BMSReader.note_dataTable.Rows.Count - 10){
                         Debug.Log("near note end");
                     }
-                    row_key++;
+                    BMSReader.row_key++;
                 }else{
                     break;
                 }
             }
-
-            playing_time += Time.fixedDeltaTime;
-            return;
-        }
-    }
-    private void Update(){
-        if (Input.GetKeyUp(KeyCode.Escape)){
-            StartCoroutine(NoteTableClear());
-            SceneManager.UnloadSceneAsync(cur_scene_name);
-            SceneManager.LoadScene("Select", LoadSceneMode.Additive);
-        }
-        if (!table_loaded) { return; }
-        if (!no_bgi){
-            if(bga_table_row >= bga_table.Rows.Count){
-                no_bgi = true;
-            }
-            while (bga_table_row < bga_table.Rows.Count){
-                if((double)bga_table.Rows[bga_table_row]["time"] - playing_bga_time <= Time.deltaTime
-                    && (double)bga_table.Rows[bga_table_row]["time"] - playing_bga_time > -double.Epsilon
+            while (BMSReader.bga_table_row < BMSReader.bga_table.Rows.Count){
+                if((double)BMSReader.bga_table.Rows[BMSReader.bga_table_row]["time"] - BMSReader.playing_time < Time.fixedDeltaTime
+                    && (double)BMSReader.bga_table.Rows[BMSReader.bga_table_row]["time"] - BMSReader.playing_time > -double.Epsilon
                 ){
-                    num = Convert36To10(bga_table.Rows[bga_table_row]["bmp_num"].ToString());
-                    switch (bga_table.Rows[bga_table_row]["channel"].ToString()){
+                    num = MainVars.Convert36To10(BMSReader.bga_table.Rows[BMSReader.bga_table_row]["bmp_num"].ToString());
+                    switch (BMSReader.bga_table.Rows[BMSReader.bga_table_row]["channel"].ToString()){
                         case "04"://base
-                            if (isVideo.ContainsKey(num) && isVideo[num]){
-                                rawImages[0].texture = videoPlayers[0].targetTexture = new RenderTexture(renderTextureForms[0]);
-                                videoPlayers[0].url = bms_directory + bga_paths[num].ToString();
+                            if (BMSReader.isVideo.ContainsKey(num) && BMSReader.isVideo[num]){
+                                videoPlayers[0].targetTexture = new RenderTexture(renderTextureForms[0]);
+                                videoPlayers[0].url = BMSReader.bms_directory + BMSReader.bga_paths[num];
                                 Debug.Log($"base:{videoPlayers[0].url}");
                                 //Debug.Break();
                                 videoPlayers[0].frame = 0L;
@@ -162,17 +154,19 @@ public class BMSPlayer : BMSReader {
                                 }catch (Exception e){
                                     Debug.LogWarning(e.Message);
                                 }
-                            }else if (isVideo.ContainsKey(num) && !isVideo[num]){
+                                rawImages[0].texture = videoPlayers[0].targetTexture;
+                            }
+                            else if (BMSReader.isVideo.ContainsKey(num) && !BMSReader.isVideo[num]){
                                 if (!string.IsNullOrEmpty(videoPlayers[0].url) && videoPlayers[0].isPlaying){
                                     videoPlayers[0].Stop();
                                 }
-                                rawImages[0].texture = textures[num];
+                                rawImages[0].texture = BMSReader.textures[num];
                             }
                             break;
                         case "07"://layer
-                            if (isVideo.ContainsKey(num) && isVideo[num]){
-                                rawImages[1].texture = videoPlayers[1].targetTexture = new RenderTexture(renderTextureForms[1]);
-                                videoPlayers[1].url = bms_directory + bga_paths[num].ToString();
+                            if (BMSReader.isVideo.ContainsKey(num) && BMSReader.isVideo[num]){
+                                videoPlayers[1].targetTexture = new RenderTexture(renderTextureForms[1]);
+                                videoPlayers[1].url = BMSReader.bms_directory + BMSReader.bga_paths[num];
                                 Debug.Log($"layer:{videoPlayers[1].url}");
                                 //Debug.Break();
                                 videoPlayers[1].frame = 0L;
@@ -183,18 +177,19 @@ public class BMSPlayer : BMSReader {
                                 }catch (Exception e){
                                     Debug.LogWarning(e.Message);
                                 }
+                                rawImages[1].texture = videoPlayers[1].targetTexture;
                             }
-                            else if (isVideo.ContainsKey(num) && !isVideo[num]){
+                            else if (BMSReader.isVideo.ContainsKey(num) && !BMSReader.isVideo[num]){
                                 if (!string.IsNullOrEmpty(videoPlayers[1].url) && videoPlayers[1].isPlaying){
                                     videoPlayers[1].Stop();
                                 }
-                                rawImages[1].texture = textures[num];
+                                rawImages[1].texture = BMSReader.textures[num];
                             }
                             break;
                         case "0A"://layer2
-                            if (isVideo.ContainsKey(num) && isVideo[num]){
-                                rawImages[2].texture = videoPlayers[2].targetTexture = new RenderTexture(renderTextureForms[2]);
-                                videoPlayers[2].url = bms_directory + bga_paths[num].ToString();
+                            if (BMSReader.isVideo.ContainsKey(num) && BMSReader.isVideo[num]){
+                                videoPlayers[2].targetTexture = new RenderTexture(renderTextureForms[2]);
+                                videoPlayers[2].url = BMSReader.bms_directory + BMSReader.bga_paths[num];
                                 Debug.Log($"layer2:{videoPlayers[2].url}");
                                 //Debug.Break();
                                 videoPlayers[2].frame = 0L;
@@ -205,49 +200,55 @@ public class BMSPlayer : BMSReader {
                                 }catch (Exception e){
                                     Debug.LogWarning(e.Message);
                                 }
+                                rawImages[2].texture = videoPlayers[2].targetTexture;
                             }
-                            else if (isVideo.ContainsKey(num) && !(bool)isVideo[num]){
+                            else if (BMSReader.isVideo.ContainsKey(num) && !(bool)BMSReader.isVideo[num]){
                                 if (!string.IsNullOrEmpty(videoPlayers[2].url) && videoPlayers[2].isPlaying){
                                     videoPlayers[2].Stop();
                                 }
-                                rawImages[2].texture = textures[num];
+                                rawImages[2].texture = BMSReader.textures[num];
                             }
                             break;
                         //case "06"://poor/bad
-                        //    if (isVideo.ContainsKey(num) && isVideo[num]){
+                        //    if (BMSReader.isVideo.ContainsKey(num) && BMSReader.isVideo[num]){
                         //        //
-                        //    }else if (isVideo.ContainsKey(num) && !isVideo[num]){
+                        //    }else if (BMSReader.isVideo.ContainsKey(num) && !BMSReader.isVideo[num]){
                         //        //
                         //    }
                         //    break;
                     }
-                    bga_table_row++;
+                    BMSReader.bga_table_row++;
                 }else{
                     break;
                 }
             }
-            playing_bga_time += Time.deltaTime;
+            BMSReader.playing_time += Time.fixedDeltaTime;
             return;
         }
-
     }
-    IEnumerator NoteTableClear(){
-        note_dataTable.Clear();
-        note_dataTable = null;
-        bgm_note_table.Clear();
-        bgm_note_table = null;
-        bpm_index_table.Clear();
-        bpm_index_table = null;
-        ArrayList.Repeat(null, audioClips.Length).CopyTo(audioClips);
-        ArrayList.Repeat(null, textures.Length).CopyTo(textures);
-        //audioClips = null;
+    private void Update() {
+        for(int i = 0; i < rawImages.Length; i++){
+            if(rawImages[i].texture == null){
+                rawImages[i].texture = transparent.texture;
+            }
+        }
+    }
+    void NoteTableClear(){
+        if(BMSReader.note_dataTable != null){
+            BMSReader.note_dataTable.Clear();
+            BMSReader.note_dataTable = null;
+        }
+        if (BMSReader.bgm_note_table != null){
+            BMSReader.bgm_note_table.Clear(); 
+            BMSReader.bgm_note_table = null;
+        }
+        if (BMSReader.bpm_index_table != null){
+            BMSReader.bpm_index_table.Clear(); 
+            BMSReader.bpm_index_table = null;
+        }
         GC.Collect();
         //GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true);
-        row_key = 0;
-        bgm_table_row = 0;
-        bgm_note_id = 0;
-        bga_table_row = 0;
-        yield return new WaitForFixedUpdate();
+        //yield return new WaitForFixedUpdate();
         //GC.WaitForFullGCComplete();
     }
 

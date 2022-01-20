@@ -30,6 +30,7 @@ public class SongList : MainVars,IPointerClickHandler {
         }
         cur_scene_name = "Select";
         Resources.UnloadUnusedAssets();
+        GC.Collect();
     }
 
     // Update is called once per frame

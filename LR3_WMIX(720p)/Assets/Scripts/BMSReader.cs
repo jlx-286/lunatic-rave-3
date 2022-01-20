@@ -19,30 +19,13 @@ using UnityEngine.Video;
 using Random = UnityEngine.Random;
 
 public class BMSReader : MainVars{
-    public static string bms_directory, bms_file_name;
-    public Dictionary<string,object> bms_head;
     private float start_bpm, min_bpm, max_bpm;
     private float curr_bpm;
     //private float total;
     //float beat_timer = 1.0f, beat_timing = 0.0f;
-    public static DataTable note_dataTable;
-    public static DataTable bgm_note_table;
-    public static DataTable bpm_index_table;
-    public static DataTable bga_table;
-    public static int bga_table_row = 0;
-    public static int row_key = 0;
-    public static int bgm_table_row = 0;
-    public static int bgm_note_id = 0;
     private Dictionary<ushort,float> exbpm_dict;
-    public static double playing_time;
     //private StringBuilder file_names;
     //DataSet dataSet;
-    public static Dictionary<ushort,string> bga_paths;
-    public static Dictionary<ushort,bool> isVideo;
-    public static Texture2D[] textures;
-    public static Dictionary<ushort,string> bgi_paths;
-    public static ushort total_pictures;
-    public static ushort loaded_pictures;
     //public AudioSource bgm_source_form;
     //private int key_row_count = 0;
     //private int bgm_row_count = 0;
@@ -50,17 +33,8 @@ public class BMSReader : MainVars{
     public Text title_text;
     //private float beat_per_track = 4d;
     private Dictionary<ushort,double> beats_tracks;
-    public double total_time = double.Epsilon;
-    public static int channel = 8;
-    public static bool table_loaded;
-    public static AudioSource[] bgm_sources;
-    public static AudioSource bgm_source;
-    public static AudioClip[] audioClips;
-    public static AudioClip landMine;
+    //public double total_time = double.Epsilon;
     private Dictionary<ushort,string> missed_sounds;
-    public static ushort total_clips;
-    public static ushort loaded_clips;
-    public static Dictionary<ushort,double> time_before_track;
     private List<string> lnobj;
     //public Slider loaded_bar;
     //public Slider total_bar;
@@ -69,8 +43,36 @@ public class BMSReader : MainVars{
     private bool loading_rest;
     byte score_type = 5;// single:5,7,9;double:10,14,9;couple:10,14,9,18;(battle)
     private Thread thread;
+    [HideInInspector] public Dictionary<string,object> bms_head;
+    [HideInInspector] public string bms_directory;
+    [HideInInspector] public string bms_file_name;
+    [HideInInspector] public DataTable note_dataTable;
+    [HideInInspector] public DataTable bgm_note_table;
+    [HideInInspector] public DataTable bpm_index_table;
+    [HideInInspector] public DataTable bga_table;
+    [HideInInspector] public int bga_table_row = 0;
+    [HideInInspector] public int row_key = 0;
+    [HideInInspector] public int bgm_table_row = 0;
+    [HideInInspector] public int bgm_note_id = 0;
+    [HideInInspector] public double playing_time;
+    [HideInInspector] public Dictionary<ushort,string> bga_paths;
+    [HideInInspector] public Dictionary<ushort,bool> isVideo;
+    [HideInInspector] public Texture2D[] textures;
+    [HideInInspector] public VideoClip[] videoClips;
+    [HideInInspector] public Dictionary<ushort,string> bgi_paths;
+    [HideInInspector] public ushort total_pictures;
+    [HideInInspector] public ushort loaded_pictures;
+    [HideInInspector] public int channel = 8;
+    [HideInInspector] public bool table_loaded;
+    [HideInInspector] public AudioSource[] bgm_sources;
+    [HideInInspector] public AudioSource bgm_source;
+    [HideInInspector] public AudioClip[] audioClips;
+    [HideInInspector] public AudioClip landMine;
+    [HideInInspector] public ushort total_clips;
+    [HideInInspector] public ushort loaded_clips;
+    [HideInInspector] public Dictionary<ushort,double> time_before_track;
     // Use this for initialization
-    void Start () {
+    private void Start () {
         //thread = new Thread(new ThreadStart(ReadBMS));
         //thread.Start();
         //System.Net.ServicePointManager.DefaultConnectionLimit = 50;
@@ -97,7 +99,7 @@ public class BMSReader : MainVars{
         beats_tracks = new Dictionary<ushort, double>();
         exbpm_dict = new Dictionary<ushort, float>();
         audioClips = new AudioClip[36 * 36];
-        ArrayList.Repeat(null, audioClips.Length).CopyTo(audioClips);
+        //ArrayList.Repeat(null, audioClips.Length).CopyTo(audioClips);
         missed_sounds = new Dictionary<ushort, string>();
         total_clips = loaded_clips = 0;
         bms_head = new Dictionary<string, object>{
@@ -316,22 +318,17 @@ public class BMSReader : MainVars{
                     ){
                         u = Convert36To10(line.Substring(4, 2));
                         string name = line.Replace(line.Split()[0], "").TrimStart();//with extension in BMS "*.wav"
-                        //name = name.Replace(name.Substring(name.LastIndexOf('.')), "");
-                        name = name.Substring(0, name.LastIndexOf('.'));//without extension
+                        name = Path.GetFileNameWithoutExtension(name);//without extension
                         name = Regex.Match(
                             file_names.ToString(),
                             name.Replace("+", @"\+").Replace("-", @"\-").Replace("[", @"\[").Replace("]", @"\]").Replace("(", @"\(").Replace("\t", @"\s")
                             .Replace(")", @"\)").Replace("^", @"\^").Replace("{", @"\{").Replace("}", @"\}").Replace(" ", @"\s").Replace(".", @"\.")
-                            + @"\.(WAV|MP3|OGG|AIFF|AAC|M3A|WMA|AMR|FLAC|MOD|XM|IT)\n",
+                            + @"\.(MP3|OGG|WAV|AIFF|AIF|MOD|IT|S3M|XM|AAC|M3A|WMA|AMR|FLAC)\n",
                             RegexOptions.IgnoreCase | RegexOptions.ECMAScript | RegexOptions.CultureInvariant).Value;
                         name = name.Trim();
-                        //Debug.Log(num);
-                        //Debug.Log(name);
-                        //if (name.Length > 0){
-                            total_clips++;
-                            StartCoroutine(LoadAudioClip(u, name));
-                            //LoadLocalAudioClip(num, name);
-                        //}
+                        total_clips++;
+                        //audioClips[u] = GetAudioClipByFilePath(bms_directory + name);
+                        StartCoroutine(LoadAudioClip(u, name));
                     }else if (
                         Regex.IsMatch(line, @"^#BMP[0-9A-Z]{2,}\s",
                         RegexOptions.IgnoreCase | RegexOptions.ECMAScript | RegexOptions.CultureInvariant)
@@ -384,87 +381,50 @@ public class BMSReader : MainVars{
             }
         }
         foreach (var item in bgi_paths){
-            byte[] source_bytes = File.ReadAllBytes(bms_directory + item.Value);
-            Texture2D texture2D = new Texture2D(255, 255);
-            using (MemoryStream memoryStream = new MemoryStream(source_bytes)){
-                using(System.Drawing.Image image = System.Drawing.Image.FromStream(memoryStream)){
-                    using (MemoryStream tempStream = new MemoryStream()){
-                        //BMP文件以字符串“0x4D42”开头
-                        //if (bytes[0] == 0x4D
-                        //    && bytes[1] == 0x42
-                        //    //&& bytes[2] == '4'
-                        //    //&& bytes[3] == 'D'
-                        //    //&& bytes[4] == '4'
-                        //    //&& bytes[5] == '2'
-                        //){
-                        //    using (Bitmap bitmap = new Bitmap(image)){
-                        //        bitmap.MakeTransparent(System.Drawing.Color.Black);
-                        //        bitmap.Save(tempStream, ImageFormat.Png);
-                        //    }
-                        //}
-                        //gif头六个是 GIF89a或 GIF87a
-                        //else if (bytes[0] == 'G'
-                        //    && bytes[1] == 'I'
-                        //    && bytes[2] == 'F'
-                        //    && bytes[3] == '8'
-                        //    && (bytes[4] == '7' || bytes[4] == '9')
-                        //    && bytes[5] == 'a'
-                        //) {
-                        //    image.Save(tempStream, ImageFormat.Gif);
-                        //}
-                        //所有的JPEG文件以字符串“0xFFD8”开头,并以字符串“0xFFD9”结束
-                        //else if (bytes[0] == 0xFF
-                        //    && bytes[1] == 0xD8
-                        //    //&& bytes[2] == 'F'
-                        //    //&& bytes[3] == 'F'
-                        //    //&& bytes[4] == 'D'
-                        //    //&& bytes[5] == '8'
-                        //    //&& bytes[bytes.Length - 6] == '0'
-                        //    //&& bytes[bytes.Length - 5] == 'x'
-                        //    //&& bytes[bytes.Length - 4] == 'F'
-                        //    //&& bytes[bytes.Length - 3] == 'F'
-                        //    && bytes[bytes.Length - 2] == 0xFF
-                        //    && bytes[bytes.Length - 1] == 0xD9
-                        //){
-                        //    image.Save(tempStream, ImageFormat.Jpeg);
-                        //}
-                        if(
-                            Regex.IsMatch(item.Value.ToString(), @"\.bmp$",
-                            RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
-                            || image.RawFormat == ImageFormat.Bmp || image.RawFormat == ImageFormat.MemoryBmp
-                        ){
-                            using(Bitmap bitmap = new Bitmap(image)){
-                                bitmap.MakeTransparent(System.Drawing.Color.Black);
-                                bitmap.Save(tempStream, ImageFormat.Png);
+            if (File.Exists(bms_directory + item.Value)){
+                byte[] source_bytes = File.ReadAllBytes(bms_directory + item.Value);
+                Texture2D texture2D = new Texture2D(255, 255);
+                using (MemoryStream memoryStream = new MemoryStream(source_bytes)){
+                    using(System.Drawing.Image image = System.Drawing.Image.FromStream(memoryStream)){
+                        using (MemoryStream tempStream = new MemoryStream()){
+                            if(
+                                Regex.IsMatch(item.Value.ToString(), @"\.bmp$",
+                                RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
+                                || image.RawFormat == ImageFormat.Bmp || image.RawFormat == ImageFormat.MemoryBmp
+                            ){
+                                using(Bitmap bitmap = new Bitmap(image)){
+                                    bitmap.MakeTransparent(System.Drawing.Color.Black);
+                                    bitmap.Save(tempStream, ImageFormat.Png);
+                                }
                             }
+                            //else if (Regex.IsMatch(item.Value.ToString(), @"\.png$",
+                            //    RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
+                            //){
+                            //    image.Save(tempStream, ImageFormat.Png);
+                            //}
+                            //else if (Regex.IsMatch(item.Value.ToString(), @"\.(jpg|jpeg)$",
+                            //    RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
+                            //){
+                            //    image.Save(tempStream, ImageFormat.Jpeg);
+                            //}
+                            else{
+                                //image.Save(tempStream, ImageFormat.Png);
+                                image.Save(tempStream, image.RawFormat);
+                            }
+                            byte[] dist_bytes = new byte[tempStream.Length];
+                            tempStream.Seek(0, SeekOrigin.Begin);
+                            tempStream.Read(dist_bytes, 0, dist_bytes.Length);
+                            texture2D.LoadImage(dist_bytes);
+                            texture2D.Apply();
+                            //tempStream.Flush();
+                            //tempStream.Close();
                         }
-                        //else if (Regex.IsMatch(item.Value.ToString(), @"\.png$",
-                        //    RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
-                        //){
-                        //    image.Save(tempStream, ImageFormat.Png);
-                        //}
-                        //else if (Regex.IsMatch(item.Value.ToString(), @"\.(jpg|jpeg)$",
-                        //    RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
-                        //){
-                        //    image.Save(tempStream, ImageFormat.Jpeg);
-                        //}
-                        else{
-                            //image.Save(tempStream, ImageFormat.Png);
-                            image.Save(tempStream, image.RawFormat);
-                        }
-                        byte[] dist_bytes = new byte[tempStream.Length];
-                        tempStream.Seek(0, SeekOrigin.Begin);
-                        tempStream.Read(dist_bytes, 0, dist_bytes.Length);
-                        texture2D.LoadImage(dist_bytes);
-                        texture2D.Apply();
-                        //tempStream.Flush();
-                        //tempStream.Close();
                     }
+                    //memoryStream.Flush();
+                    //memoryStream.Close();
                 }
-                //memoryStream.Flush();
-                //memoryStream.Close();
+                textures[item.Key] = texture2D;
             }
-            textures[item.Key] = texture2D;
             loaded_pictures++;
         }
         start_bpm = bms_head.ContainsKey("BPM") ? Convert.ToSingle(bms_head["BPM"]) : 130f;
@@ -891,10 +851,11 @@ public class BMSReader : MainVars{
         bga_table.DefaultView.Sort = "time ASC";
         bga_table = bga_table.DefaultView.ToTable();
         playing_time = 0.000d;
+        //table_loaded = true;
     }
     
     private void FixedUpdate(){
-        if(!table_loaded && !loading_rest && loaded_clips == total_clips
+        if (!table_loaded && !loading_rest && loaded_clips == total_clips
             && loaded_pictures == total_pictures
         ){
             loading_rest = true;
@@ -911,7 +872,7 @@ public class BMSReader : MainVars{
     private void Update(){}
     
     IEnumerator LoadAudioClip(ushort num, string fileName){
-        if (fileName.Length == 0){
+        if (string.IsNullOrEmpty(fileName)){
             yield return null;
             audioClips[num] = null;
             loaded_clips++;
@@ -923,7 +884,7 @@ public class BMSReader : MainVars{
                 }
                 else {
                     AudioClip clip = DownloadHandlerAudioClip.GetContent(uwr);
-                    if (clip.length < Time.fixedDeltaTime){
+                    if (clip == null || clip.length < Time.fixedDeltaTime){
                         missed_sounds.Add(num, fileName);
                         Debug.LogWarning($"unsupported file:{fileName}");
                     }else{
@@ -932,8 +893,8 @@ public class BMSReader : MainVars{
                             Debug.Log("long clip");
                         }
                     }
+                    loaded_clips++;
                 }
-                loaded_clips++;
             }
         }
     }
@@ -949,7 +910,7 @@ public class BMSReader : MainVars{
                 }else{
                     Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
                     //Debug.Log(bms_directory + fileName);
-                    Debug.Log(texture.format);
+                    //Debug.Log(texture.format);
                     textures[Convert36To10(num)] = texture;
                 }
                 loaded_pictures++;

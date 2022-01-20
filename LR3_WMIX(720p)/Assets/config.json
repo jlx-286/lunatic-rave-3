@@ -1,0 +1,12 @@
+{
+    "FFmpegPath":{
+        "Windows":"D:/Programs/ffmpeg-4.4-full_build/bin/ffmpeg.exe",
+        "Linux":"",
+        "Mac":""
+    },
+    "IR Servers":[
+        {"name":"LR2IR","url":""},
+        {"name":"MochaIR","url":""},
+        {"name":"MinIR","url":""}
+    ]
+}

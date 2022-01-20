@@ -28,11 +28,16 @@ public class LeftMenu : MonoBehaviour{
         if (Input.GetKeyUp(KeyCode.Escape)){
             //sqliteConnection.Close();
             //sqliteConnection = null;
-            #if UNITY_EDITOR
-                EditorApplication.isPlaying = false;
-            #else
-                Application.Quit();
-            #endif
+            switch (Application.platform){
+                case RuntimePlatform.WindowsEditor:
+                case RuntimePlatform.LinuxEditor:
+                case RuntimePlatform.OSXEditor:
+                    EditorApplication.isPlaying = false;
+                    break;
+                default:
+                    Application.Quit();
+                    break;
+            }
         }
     }
     private void TogglePanel(int index){

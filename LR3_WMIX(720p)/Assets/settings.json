@@ -1,0 +1,56 @@
+{
+    "Jukebox1":{
+        "BMS root directory":""
+    },
+    "Jukebox2":{
+        "random select":false,
+        "level folder":false,
+        "favorite folder":false,
+        "clear folder":false,
+        "ignore folder":false,
+        "playrank folder":false,
+        "playcount top 10 folder":false,
+        "insane BMS folder":false
+    },
+    "options":{
+        "PM controller":false,
+        "folder lamp":true,
+        "assist 1/3 key to scroll":false,
+        "disable system keys":true,
+        "output system log":false,
+        "disable skin preview":false,
+        "disable parallel loading":false,
+        "Regist gave up score to IR":false,
+        "disable right click exit":true,
+        "assign up/down arrow key to hs change":false,
+        "hi speed":{
+            "min":10,
+            "max":900,
+            "margin":10
+        },
+        "lane cover":{
+            "margin":10,
+            "current":0,
+            "enabled":true
+        },
+        "base speed":150,
+        "miss BGA":500,
+        "font":{
+            "user font":false,
+            "font name":"Consolas",
+            "font style":"regular",
+            "font size":24,
+            "font size list":[],
+            "font name list":[]
+        }
+    },
+    "select":{
+        "preview":false,
+        "remove subtitles from song bar":false,
+        "beta1-style difficulty change":false
+    },
+    "system":{
+        "wait for vsync":false,
+        "buffer size":500
+    }
+}

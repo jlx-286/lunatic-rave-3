@@ -1,7 +1,6 @@
+using FFmpeg.NET;
 using NAudio;
 using NAudio.Wave;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NVorbis;
 using System;
 using System.Collections;
@@ -24,30 +23,32 @@ public class WAV {
     private float[] LeftChannel { get; set; }
     private float[] RightChannel { get; set; }
     public float[] TotalChannel { get; internal set; }
-    public int ChannelCount { get; internal set; }
+    public byte ChannelCount { get; internal set; }
     public int SampleCount { get; internal set; }
     public int SampleRate { get; internal set; }
-    private float Duration { get; set; }
-    private byte BytesPerSample { get; set; }
-    private uint LengthInFFprobe { get; set; }
-    private byte[] DataInFFprobe { get; set; }
-    public WAV(byte[] wav, JObject jObject) {
-        Duration = Convert.ToSingle(jObject["streams"][0]["duration"]);
-        ChannelCount = Convert.ToInt32(jObject["streams"][0]["channels"]);
-        //ChannelCount = wav[22];
-        SampleRate = Convert.ToInt32(jObject["streams"][0]["sample_rate"]);
-        //SampleRate = BytesToInt(wav, 24);
-        BytesPerSample = Convert.ToByte(
-            Convert.ToUInt16(jObject["streams"][0]["bits_per_sample"]) == 0 ?
-            2 : Convert.ToUInt16(jObject["streams"][0]["bits_per_sample"])
-            / 8);
-        LengthInFFprobe = Convert.ToUInt32(Mathf.CeilToInt(Duration * ChannelCount * SampleRate * BytesPerSample));
-        DataInFFprobe = new byte[LengthInFFprobe];
-        for(int k = 0; k < LengthInFFprobe; k++){
+    private double Duration { get; set; }
+    private ushort BytesPerSample { get; set; }
+    private uint LengthInFFmpeg { get; set; }
+    private byte[] DataInFFmpeg { get; set; }
+    public WAV(byte[] wav, MetaData metaData) {
+        Duration = metaData.Duration.TotalSeconds;
+        ChannelCount = Convert.ToByte(metaData.AudioData.ChannelOutput.ToLower().StartsWith("mono") ? 1 : 2);
+        SampleRate = Convert.ToInt32(metaData.AudioData.SampleRate.Split()[0]);
+        BytesPerSample = Convert.ToUInt16(Math.Round(
+            metaData.Duration.TotalSeconds
+            * metaData.AudioData.BitRateKbs * 1000
+            / SampleRate / ChannelCount / 8
+        ));
+        if(BytesPerSample == 0){
+            BytesPerSample = 2;
+        }
+        LengthInFFmpeg = Convert.ToUInt32(Math.Ceiling(Duration * ChannelCount * SampleRate * BytesPerSample));
+        DataInFFmpeg = new byte[LengthInFFmpeg];
+        for(int k = 0; k < LengthInFFmpeg; k++){
             if (k < wav.Length){
-                DataInFFprobe[k] = wav[k];
+                DataInFFmpeg[k] = wav[k];
             }else{
-                DataInFFprobe[k] = 0;
+                DataInFFmpeg[k] = 0;
             }
         }
         int pos = 12;
@@ -61,10 +62,7 @@ public class WAV {
             pos++;
         }
         pos += 8;
-        //Debug.Log(pos);
-        SampleCount = (int)((LengthInFFprobe - (uint)pos) / 2);
-        //SampleCount = jObject["streams"][0][""];
-        //SampleCount = 335232;
+        SampleCount = (int)((LengthInFFmpeg - (uint)pos) / 2);
         if (ChannelCount == 2) SampleCount /= 2;
         //Debug.Log(SampleCount);
 
@@ -77,12 +75,12 @@ public class WAV {
         }
         TotalChannel = new float[SampleCount * ChannelCount];
         int i = 0;
-        int maxInput = (int)(LengthInFFprobe - (RightChannel == null ? 1 : 3));
+        int maxInput = (int)(LengthInFFmpeg - (RightChannel == null ? 1 : 3));
         while (i < SampleCount && pos < maxInput){
-            LeftChannel[i] = BytesToFloat(DataInFFprobe[pos], DataInFFprobe[pos + 1]);
+            LeftChannel[i] = BytesToFloat(DataInFFmpeg[pos], DataInFFmpeg[pos + 1]);
             pos += 2;
             if(ChannelCount == 2){
-                RightChannel[i] = BytesToFloat(DataInFFprobe[pos], DataInFFprobe[pos + 1]);
+                RightChannel[i] = BytesToFloat(DataInFFmpeg[pos], DataInFFmpeg[pos + 1]);
                 pos += 2;
             }
             i++;
@@ -102,8 +100,8 @@ public class WAV {
         return $"[WAV: LeftChannel={LeftChannel}, RightChannel={RightChannel}, ChannelCount={ChannelCount}, SampleCount={SampleCount}, SampleRate={SampleRate}]";
     }
     
-    public static AudioClip WavToClip(byte[] data, JObject jObject){
-        WAV wav = new WAV(data, jObject);
+    public static AudioClip WavToClip(byte[] data, MetaData metaData){
+        WAV wav = new WAV(data, metaData);
         try{
             AudioClip audioClip = AudioClip.Create("wavclip", wav.SampleCount, wav.ChannelCount, wav.SampleRate, false); ;
             audioClip.SetData(wav.TotalChannel, 0);
@@ -113,11 +111,11 @@ public class WAV {
         }
     }
     #region mp3 to clip
-    public static AudioClip Mp3ToClip(byte[] data, JObject jObject){
+    public static AudioClip Mp3ToClip(byte[] data, MetaData metaData){
         MemoryStream stream = new MemoryStream(data);
         Mp3FileReader p3Reader = new Mp3FileReader(stream);
         WaveStream waveStream = WaveFormatConversionStream.CreatePcmStream(p3Reader);
-        WAV wav = new WAV(AudioMemStream(waveStream).ToArray(), jObject);
+        WAV wav = new WAV(AudioMemStream(waveStream).ToArray(), metaData);
         try{
             AudioClip audioClip = AudioClip.Create("mp3clip", wav.SampleCount, wav.ChannelCount, wav.SampleRate, false);
             audioClip.SetData(wav.TotalChannel, 0);
