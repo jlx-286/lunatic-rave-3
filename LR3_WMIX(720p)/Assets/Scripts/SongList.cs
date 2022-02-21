@@ -7,28 +7,29 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class SongList : MainVars,IPointerClickHandler {
+public class SongList : MonoBehaviour ,IPointerClickHandler {
     public GameObject activeContent;
     public GameObject initialContent;
     public GameObject emptyContent;
     public Button buttonForm;
-    public static string songsPath;
-    public static string currPath;
-    public static bool isInCus;
-    public static bool loaded;
+    [HideInInspector] public static bool isInCus;
+    [HideInInspector] public static bool loaded;
     public Button bmsItemForm;
+    private string bmsFilename;
     // Use this for initialization
     private void Start () {
         loaded = false;
-        songsPath = @"E:\Programs\BMS\";
-        if (cur_scene_name == "Main"){
-            currPath = songsPath;
+        if (MainVars.cur_scene_name == "Start"){
+            MainVars.bms_file_path = MainVars.Bms_root_dir;
+            bmsFilename = string.Empty;
             isInCus = false;
         }else{
-            currPath = bms_file_path.TrimEnd('\\', '/').Substring(0, Math.Max(bms_file_path.LastIndexOf('\\'), bms_file_path.LastIndexOf('/')) + 1);
+            bmsFilename = Path.GetFileName(MainVars.bms_file_path);
+            MainVars.bms_file_path = Path.GetDirectoryName(MainVars.bms_file_path).Replace('\\', '/') + '/';
             isInCus = true;
         }
-        cur_scene_name = "Select";
+        MainVars.cur_scene_name = "Select";
+        MainVars.BMSReader = null;
         Resources.UnloadUnusedAssets();
         GC.Collect();
     }
@@ -51,18 +52,18 @@ public class SongList : MainVars,IPointerClickHandler {
             for (int i = 0; i < activeContent.transform.childCount; i++){
                 Destroy(activeContent.transform.GetChild(i).gameObject);
             }
-            foreach (string s in Directory.GetDirectories(currPath)){
+            foreach (string s in Directory.GetDirectories(MainVars.bms_file_path)){
                 Button b = Instantiate(buttonForm, activeContent.transform);
-                b.GetComponentInChildren<Text>().text = s.Replace(currPath, "");
+                b.GetComponentInChildren<Text>().text = Path.GetFileName(s);
                 b.GetComponent<Image>().enabled = true;
                 b.GetComponent<Button>().enabled = true;
                 b.GetComponent<CustomFolderButton>().enabled = true;
                 b.GetComponent<CustomFolderButton>().isFolder = true;
             }
-            foreach(string s in Directory.GetFiles(currPath, "*.*", SearchOption.TopDirectoryOnly)){
+            foreach(string s in Directory.GetFiles(MainVars.bms_file_path, "*.*", SearchOption.TopDirectoryOnly)){
                 if (Regex.IsMatch(s, @"\.(bms|bme|bml|pms)$", RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)){
                     Button b = Instantiate(bmsItemForm, activeContent.transform);
-                    b.GetComponentInChildren<Text>().text = s.Replace(currPath, "");
+                    b.GetComponentInChildren<Text>().text = Path.GetFileName(s);
                     b.GetComponent<Image>().enabled = true;
                     b.GetComponent<Button>().enabled = true;
                     b.GetComponent<CustomFolderButton>().enabled = true;
@@ -75,12 +76,19 @@ public class SongList : MainVars,IPointerClickHandler {
 
     public virtual void OnPointerClick(PointerEventData pointerEventData){
         if (pointerEventData.button == PointerEventData.InputButton.Right && isInCus){
-            currPath = currPath.Replace(currPath.Split('/', '\\')[currPath.Split('/', '\\').Length - 2] + "\\", "");
-            if (currPath.Length >= songsPath.Length){
-                isInCus = true;
-                loaded = false;
-            }else if (currPath.Length < songsPath.Length){
-                currPath = songsPath;
+            MainVars.bms_file_path = MainVars.bms_file_path.Replace('\\', '/');
+            if (Path.GetPathRoot(MainVars.bms_file_path).Length > 1){
+                MainVars.bms_file_path = Path.GetDirectoryName(MainVars.bms_file_path.TrimEnd('/')).Replace('\\', '/') + '/';
+                if (MainVars.bms_file_path.Length >= MainVars.Bms_root_dir.Length){
+                    isInCus = true;
+                    loaded = false;
+                }else if (MainVars.bms_file_path.Length < MainVars.Bms_root_dir.Length){
+                    MainVars.bms_file_path = MainVars.Bms_root_dir;
+                    isInCus = false;
+                    loaded = false;
+                }
+            }
+            else if(Path.GetPathRoot(MainVars.bms_file_path).Length < 2 && isInCus) {
                 isInCus = false;
                 loaded = false;
             }

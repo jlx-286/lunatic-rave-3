@@ -11,25 +11,24 @@ using UnityEngine.UI;
 public class CustomFolderButton : SongList{
     private Button button;
     private GameObject that;
-    public bool isFolder;
+    [HideInInspector] public bool isFolder;
     // Use this for initialization
     private void Start(){
         that = this.gameObject;
         button = that.GetComponent<Button>();
         button.onClick.AddListener(()=>{
             if (isFolder){
-                currPath += that.GetComponentInChildren<Text>().text + "\\";
+                MainVars.bms_file_path += that.GetComponentInChildren<Text>().text + '/';
                 loaded = false;
             }else{
-                bms_file_path = currPath + this.gameObject.GetComponentInChildren<Text>().text;
+                MainVars.bms_file_path += that.GetComponentInChildren<Text>().text;
                 SceneManager.UnloadSceneAsync("Select");
-                SceneManager.LoadScene("7k_1P_Play", LoadSceneMode.Additive);
+                //SceneManager.LoadScene("7k_1P_Play", LoadSceneMode.Additive);
+                SceneManager.LoadScene("Decide", LoadSceneMode.Additive);
             }
         });
     }
 
     // Update is called once per frame
-    private void Update(){
-        
-    }
+    private void Update(){}
 }

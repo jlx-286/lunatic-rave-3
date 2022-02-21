@@ -42,15 +42,13 @@ public class DelAudio : MonoBehaviour {
         }
         //if ((hasPlayed && !audioSource.isPlaying) || audioSource.time >= audioSource.clip.length - Time.fixedDeltaTime * 2){
         if (this.gameObject != null && audioSource != null && !audioSource.isPlaying && hasPlayed){
-            DestroyImmediate(this.gameObject);
             if (BMSPlayer.totalSrcs.ContainsKey(clipNum)){
-                //Debug.Log("ContainsKey");
                 BMSPlayer.totalSrcs.Remove(clipNum);
             }
+            DestroyImmediate(this.gameObject);
         }
         else if(this.gameObject == null || audioSource == null){
             if (BMSPlayer.totalSrcs.ContainsKey(clipNum)){
-                //Debug.Log("ContainsKey(null)");
                 BMSPlayer.totalSrcs.Remove(clipNum);
             }
         }

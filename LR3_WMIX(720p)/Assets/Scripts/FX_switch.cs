@@ -19,29 +19,30 @@ public class FX_switch : MainVars {
             image = toggle.gameObject.GetComponent<Image>();
             image.sprite = toggle.isOn ? sprites[1] : sprites[0];
             toggle.onValueChanged.AddListener((value) => {
-                image.sprite = value ? sprites[1] : sprites[0];
+                byte val = Convert.ToByte(value ? 1 : 0);
+                image.sprite = sprites[val];
                 //fx_name = this.name.ToLower();
                 switch (fx_name){
                     case "reverb":
-                        FXs["reverb"]["enabled"] = value;
+                        MainVars.FXs["reverb"]["enabled"] = val;
                         break;
                     case "chorus":
-                        FXs["chorus"]["enabled"] = value;
+                        MainVars.FXs["chorus"]["enabled"] = val;
                         break;
                     case "distortion":
-                        FXs["distortion"]["enabled"] = value;
+                        MainVars.FXs["distortion"]["enabled"] = val;
                         break;
                     case "lowpass":
-                        FXs["lowpass"]["enabled"] = value;
+                        MainVars.FXs["lowpass"]["enabled"] = val;
                         break;
                     case "hipass":
-                        FXs["hipass"]["enabled"] = value;
+                        MainVars.FXs["hipass"]["enabled"] = val;
                         break;
                     case "delay":
-                        FXs["delay"]["enabled"] = value;
+                        MainVars.FXs["delay"]["enabled"] = val;
                         break;
                     case "flanger":
-                        FXs["flanger"]["enabled"] = value;
+                        MainVars.FXs["flanger"]["enabled"] = val;
                         break;
                 }
             });

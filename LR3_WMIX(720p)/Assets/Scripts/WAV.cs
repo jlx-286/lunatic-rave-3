@@ -34,11 +34,10 @@ public class WAV {
         Duration = metaData.Duration.TotalSeconds;
         ChannelCount = Convert.ToByte(metaData.AudioData.ChannelOutput.ToLower().StartsWith("mono") ? 1 : 2);
         SampleRate = Convert.ToInt32(metaData.AudioData.SampleRate.Split()[0]);
+        //LengthInFFmpeg = Convert.ToUInt32(Math.Ceiling(Duration * Duration * metaData.AudioData.BitRateKbs * 1000 / 8));
         BytesPerSample = Convert.ToUInt16(Math.Round(
-            metaData.Duration.TotalSeconds
-            * metaData.AudioData.BitRateKbs * 1000
-            / SampleRate / ChannelCount / 8
-        ));
+            decimal.One * metaData.AudioData.BitRateKbs
+            / SampleRate / ChannelCount / 8));
         if(BytesPerSample == 0){
             BytesPerSample = 2;
         }
@@ -58,13 +57,10 @@ public class WAV {
             && wav[pos + 1] == 'a'
             && wav[pos + 2] == 't'
             && wav[pos + 3] == 'a')
-        ) {
-            pos++;
-        }
+        ) { pos++; }
         pos += 8;
         SampleCount = (int)((LengthInFFmpeg - (uint)pos) / 2);
         if (ChannelCount == 2) SampleCount /= 2;
-        //Debug.Log(SampleCount);
 
         LeftChannel = new float[SampleCount];
         if (ChannelCount == 2) {
@@ -112,9 +108,8 @@ public class WAV {
     }
     #region mp3 to clip
     public static AudioClip Mp3ToClip(byte[] data, MetaData metaData){
-        MemoryStream stream = new MemoryStream(data);
-        Mp3FileReader p3Reader = new Mp3FileReader(stream);
-        WaveStream waveStream = WaveFormatConversionStream.CreatePcmStream(p3Reader);
+        Mp3FileReader mp3FileReader = new Mp3FileReader(new MemoryStream(data));
+        WaveStream waveStream = WaveFormatConversionStream.CreatePcmStream(mp3FileReader);
         WAV wav = new WAV(AudioMemStream(waveStream).ToArray(), metaData);
         try{
             AudioClip audioClip = AudioClip.Create("mp3clip", wav.SampleCount, wav.ChannelCount, wav.SampleRate, false);
@@ -139,8 +134,7 @@ public class WAV {
     #region ogg to clip
     static VorbisReader vorbis;
     public static AudioClip OggToClip(byte[] data){
-        MemoryStream oggstream = new MemoryStream(data);
-        vorbis = new VorbisReader(oggstream, true);
+        vorbis = new VorbisReader(new MemoryStream(data), true);
         int sampleCount = (int)(vorbis.SampleRate * vorbis.TotalTime.TotalSeconds);
         try{
             AudioClip audioClip = AudioClip.Create("oggclip", sampleCount,

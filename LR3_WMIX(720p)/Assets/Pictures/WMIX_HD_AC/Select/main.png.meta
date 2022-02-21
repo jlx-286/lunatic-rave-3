@@ -28,9 +28,9 @@ TextureImporter:
     21300046: difficulty
     21300048: main_52
     21300050: mode
-    21300052: main_54
-    21300054: main_55
-    21300056: main_56
+    21300052: beginner
+    21300054: normal
+    21300056: hyper
     21300058: top_left
     21300060: main_58
     21300062: auto_play
@@ -38,11 +38,11 @@ TextureImporter:
     21300066: right
     21300068: replay
     21300070: notice
-    21300072: main_66
+    21300072: another
     21300074: main_67
     21300076: main_68
     21300078: main_69
-    21300080: main_70
+    21300080: insane
     21300082: main_71
     21300084: main_72
     21300086: main_73
@@ -813,13 +813,13 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: main_54
+      name: beginner
       rect:
         serializedVersion: 2
-        x: 1340
-        y: 1661
-        width: 213
-        height: 29
+        x: 1337
+        y: 1663
+        width: 218
+        height: 27
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -833,13 +833,13 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: main_55
+      name: normal
       rect:
         serializedVersion: 2
-        x: 1349
-        y: 1631
-        width: 195
-        height: 29
+        x: 1337
+        y: 1632
+        width: 218
+        height: 27
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -853,13 +853,13 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: main_56
+      name: hyper
       rect:
         serializedVersion: 2
-        x: 1367
-        y: 1601
-        width: 158
-        height: 28
+        x: 1337
+        y: 1602
+        width: 218
+        height: 27
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -1013,13 +1013,13 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: main_66
+      name: another
       rect:
         serializedVersion: 2
         x: 1337
-        y: 1573
+        y: 1572
         width: 218
-        height: 26
+        height: 27
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -1093,12 +1093,12 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: main_70
+      name: insane
       rect:
         serializedVersion: 2
-        x: 1363
+        x: 1337
         y: 1542
-        width: 167
+        width: 217
         height: 27
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -2436,9 +2436,9 @@ TextureImporter:
       name: main_141
       rect:
         serializedVersion: 2
-        x: 0
+        x: 1
         y: 517
-        width: 47
+        width: 45
         height: 68
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -2456,9 +2456,9 @@ TextureImporter:
       name: main_142
       rect:
         serializedVersion: 2
-        x: 47
+        x: 52
         y: 517
-        width: 47
+        width: 45
         height: 68
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -2476,9 +2476,9 @@ TextureImporter:
       name: main_143
       rect:
         serializedVersion: 2
-        x: 94
+        x: 98
         y: 517
-        width: 47
+        width: 45
         height: 68
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
