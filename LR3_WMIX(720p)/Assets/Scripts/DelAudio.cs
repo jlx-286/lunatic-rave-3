@@ -8,13 +8,16 @@ public class DelAudio : MonoBehaviour {
     [HideInInspector] public bool hasClip;
     private bool prepared;
     private bool hasPlayed;
-    public BMSPlayer BMSPlayer;
+    public BMSPlayer BMS_Player;
+    //private BMSReader BMS_Reader;
     [HideInInspector] public ushort clipNum;
     private void Awake(){
         hasClip = false;
         prepared = false;
         hasPlayed = false;
         clipNum = 0;
+        //BMS_Reader = MainVars.BMSReader;
+        //BMS_Player = MainVars.BMSPlayer;
     }
     // Use this for initialization
     //private void Start(){}
@@ -29,7 +32,7 @@ public class DelAudio : MonoBehaviour {
         if (!prepared){
             audioSource = this.gameObject.GetComponent<AudioSource>();
             if(audioSource.clip == null || audioSource.clip.length < Time.fixedDeltaTime){
-                BMSPlayer.totalSrcs.Remove(clipNum);
+                BMS_Player.totalSrcs.Remove(clipNum);
                 DestroyImmediate(this.gameObject);
             }
             else{
@@ -42,14 +45,14 @@ public class DelAudio : MonoBehaviour {
         }
         //if ((hasPlayed && !audioSource.isPlaying) || audioSource.time >= audioSource.clip.length - Time.fixedDeltaTime * 2){
         if (this.gameObject != null && audioSource != null && !audioSource.isPlaying && hasPlayed){
-            if (BMSPlayer.totalSrcs.ContainsKey(clipNum)){
-                BMSPlayer.totalSrcs.Remove(clipNum);
+            if (BMS_Player.totalSrcs != null && BMS_Player.totalSrcs.ContainsKey(clipNum)){
+                BMS_Player.totalSrcs.Remove(clipNum);
             }
             DestroyImmediate(this.gameObject);
         }
         else if(this.gameObject == null || audioSource == null){
-            if (BMSPlayer.totalSrcs.ContainsKey(clipNum)){
-                BMSPlayer.totalSrcs.Remove(clipNum);
+            if (BMS_Player.totalSrcs != null && BMS_Player.totalSrcs.ContainsKey(clipNum)){
+                BMS_Player.totalSrcs.Remove(clipNum);
             }
         }
 	}

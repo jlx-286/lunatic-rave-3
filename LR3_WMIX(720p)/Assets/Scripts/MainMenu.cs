@@ -54,9 +54,7 @@ public class MainMenu : MonoBehaviour {
         }
         MainVars.Bms_root_dir = jObject["BMS_root_dir"].ToString();
         MainVars.Bms_root_dir = MainVars.Bms_root_dir.Replace('\\', '/');
-        if (Regex.IsMatch(MainVars.Bms_root_dir, @"^file://",
-            RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
-        ){
+        if (Regex.IsMatch(MainVars.Bms_root_dir, @"^file://", StaticClass.regexOption)){
             MainVars.Bms_root_dir = MainVars.Bms_root_dir.Substring(7);
         }
         MainVars.Bms_root_dir = MainVars.Bms_root_dir.TrimEnd('/') + '/';
@@ -93,8 +91,7 @@ public class MainMenu : MonoBehaviour {
         ffmpegPath = jObject["FFmpegPath"][platform].ToString();
         if (!File.Exists(ffmpegPath)){ return false; }
         try{
-            MainVars.ffmpegEngine = new FFmpegEngine(ffmpegPath);
-            MainVars.ffmpegPath = ffmpegPath;
+            StaticClass.ffmpegEngine = new FFmpegEngine(ffmpegPath);
         }
         catch (Exception e){
             Debug.LogWarning(e.Message);

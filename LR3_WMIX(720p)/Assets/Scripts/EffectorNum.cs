@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.UI;
 
-public class EffectorNum : FX_switch {
+public class EffectorNum : MonoBehaviour {
     public Sprite plusImg;
     public Sprite minusImg;
     public Sprite[] numImgs;
@@ -15,27 +15,37 @@ public class EffectorNum : FX_switch {
     private Image[] digits;
     private bool isPercent;
     private List<Image> tmp_images;
+    public AudioMixer mixer;
     [HideInInspector] public enum FXname{
-        Distortion = 1,
-        HighPassCutoff = 2,
-        HighPassRQ = 3,
-        LowPassCutoff = 4,
-        LowPassRQ = 5,
-        EchoDelay = 6,
-        EchoDelayRatio = 7,
-        EchoWet = 8,
-        EchoDry = 9,
-        ChorusDry = 10,
-        ChorusWet1 = 11,
-        ChorusWet2 = 12,
-        ChorusWet3 = 13,
-        ChorusDelay = 14,
-        ChorusRate = 15,
-        ChorusDepth = 16,
+        MasterVolume = 1,
+        KeyVolume = 2,
+        BGMVolume = 3,
+        EQ62 = 4,
+        EQ160 = 5,
+        EQ400 = 6,
+        EQ1000 = 7,
+        EQ2500 = 8,
+        EQ6300 = 9,
+        EQ16000 = 10,
+        Frequency = 11,
+        Pitch = 12,
+        EchoDelay = 13,
+        EchoDecayRatio = 14,
+        LowPassCutoff = 15,
+        LowPassRQ = 16,
+        HighPassCutoff = 17,
+        HighPassRQ = 18,
+        Distortion = 19,
+        ChorusDelay = 20,
+        ChorusRate = 21,
+        ChorusDepth = 22,
+        ReverbDecayTime = 23,
+        ReverbLevel = 24,
+        Flanger = 25,
     };
-    FXname fx_name_;
+    public FXname fx_name;
 	// Use this for initialization
-	void Start () {
+	private void Start () {
         isPercent = true;
         slider = this.GetComponent<Slider>();
         tmp_images = new List<Image>();
@@ -50,6 +60,7 @@ public class EffectorNum : FX_switch {
         slider.onValueChanged.AddListener((value) => {
             int value_int = (int)value;
             byte value_byte = (byte)value;
+            sbyte valsb = (sbyte)value;
             if (isPercent){
                 digits[0].sprite = numImgs[value_int / 100];
                 //target[0].sprite = numImgs[value_int / 100 - value_int / 1000 * 100];
@@ -62,10 +73,12 @@ public class EffectorNum : FX_switch {
                 if(value_int < 10){
                     digits[1].sprite = zeroImg;
                 }
-            } else{
+            }
+            else {
                 if(value_int < 0){
                     digits[0].sprite = minusImg;
-                }else{
+                }
+                else {
                     digits[0].sprite = plusImg;
                 }
                 value_int = Math.Abs(value_int);
@@ -76,101 +89,126 @@ public class EffectorNum : FX_switch {
                 }
             }
             switch (fx_name){
-                case "pitch":
-                    MainVars.pitch = (sbyte)value;
-                    //Convert.ToSingle(Math.Pow(2d, value / 12d));
+                case FXname.Pitch:
+                    MainVars.pitch = valsb;
                     mixer.SetFloat("pitch", Mathf.Pow(2f, value / 12f));
                     break;
-                case "freq":
-                    MainVars.freq = (sbyte)value;
-                    //Convert.ToSingle(Math.Pow(2d, value / 12d));
+                case FXname.Frequency:
+                    MainVars.freq = valsb;
                     mixer.SetFloat("freq", Mathf.Pow(2f, value / 12f));
                     break;
-                case "m_vol":
+                case FXname.EQ62:
+                    MainVars.eq_62 = valsb;
+                    mixer.SetFloat("eq62", Mathf.Pow(1.4f, value / 12f));
+                    break;
+                case FXname.EQ160:
+                    MainVars.eq_160 = valsb;
+                    mixer.SetFloat("eq160", Mathf.Pow(1.4f, value / 12f));
+                    break;
+                case FXname.EQ400:
+                    MainVars.eq_400 = valsb;
+                    mixer.SetFloat("eq400", Mathf.Pow(1.4f, value / 12f));
+                    break;
+                case FXname.EQ1000:
+                    MainVars.eq_1000 = valsb;
+                    mixer.SetFloat("eq1000", Mathf.Pow(1.4f, value / 12f));
+                    break;
+                case FXname.EQ2500:
+                    MainVars.eq_2500 = valsb;
+                    mixer.SetFloat("eq2500", Mathf.Pow(1.4f, value / 12f));
+                    break;
+                case FXname.EQ6300:
+                    MainVars.eq_6300 = valsb;
+                    mixer.SetFloat("eq6300", Mathf.Pow(1.4f, value / 12f));
+                    break;
+                case FXname.EQ16000:
+                    MainVars.eq_16000 = valsb;
+                    mixer.SetFloat("eq16000", Mathf.Pow(1.4f, value / 12f));
+                    break;
+                case FXname.MasterVolume:
                     MainVars.master_vol = value_byte; break;
-                case "bgm":
+                case FXname.BGMVolume:
                     MainVars.bgm_vol = value_byte; break;
-                case "key":
+                case FXname.KeyVolume:
                     MainVars.key_vol = value_byte; break;
-                case "reverb":
-                    MainVars.FXs["reverb"]["value"] = value_byte; break;
-                case "reverb_m":
-                    MainVars.FXs["reverb"]["level"] = value_byte; break;
-                case "lowpass":
-                    MainVars.FXs["lowpass"]["value"] = value_byte; break;
-                case "lowpass_m":
-                    MainVars.FXs["lowpass"]["level"] = value_byte; break; ;
-                case "hipass":
-                    MainVars.FXs["hipass"]["value"] = value_byte; break;
-                case "hipass_m":
-                    MainVars.FXs["hipass"]["level"] = value_byte; break;
-                case "delay":
-                    MainVars.FXs["delay"]["value"] = value_byte; break;
-                case "delay_m":
-                    MainVars.FXs["delay"]["level"] = value_byte; break;
-                case "flanger":
-                    MainVars.FXs["flanger"]["value"] = value_byte; break;
-                case "flanger_m":
-                    MainVars.FXs["flanger"]["level"] = value_byte; break;
-                case "chorus":
-                    MainVars.FXs["chorus"]["value"] = value_byte; break;
-                case "chorus_m":
-                    MainVars.FXs["chorus"]["level"] = value_byte; break;
-                case "dist":
-                    MainVars.FXs["dist"]["value"] = value_byte; break;
-                case "dist_m":
-                    MainVars.FXs["dist"]["level"] = value_byte; break;
-                default:break;
+                case FXname.EchoDelay:
+                    MainVars.delay_d = value_byte;
+                    MainVars.echoFilter.delay = Math.Max(value * 50, 10f);
+                    break;
+                case FXname.EchoDecayRatio:
+                    MainVars.decay_r = value_byte;
+                    MainVars.echoFilter.decayRatio = value / 100;
+                    break;
+                case FXname.LowPassCutoff:
+                    MainVars.lowpass_c = value_byte;
+                    MainVars.lowPassFilter.cutoffFrequency = Math.Max(value * 220, 10f);
+                    break;
+                case FXname.LowPassRQ:
+                    MainVars.lowpass_Q = value_byte;
+                    MainVars.lowPassFilter.lowpassResonanceQ = 0.09f * value_byte + 1f;
+                    break;
+                case FXname.HighPassCutoff:
+                    MainVars.hipass_c = value_byte;
+                    MainVars.highPassFilter.cutoffFrequency = Math.Max(value * 220, 10f);
+                    break;
+                case FXname.HighPassRQ:
+                    MainVars.hipass_Q = value_byte;
+                    MainVars.highPassFilter.highpassResonanceQ = 0.09f * value_byte + 1f;
+                    break;
+                case FXname.Distortion:
+                    MainVars.dist = value_byte;
+                    MainVars.distortionFilter.distortionLevel = value / 100;
+                    break;
+                case FXname.ChorusDelay:
+                    MainVars.chorus_del = value_byte;
+                    MainVars.chorusFilter.delay = Math.Max(0.1f, value_byte);
+                    break;
+                case FXname.ChorusRate:
+                    MainVars.chorus_r = value_byte;
+                    MainVars.chorusFilter.rate = value_byte * 0.2f;
+                    break;
+                case FXname.ChorusDepth:
+                    MainVars.chorus_dep = value_byte;
+                    MainVars.chorusFilter.depth = value / 100;
+                    break;
+                case FXname.ReverbDecayTime:
+                    MainVars.reverb_dt = value_byte;
+                    MainVars.reverbFilter.decayTime = Math.Max(0.1f, 0.2f * value_byte);
+                    break;
+                case FXname.ReverbLevel:
+                    MainVars.reverb_level = value_byte;
+                    MainVars.reverbFilter.reverbLevel = -2000f + value_byte * 20;
+                    break;
             }
         });
         switch (fx_name){
-            case "pitch":
-                slider.value = MainVars.pitch;
-                break;
-            case "freq":
-                slider.value = MainVars.freq;
-                break;
-            case "m_vol":
-                slider.value = MainVars.master_vol; break;
-            case "bgm":
-                slider.value = MainVars.bgm_vol; break;
-            case "key":
-                slider.value = MainVars.key_vol; break;
-            case "reverb":
-                slider.value = (byte)MainVars.FXs["reverb"]["value"]; break;
-            case "reverb_m":
-                slider.value = (byte)MainVars.FXs["reverb"]["level"]; break;
-            case "lowpass":
-                slider.value = (byte)MainVars.FXs["lowpass"]["value"]; break;
-            case "lowpass_m":
-                slider.value = (byte)MainVars.FXs["lowpass"]["level"]; break; ;
-            case "hipass":
-                slider.value = (byte)MainVars.FXs["hipass"]["value"]; break;
-            case "hipass_m":
-                slider.value = (byte)MainVars.FXs["hipass"]["level"]; break;
-            case "delay":
-                slider.value = (byte)MainVars.FXs["delay"]["value"]; break;
-            case "delay_m":
-                slider.value = (byte)MainVars.FXs["delay"]["level"]; break;
-            case "flanger":
-                slider.value = (byte)MainVars.FXs["flanger"]["value"]; break;
-            case "flanger_m":
-                slider.value = (byte)MainVars.FXs["flanger"]["level"]; break;
-            case "chorus":
-                slider.value = (byte)MainVars.FXs["chorus"]["value"]; break;
-            case "chorus_m":
-                slider.value = (byte)MainVars.FXs["chorus"]["level"]; break;
-            case "dist":
-                slider.value = (byte)MainVars.FXs["dist"]["value"]; break;
-            case "dist_m":
-                slider.value = (byte)MainVars.FXs["dist"]["level"]; break;
-            default: break;
+            case FXname.Pitch:slider.value = MainVars.pitch; break;
+            case FXname.Frequency:slider.value = MainVars.freq; break;
+            case FXname.MasterVolume:slider.value = MainVars.master_vol; break;
+            case FXname.BGMVolume:slider.value = MainVars.bgm_vol; break;
+            case FXname.KeyVolume:slider.value = MainVars.key_vol; break;
+            case FXname.EQ62:slider.value = MainVars.eq_62; break;
+            case FXname.EQ160:slider.value = MainVars.eq_160; break;
+            case FXname.EQ400:slider.value = MainVars.eq_400; break;
+            case FXname.EQ1000:slider.value = MainVars.eq_1000; break;
+            case FXname.EQ2500:slider.value = MainVars.eq_2500;break;
+            case FXname.EQ6300:slider.value = MainVars.eq_6300; break;
+            case FXname.EQ16000:slider.value = MainVars.eq_16000; break;
+            case FXname.EchoDelay:slider.value = MainVars.delay_d; break;
+            case FXname.EchoDecayRatio: slider.value = MainVars.decay_r; break;
+            case FXname.LowPassCutoff:slider.value = MainVars.lowpass_c; break;
+            case FXname.LowPassRQ:slider.value = MainVars.lowpass_Q; break;
+            case FXname.HighPassCutoff:slider.value = MainVars.hipass_c; break;
+            case FXname.HighPassRQ:slider.value = MainVars.hipass_Q; break;
+            case FXname.Distortion:slider.value = MainVars.dist; break;
+            case FXname.ChorusDelay:slider.value = MainVars.chorus_del; break;
+            case FXname.ChorusDepth:slider.value = MainVars.chorus_dep; break;
+            case FXname.ChorusRate:slider.value = MainVars.chorus_r; break;
+            case FXname.ReverbDecayTime:slider.value = MainVars.reverb_dt; break;
+            case FXname.ReverbLevel:slider.value = MainVars.reverb_level; break;
         }
-        GC.Collect();
 	}
 	
 	// Update is called once per frame
-	void Update () {
-		
-	}
+	//private void Update () {}
 }

@@ -30,6 +30,7 @@ public class SongList : MonoBehaviour ,IPointerClickHandler {
         }
         MainVars.cur_scene_name = "Select";
         MainVars.BMSReader = null;
+        //MainVars.BMSPlayer = null;
         Resources.UnloadUnusedAssets();
         GC.Collect();
     }
@@ -61,7 +62,7 @@ public class SongList : MonoBehaviour ,IPointerClickHandler {
                 b.GetComponent<CustomFolderButton>().isFolder = true;
             }
             foreach(string s in Directory.GetFiles(MainVars.bms_file_path, "*.*", SearchOption.TopDirectoryOnly)){
-                if (Regex.IsMatch(s, @"\.(bms|bme|bml|pms)$", RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)){
+                if (Regex.IsMatch(s, @"\.(bms|bme|bml|pms)$", StaticClass.regexOption)){
                     Button b = Instantiate(bmsItemForm, activeContent.transform);
                     b.GetComponentInChildren<Text>().text = Path.GetFileName(s);
                     b.GetComponent<Image>().enabled = true;

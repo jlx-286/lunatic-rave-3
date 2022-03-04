@@ -36,7 +36,8 @@ public class WAV {
         SampleRate = Convert.ToInt32(metaData.AudioData.SampleRate.Split()[0]);
         //LengthInFFmpeg = Convert.ToUInt32(Math.Ceiling(Duration * Duration * metaData.AudioData.BitRateKbs * 1000 / 8));
         BytesPerSample = Convert.ToUInt16(Math.Round(
-            decimal.One * metaData.AudioData.BitRateKbs
+            double.Epsilon / 2 +
+            metaData.AudioData.BitRateKbs
             / SampleRate / ChannelCount / 8));
         if(BytesPerSample == 0){
             BytesPerSample = 2;

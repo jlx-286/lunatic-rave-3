@@ -418,6 +418,7 @@ MonoBehaviour:
   isVideo: 
   textures: []
   audioClips: []
+  playing_scene_name: 
   slider: {fileID: 1325556357}
   play_btn: {fileID: 1037174013}
   back_btn: {fileID: 1050829308}
@@ -428,7 +429,7 @@ MonoBehaviour:
   title: {fileID: 1595670613}
   sub_title: {fileID: 676629413}
   artist: {fileID: 1529596197}
-  playing_scene_name: 
+  transparent: {fileID: 21300000, guid: b77eb661f9c201a43909ea4b53eeb41a, type: 3}
 --- !u!1 &247445317
 GameObject:
   m_ObjectHideFlags: 0
@@ -1202,9 +1203,9 @@ MonoBehaviour:
     m_Font: {fileID: 12800000, guid: 6e897f5bf0c7b4b48ab4c2aa3a133bcb, type: 3}
     m_FontSize: 20
     m_FontStyle: 1
-    m_BestFit: 0
-    m_MinSize: 0
-    m_MaxSize: 40
+    m_BestFit: 1
+    m_MinSize: 1
+    m_MaxSize: 20
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 0
@@ -1731,7 +1732,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: Loaded 0%
+  m_Text: 
 --- !u!222 &1001147332
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2341,9 +2342,9 @@ MonoBehaviour:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
     m_FontSize: 27
     m_FontStyle: 1
-    m_BestFit: 0
-    m_MinSize: 0
-    m_MaxSize: 40
+    m_BestFit: 1
+    m_MinSize: 1
+    m_MaxSize: 27
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 0
@@ -2575,9 +2576,9 @@ MonoBehaviour:
     m_Font: {fileID: 12800000, guid: f5f08cef0dbaf5341a7df516ce97cd04, type: 3}
     m_FontSize: 27
     m_FontStyle: 1
-    m_BestFit: 0
-    m_MinSize: 0
-    m_MaxSize: 40
+    m_BestFit: 1
+    m_MinSize: 1
+    m_MaxSize: 27
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 0
@@ -2667,14 +2668,14 @@ MonoBehaviour:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
     m_FontSize: 64
     m_FontStyle: 1
-    m_BestFit: 0
-    m_MinSize: 2
+    m_BestFit: 1
+    m_MinSize: 1
     m_MaxSize: 64
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 0
-    m_HorizontalOverflow: 1
-    m_VerticalOverflow: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: 
 --- !u!222 &1595670614
