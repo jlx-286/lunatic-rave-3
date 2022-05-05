@@ -1,14 +1,16 @@
 {
-    "BMS_root_dir":"E:/Programs/BMS/",
-    "General_BGA":"E:/Programs/LR2_20180924_Hakula/LR2files/Movie/Beeple.mpg",
+    "BMS_root_dir":"/media/ltbk/P_10(2)/Programs/BMS/",
+    // "BMS_root_dir":"E:/Programs/BMS/",
+    "General_BGA":"/media/ltbk/P_10(2)/Programs/LR2_20180924_Hakula/LR2files/Movie/Beeple.mpg",
+    // "General_BGA":"E:/Programs/LR2_20180924_Hakula/LR2files/Movie/Beeple.mpg",
     "FFmpegPath":{
         "Windows":"D:/Programs/ffmpeg-4.4.1-full_build-shared/bin/ffmpeg.exe",
-        "Linux":"",
+        "Linux":"/usr/bin/ffmpeg",
         "Mac":""
     },
-    "IR_Servers":[
-        {"name":"LR2IR","url":""},
-        {"name":"MochaIR","url":""},
-        {"name":"MinIR","url":""}
-    ]
+    // "IR_Servers":[
+    //     {"name":"LR2IR","url":""},
+    //     {"name":"MochaIR","url":""},
+    //     {"name":"MinIR","url":""}
+    // ]
 }

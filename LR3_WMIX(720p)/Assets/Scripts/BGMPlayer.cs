@@ -10,12 +10,8 @@ public class BGMPlayer : MonoBehaviour {
     // Use this for initialization
     void Start () {
         BMS_Reader = MainVars.BMSReader;
-        BMS_Player.bgm_table_row = 0;
         //BMS_Player = MainVars.BMSPlayer;
         BGM_pos = this.gameObject.GetComponent<RectTransform>();
-        //for(int a = 0; a < 10; a++){
-        //    Debug.Log(BMS_Reader.bgm_note_table.Rows[a][0]);
-        //}
     }
 	
 	// Update is called once per frame
@@ -24,10 +20,7 @@ public class BGMPlayer : MonoBehaviour {
         if (BMS_Player.escaped) { return; }
         if (!BMS_Player.no_bgm_notes){
             while(BMS_Player.bgm_table_row < BMS_Reader.bgm_note_table.Rows.Count){
-                //Debug.Log("while?");
-                if ((double)BMS_Reader.bgm_note_table.Rows[BMS_Player.bgm_table_row][0] - BMS_Player.playing_time <  Time.fixedDeltaTime
-                    && (double)BMS_Reader.bgm_note_table.Rows[BMS_Player.bgm_table_row][0] - BMS_Player.playing_time > -double.Epsilon
-                ){
+                if ((double)BMS_Reader.bgm_note_table.Rows[BMS_Player.bgm_table_row][0] - BMS_Player.playing_time < Time.fixedDeltaTime){
                     BMS_Player.currClipNum = (ushort)BMS_Reader.bgm_note_table.Rows[BMS_Player.bgm_table_row][1];
                     if (BMS_Player.totalSrcs.ContainsKey(BMS_Player.currClipNum)){
                         DestroyImmediate(BMS_Player.totalSrcs[BMS_Player.currClipNum].gameObject);

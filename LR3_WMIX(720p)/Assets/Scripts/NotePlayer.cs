@@ -18,7 +18,6 @@ public class NotePlayer : MonoBehaviour {
     // Use this for initialization
     void Start () {
         BMS_Reader = MainVars.BMSReader;
-        BMS_Reader.row_key = 0;
         //BMS_Player = MainVars.BMSPlayer;
         laneKeyStates = new KeyState[lanes.Length];
         ArrayList.Repeat(KeyState.Free, laneKeyStates.Length).CopyTo(laneKeyStates);
@@ -65,16 +64,14 @@ public class NotePlayer : MonoBehaviour {
     private void FixedUpdate(){
         if (BMS_Player.escaped) { return; }
         if (!BMS_Player.no_key_notes){
-            while(BMS_Reader.row_key < BMS_Reader.note_dataTable.Rows.Count){
-                if ((double)BMS_Reader.note_dataTable.Rows[BMS_Reader.row_key][1] - BMS_Player.playing_time < Time.fixedDeltaTime
-                    && (double)BMS_Reader.note_dataTable.Rows[BMS_Reader.row_key][1] - BMS_Player.playing_time > -double.Epsilon
-                ){
+            while(BMS_Player.row_key < BMS_Reader.note_dataTable.Rows.Count){
+                if ((double)BMS_Reader.note_dataTable.Rows[BMS_Player.row_key][1] - BMS_Player.playing_time < Time.fixedDeltaTime){
                     //Debug.Log("while?");
-                    str_note = BMS_Reader.note_dataTable.Rows[BMS_Reader.row_key][0].ToString();
+                    str_note = BMS_Reader.note_dataTable.Rows[BMS_Player.row_key][0].ToString();
                     if (laneDict.ContainsKey(str_note)){
                         //channel = laneDict[str_note];
                         //if (channel >= 0 && channel < 16){
-                        BMS_Player.currClipNum = (ushort)BMS_Reader.note_dataTable.Rows[BMS_Reader.row_key][2];
+                        BMS_Player.currClipNum = (ushort)BMS_Reader.note_dataTable.Rows[BMS_Player.row_key][2];
                         if (BMS_Player.totalSrcs.ContainsKey(BMS_Player.currClipNum)){
                             DestroyImmediate(BMS_Player.totalSrcs[BMS_Player.currClipNum].gameObject);
                             BMS_Player.totalSrcs.Remove(BMS_Player.currClipNum);
@@ -87,10 +84,10 @@ public class NotePlayer : MonoBehaviour {
                         delAudio.hasClip = true;
                         //}
                     }//else { channel = -1; }
-                    if (BMS_Reader.row_key >= BMS_Reader.note_dataTable.Rows.Count - 10){
+                    if (BMS_Player.row_key >= BMS_Reader.note_dataTable.Rows.Count - 10){
                         Debug.Log("near note end");
                     }
-                    BMS_Reader.row_key++;
+                    BMS_Player.row_key++;
                 }
                 else{
                     break;

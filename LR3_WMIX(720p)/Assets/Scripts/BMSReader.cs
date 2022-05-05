@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FFmpeg.NET;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -43,13 +44,12 @@ public class BMSReader : MonoBehaviour{
     [HideInInspector] public DataTable bgm_note_table;
     private DataTable bpm_index_table;
     [HideInInspector] public DataTable bga_table;
-    [HideInInspector] public int bga_table_row = 0;
-    [HideInInspector] public int row_key = 0;
     [HideInInspector] public int bgm_note_id = 0;
     //[HideInInspector] public double playing_time;
     [HideInInspector] public string[] bga_paths;
     [HideInInspector] public bool[] isVideo;
     [HideInInspector] public Texture2D[] textures;
+    public Texture2D transparent;
     //[HideInInspector] public VideoClip[] videoClips;
     //[HideInInspector] public int channel = 8;
     private bool table_loaded;
@@ -164,6 +164,7 @@ public class BMSReader : MonoBehaviour{
     private void ReadScript(){
         MainVars.cur_scene_name = "Decide";
         back_btn.onClick.AddListener(() => {
+            VLCPlayer.VLCRelease();
             SceneManager.UnloadSceneAsync(MainVars.cur_scene_name);
             SceneManager.LoadScene("Select", LoadSceneMode.Additive);
             thread.Abort();
@@ -202,7 +203,7 @@ public class BMSReader : MonoBehaviour{
         isVideo = new bool[36 * 36];
         ArrayList.Repeat(false, isVideo.Length).CopyTo(isVideo);
         textures = new Texture2D[36 * 36];
-        ArrayList.Repeat(null, textures.Length).CopyTo(textures);
+        ArrayList.Repeat(transparent, textures.Length).CopyTo(textures);
         beats_tracks = new Dictionary<ushort, double>();
         exbpm_dict = new Dictionary<ushort, float>();
         audioClips = new AudioClip[36 * 36];
@@ -275,6 +276,9 @@ public class BMSReader : MonoBehaviour{
         lnobj = new List<ushort>();
         StreamReader streamReader = new StreamReader(bms_directory + bms_file_name, encoding);
         Random random = new Random();
+        string[] args = { "--video-filter=transform", "--transform-type=vflip", "--no-osd", "--no-audio",
+            "--no-repeat", "--no-loop", $"--rate={Mathf.Pow(2f, MainVars.freq / 12f)}" };
+        VLCPlayer.instance = VLCPlayer.libvlc_new(args.Length, args);
         while (streamReader.Peek() >= 0){
             line = streamReader.ReadLine();
             if (string.IsNullOrEmpty(line) || string.IsNullOrWhiteSpace(line)) { continue; }
@@ -486,7 +490,28 @@ public class BMSReader : MonoBehaviour{
                             //    });
                             //}else{
                             //}
-                            unityActions.Enqueue(() => {
+                            string tmp_path = bms_directory + name;
+                            ushort uu = u;
+                            unityActions.Enqueue(async() => {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+                                tmp_path = tmp_path.Replace('/', '\\');
+#else
+                                tmp_path = tmp_path.Replace('\\', '/');
+#endif
+                                if (File.Exists(tmp_path) && VLCPlayer.instance != IntPtr.Zero){
+                                    MediaFile mediaFile = new MediaFile(tmp_path);
+                                    MetaData metaData = null;
+                                    if(mediaFile != null){
+                                        metaData = await StaticClass.ffmpegEngine.GetMetaDataAsync(mediaFile);
+                                    }
+                                    if(metaData != null){
+                                        VLCPlayer.medias[uu] = VLCPlayer.libvlc_media_new_path(VLCPlayer.instance, tmp_path);
+                                        if(VLCPlayer.medias[uu] != IntPtr.Zero){
+                                            VLCPlayer.libvlc_media_parse(VLCPlayer.medias[uu]);
+                                            VLCPlayer.media_sizes[uu] = metaData.VideoData.FrameSize.Replace('x', ' ');
+                                        } else { VLCPlayer.medias.Remove(uu); }
+                                    }
+                                }
                                 loaded_medias_count++;
                                 slider.value = (float)loaded_medias_count / total_medias_count;
                                 doingAction = false;

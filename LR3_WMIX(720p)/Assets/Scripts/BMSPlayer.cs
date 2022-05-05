@@ -1,4 +1,4 @@
-﻿using RenderHeads.Media.AVProVideo;
+﻿//using RenderHeads.Media.AVProVideo;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -22,10 +22,11 @@ public class BMSPlayer : MonoBehaviour {
     [HideInInspector] public ushort currClipNum;
     [HideInInspector] public double playing_time;
     public Slider[] sliders;
-    //private double playing_bga_time;
     [HideInInspector] public bool escaped;
     [HideInInspector] public Dictionary<ushort, AudioSource> totalSrcs;
     [HideInInspector] public int bgm_table_row;
+    [HideInInspector] public int bga_table_row;
+    [HideInInspector] public int row_key;
     // Use this for initialization
     private void Start () {
         BMS_Reader = MainVars.BMSReader;
@@ -33,7 +34,6 @@ public class BMSPlayer : MonoBehaviour {
         MainVars.cur_scene_name = BMS_Reader.playing_scene_name;
         no_key_notes = no_bgm_notes = no_bgi = false;
         title_text.text = MainVars.BMSReader.title.text;
-        //playing_bga_time = double.Epsilon / 2;
         totalSrcs = new Dictionary<ushort, AudioSource>();
         currSrc = null;
         currClipNum = 0;
@@ -41,7 +41,8 @@ public class BMSPlayer : MonoBehaviour {
         for(int a = 0; a < sliders.Length; a++){
             sliders[a].value = float.Epsilon;
         }
-        playing_time = 0.000d;
+        bgm_table_row = bga_table_row = row_key = 0;
+        playing_time = double.Epsilon / 2;
     }
 
     private void FixedUpdate(){
@@ -54,14 +55,15 @@ public class BMSPlayer : MonoBehaviour {
                 totalSrcs = null;
             }
             escaped = true;
+            VLCPlayer.VLCRelease();
             SceneManager.UnloadSceneAsync(MainVars.cur_scene_name);
             SceneManager.LoadScene("Select", LoadSceneMode.Additive);
             return;
         }
         if (!no_bgm_notes && !no_key_notes && !no_bgi){
-            if (BMS_Reader.row_key >= BMS_Reader.note_dataTable.Rows.Count
+            if (row_key >= BMS_Reader.note_dataTable.Rows.Count
                 && bgm_table_row >= BMS_Reader.bgm_note_table.Rows.Count
-                && BMS_Reader.bga_table_row >= BMS_Reader.bga_table.Rows.Count
+                && bga_table_row >= BMS_Reader.bga_table.Rows.Count
             ){
                 no_bgm_notes = no_key_notes = no_bgi = true;
                 Debug.Log("last note");

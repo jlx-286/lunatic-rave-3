@@ -32,6 +32,9 @@ public class MainMenu : MonoBehaviour {
                 SceneManager.LoadScene("Select", LoadSceneMode.Additive);
             }
         });
+        Application.quitting += () => {
+            VLCPlayer.VLCRelease();
+        };
 	}
 	
 	// Update is called once per frame

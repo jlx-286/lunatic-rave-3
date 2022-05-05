@@ -78,7 +78,11 @@ public class SongList : MonoBehaviour ,IPointerClickHandler {
     public virtual void OnPointerClick(PointerEventData pointerEventData){
         if (pointerEventData.button == PointerEventData.InputButton.Right && isInCus){
             MainVars.bms_file_path = MainVars.bms_file_path.Replace('\\', '/');
-            if (Path.GetPathRoot(MainVars.bms_file_path).Length > 1){
+            #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+            if (Path.GetPathRoot(MainVars.bms_file_path).Length > 2){
+            #else
+            if (Path.GetPathRoot(MainVars.bms_file_path).Length > 0){
+            #endif
                 MainVars.bms_file_path = Path.GetDirectoryName(MainVars.bms_file_path.TrimEnd('/')).Replace('\\', '/') + '/';
                 if (MainVars.bms_file_path.Length >= MainVars.Bms_root_dir.Length){
                     isInCus = true;

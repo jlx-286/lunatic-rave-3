@@ -45,3 +45,11 @@
 
 ### Unity Version
 + Unity 2018.2.0f2 (64-bit)
+
+### Other Program(s) Required:
+1. Microsoft Windows
++ <http://ffmpeg.org>
+2. Debian & other Debian-based Linux distributions
+```shell
+sudo apt install libvlc-dev vlc-plugin-base vlc-plugin-video-output ffmpeg
+```

@@ -36,7 +36,11 @@ public static class StaticClass{
             return null;
         }
         AudioClip clip = null;
+        #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
         UnityWebRequest request = UnityWebRequestMultimedia.GetAudioClip(path, AudioType.UNKNOWN);
+        #else
+        UnityWebRequest request = UnityWebRequestMultimedia.GetAudioClip("file://" + path, AudioType.UNKNOWN);
+        #endif
         await request.SendWebRequest();
         if (request.isNetworkError || request.isHttpError){
             Debug.LogError("request.error:" + request.error);
@@ -103,7 +107,7 @@ public static class StaticClass{
     }
 
     /// <summary>
-    /// returns 0 if the string is null or the string dose't match ^[0-9a-zA-Z]{1,}$
+    /// returns 0 if the string is null or the string doesn't match ^[0-9a-zA-Z]{1,}$
     /// </summary>
     /// <param name="s"></param>
     /// <returns>ushort number</returns>
