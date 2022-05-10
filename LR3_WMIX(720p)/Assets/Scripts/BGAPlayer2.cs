@@ -6,9 +6,9 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class BGAPlayer2 : MonoBehaviour {
-    public BGAPlayer BGAPlayer;
+    // public BGAPlayer BGAPlayer;
     //private RawImage[] rawImages;
-    [HideInInspector] public RawImage rawImage;
+    private RawImage rawImage;
     public byte playerNum;
 	// Use this for initialization
 	private void Start () {
@@ -21,12 +21,12 @@ public class BGAPlayer2 : MonoBehaviour {
     private void Update () {
         if (VLCPlayer.players[playerNum] != IntPtr.Zero && VLCPlayer.LibVLC_IsPlaying(VLCPlayer.players[playerNum])){
             VLCPlayer.media_textures[playerNum].SetPixels32(VLCPlayer.color32s[playerNum]);
-        }
-    }
-    private void LateUpdate(){
-        if (VLCPlayer.players[playerNum] != IntPtr.Zero && VLCPlayer.LibVLC_IsPlaying(VLCPlayer.players[playerNum])){
             VLCPlayer.media_textures[playerNum].Apply(false);
             rawImage.texture = VLCPlayer.media_textures[playerNum];
         }
     }
+    // private void LateUpdate(){
+    //     if (VLCPlayer.players[playerNum] != IntPtr.Zero && VLCPlayer.LibVLC_IsPlaying(VLCPlayer.players[playerNum])){
+    //     }
+    // }
 }

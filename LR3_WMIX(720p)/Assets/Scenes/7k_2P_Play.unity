@@ -940,6 +940,7 @@ MonoBehaviour:
   - {fileID: 483935794}
   - {fileID: 341870668}
   bgi_num: 0
+  material: {fileID: 2100000, guid: 88f3ad91348fa4731a81fdbf3c5c880f, type: 2}
 --- !u!1 &180342231
 GameObject:
   m_ObjectHideFlags: 0

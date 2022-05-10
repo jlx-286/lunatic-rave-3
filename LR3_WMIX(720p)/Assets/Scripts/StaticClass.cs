@@ -3,8 +3,14 @@ using FFmpeg.NET.Enums;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
 using System.Drawing;
 using System.Drawing.Imaging;
+#else
+using SkiaSharp;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
+#endif
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -14,7 +20,11 @@ using Ude;
 using UnityEngine;
 using UnityEngine.Networking;
 using FFmpegEngine = FFmpeg.NET.Engine;
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
 using Image = System.Drawing.Image;
+#else
+using Image = SixLabors.ImageSharp.Image;
+#endif
 
 public static class StaticClass{
     public static RegexOptions regexOption = RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
@@ -36,23 +46,25 @@ public static class StaticClass{
             return null;
         }
         AudioClip clip = null;
-        #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-        UnityWebRequest request = UnityWebRequestMultimedia.GetAudioClip(path, AudioType.UNKNOWN);
-        #else
-        UnityWebRequest request = UnityWebRequestMultimedia.GetAudioClip("file://" + path, AudioType.UNKNOWN);
-        #endif
-        await request.SendWebRequest();
-        if (request.isNetworkError || request.isHttpError){
-            Debug.LogError("request.error:" + request.error);
-        }
-        else{
-            try{
-                clip = DownloadHandlerAudioClip.GetContent(request);
-            }catch (Exception e){
-                Debug.Log(e.Message);
+        UnityWebRequest request = null;
+        try {
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+            request = UnityWebRequestMultimedia.GetAudioClip(path, AudioType.UNKNOWN);
+#else
+            request = UnityWebRequestMultimedia.GetAudioClip("file://" + path, AudioType.UNKNOWN);
+#endif
+            await request.SendWebRequest();
+            if (request.isNetworkError || request.isHttpError){
+                // more errors in Linux?
+                Debug.LogWarning("request.error:" + request.error);
             }
+            else {
+                clip = DownloadHandlerAudioClip.GetContent(request);
+            }
+            request.Dispose();
+        } catch (Exception e){
+            Debug.LogWarning(e.Message);
         }
-        request.Dispose();
         return clip;
     }
 
@@ -65,19 +77,21 @@ public static class StaticClass{
     public static async Task<AudioClip> GetAudioClipByFilePath(string path, FFmpegEngine ffmpegEngine){
         if (ffmpegEngine == null || !File.Exists(path)) { return null; }
         MediaFile mediaFile = new MediaFile(path);
+        if (mediaFile == null) { return null; }
         MetaData metaData = await ffmpegEngine.GetMetaDataAsync(mediaFile);
         if (metaData == null) { return null; }
         string format = metaData.AudioData.Format.Trim().ToLower();
         AudioClip audioClip = null;
-        byte[] data = File.ReadAllBytes(path);
+        Debug.Log($"{Path.GetFileName(path)}:{format}");
         if (format.StartsWith("mp3")){
-            audioClip = WAV.Mp3ToClip(data, metaData);
+            audioClip = WAV.Mp3ToClip(path);
         }
         else if (format.StartsWith("pcm")){
-            audioClip = WAV.WavToClip(data, metaData);
+            // abnormal in Linux?
+            audioClip = WAV.WavToClip(File.ReadAllBytes(path), metaData);
         }
         else if (format.StartsWith("vorbis")){
-            audioClip = WAV.OggToClip(data);
+            audioClip = WAV.OggToClip(path);
         }
         return audioClip;
     }
@@ -140,37 +154,54 @@ public static class StaticClass{
 
     public static Texture2D GetTexture2D(string path){
         if (!File.Exists(path)) { return null; }
-        Texture2D texture2D = new Texture2D(255, 255);
-        //byte[] sourcce_bytes = File.ReadAllBytes(path);
-        using (Image image = Image.FromFile(path)){
-            using (MemoryStream tempStream = new MemoryStream()){
-                if (Regex.IsMatch(path, @"\.bmp$", StaticClass.regexOption)
-                    || image.RawFormat == ImageFormat.Bmp || image.RawFormat == ImageFormat.MemoryBmp
-                ){
-                    using (Bitmap bitmap = new Bitmap(image)){
-                        bitmap.MakeTransparent(System.Drawing.Color.Black);
-                        bitmap.Save(tempStream, ImageFormat.Png);
-                    }
-                }
-                //else if (Regex.IsMatch(item.Value.ToString(), @"\.png$", StaticClass.regexOptions)){
-                //    image.Save(tempStream, ImageFormat.Png);
-                //}
-                //else if (Regex.IsMatch(item.Value.ToString(), @"\.(jpg|jpeg)$", StaticClass.regexOptions)){
-                //    image.Save(tempStream, ImageFormat.Jpeg);
-                //}
-                else{
-                    //image.Save(tempStream, ImageFormat.Png);
-                    image.Save(tempStream, image.RawFormat);
-                }
-                byte[] dist_bytes = new byte[tempStream.Length];
-                tempStream.Seek(0, SeekOrigin.Begin);
-                tempStream.Read(dist_bytes, 0, dist_bytes.Length);
-                texture2D.LoadImage(dist_bytes);
-                texture2D.Apply();
-                //tempStream.Flush();
-                //tempStream.Close();
+        Texture2D texture2D = new Texture2D(255, 255, TextureFormat.RGBA32, false);
+        MemoryStream tempStream = new MemoryStream();
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+        Image image = Image.FromFile(path);
+        if (image.RawFormat.Guid == ImageFormat.Bmp.Guid || image.RawFormat.Guid == ImageFormat.MemoryBmp.Guid
+            || Regex.IsMatch(path, @"\.bmp$", StaticClass.regexOption)
+        ){
+            using (Bitmap bitmap = new Bitmap(image)){
+                bitmap.MakeTransparent(System.Drawing.Color.Black);
+                bitmap.Save(tempStream, ImageFormat.Png);
             }
         }
+        //else if (Regex.IsMatch(item.Value.ToString(), @"\.(jpg|jpeg)$", StaticClass.regexOptions)){
+        //    image.Save(tempStream, ImageFormat.Jpeg);
+        //}
+        else{
+            //image.Save(tempStream, ImageFormat.Png);
+            image.Save(tempStream, image.RawFormat);
+        }
+        image.Dispose();
+#else
+        byte[] source = File.ReadAllBytes(path);
+        SKBitmap bitmap = SKBitmap.Decode(source);
+        bitmap.Encode(tempStream, SKEncodedImageFormat.Png, 100);
+        bitmap.Dispose();
+#endif
+        byte[] dist = new byte[tempStream.Length];
+        tempStream.Seek(0, SeekOrigin.Begin);
+        tempStream.Read(dist, 0, dist.Length);
+        //tempStream.Flush();
+        //tempStream.Close();
+        tempStream.Dispose();
+        texture2D.LoadImage(dist);
+#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
+        IImageFormat format = Image.DetectFormat(source);
+        if(Regex.IsMatch(path, @"\.bmp$", StaticClass.regexOption)
+            || Regex.IsMatch(format.Name, @"bmp", StaticClass.regexOption)
+        ){
+            Color32[] color32s = texture2D.GetPixels32();
+            for(int i = 0; i < color32s.Length; i++){
+                if(color32s[i].r == 0 && color32s[i].g == 0 && color32s[i].b == 0){
+                    color32s[i].a = 0;
+                }
+            }
+            texture2D.SetPixels32(color32s);
+        }
+#endif
+        texture2D.Apply(false);
         return texture2D;
     }
     

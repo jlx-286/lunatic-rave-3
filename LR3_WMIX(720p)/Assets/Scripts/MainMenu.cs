@@ -98,7 +98,7 @@ public class MainMenu : MonoBehaviour {
         }
         catch (Exception e){
             Debug.LogWarning(e.Message);
-            //throw;
+            return false;
         }
         return true;
     }

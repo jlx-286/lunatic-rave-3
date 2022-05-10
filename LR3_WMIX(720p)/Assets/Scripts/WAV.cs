@@ -1,6 +1,7 @@
 using FFmpeg.NET;
 using NAudio;
 using NAudio.Wave;
+using NLayer;
 using NVorbis;
 using System;
 using System.Collections;
@@ -100,7 +101,7 @@ public class WAV {
     public static AudioClip WavToClip(byte[] data, MetaData metaData){
         WAV wav = new WAV(data, metaData);
         try{
-            AudioClip audioClip = AudioClip.Create("wavclip", wav.SampleCount, wav.ChannelCount, wav.SampleRate, false); ;
+            AudioClip audioClip = AudioClip.Create("wavclip", wav.SampleCount, wav.ChannelCount, wav.SampleRate, false);
             audioClip.SetData(wav.TotalChannel, 0);
             return audioClip;
         }catch {
@@ -108,53 +109,60 @@ public class WAV {
         }
     }
     #region mp3 to clip
-    public static AudioClip Mp3ToClip(byte[] data, MetaData metaData){
-        Mp3FileReader mp3FileReader = new Mp3FileReader(new MemoryStream(data));
-        WaveStream waveStream = WaveFormatConversionStream.CreatePcmStream(mp3FileReader);
-        WAV wav = new WAV(AudioMemStream(waveStream).ToArray(), metaData);
+    private static MpegFile mpegFile = null;
+    //private static string pri_path = string.Empty;
+    private static void OnMp3Read(float[] data){
+        mpegFile.ReadSamples(data, 0, data.Length);
+    }
+    //private static void OnMp3SetPosition(int position){
+    //    mpegFile = new MpegFile(pri_path);
+    //}
+    public static AudioClip Mp3ToClip(string path){
+        //pri_path = path;
+        mpegFile = new MpegFile(path);
         try{
-            AudioClip audioClip = AudioClip.Create("mp3clip", wav.SampleCount, wav.ChannelCount, wav.SampleRate, false);
-            audioClip.SetData(wav.TotalChannel, 0);
+            AudioClip audioClip = AudioClip.Create("mp3clip",
+                (int)(mpegFile.Length / sizeof(float) / mpegFile.Channels),
+                mpegFile.Channels, mpegFile.SampleRate, false,
+                OnMp3Read);
+            //mpegFile.Dispose();
             return audioClip;
-        }catch {
+        } catch {
             return null;
         }
-    }
-    private static MemoryStream AudioMemStream(WaveStream waveStream){
-        MemoryStream outputStream = new MemoryStream();
-        using(WaveFileWriter waveFileWriter = new WaveFileWriter(outputStream, waveStream.WaveFormat)){
-            byte[] bytes = new byte[waveStream.Length];
-            waveStream.Position = 0;
-            waveStream.Read(bytes, 0, Convert.ToInt32(waveStream.Length));
-            waveFileWriter.Write(bytes, 0, bytes.Length);
-            waveFileWriter.Flush(); waveFileWriter.Close();
-        }
-        return outputStream;
     }
     #endregion
     #region ogg to clip
-    static VorbisReader vorbis;
-    public static AudioClip OggToClip(byte[] data){
-        vorbis = new VorbisReader(new MemoryStream(data), true);
+    private static VorbisReader vorbis;
+    private static void OnOggRead(float[] data){
+        vorbis.ReadSamples(data, 0, data.Length);
+    }
+    //private static void OnOggSetPosition(int position){
+    //    vorbis.DecodedTime = new TimeSpan(position);
+    //}
+    //public static AudioClip OggToClip(byte[] data){
+    //    vorbis = new VorbisReader(new MemoryStream(data), true);
+    //    int sampleCount = (int)(vorbis.SampleRate * vorbis.TotalTime.TotalSeconds);
+    //    try{
+    //        AudioClip audioClip = AudioClip.Create("oggclip", sampleCount,
+    //            vorbis.Channels, vorbis.SampleRate, false, OnOggRead);
+    //        //vorbis.Dispose();
+    //        return audioClip;
+    //    } catch {
+    //        return null;
+    //    }
+    //}
+    public static AudioClip OggToClip(string path){
+        vorbis = new VorbisReader(path);
         int sampleCount = (int)(vorbis.SampleRate * vorbis.TotalTime.TotalSeconds);
         try{
             AudioClip audioClip = AudioClip.Create("oggclip", sampleCount,
-                vorbis.Channels, vorbis.SampleRate, true, OnAudioRead);
+                vorbis.Channels, vorbis.SampleRate, false, OnOggRead);
             //vorbis.Dispose();
             return audioClip;
-        }catch {
+        } catch {
             return null;
         }
-    }
-    static void OnAudioRead(float[] data){
-        float[] f = new float[data.Length];
-        vorbis.ReadSamples(f, 0, data.Length);
-        for(int i = 0; i < data.Length; i++){
-            data[i] = f[i];
-        }
-    }
-    static void OnAudioSetPosition(int position){
-        vorbis.DecodedTime = new TimeSpan(position);
     }
     #endregion
 }

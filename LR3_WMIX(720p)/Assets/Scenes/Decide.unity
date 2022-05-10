@@ -1210,7 +1210,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Lunatic Rave
+  m_Text: 
 --- !u!222 &676629414
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2349,7 +2349,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: TRANCE SEQUENCER
+  m_Text: 
 --- !u!222 &1358512252
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2583,7 +2583,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Ark-Z / NA2KI(CrossGear)
+  m_Text: 
 --- !u!222 &1529596198
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2675,7 +2675,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Lunatic Rave
+  m_Text: 
 --- !u!222 &1595670614
 CanvasRenderer:
   m_ObjectHideFlags: 0

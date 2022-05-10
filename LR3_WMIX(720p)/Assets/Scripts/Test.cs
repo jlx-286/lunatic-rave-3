@@ -12,12 +12,11 @@ using UnityEngine.Video;
 using Debug = UnityEngine.Debug;
 
 public class Test : MonoBehaviour {
+    private RawImage rawImage;
     // Start is called before the first frame update
     private void Start(){
-        Debug.Log(SystemInfo.graphicsDeviceName);
-        Debug.Log(SystemInfo.graphicsDeviceType);
-        Debug.Log(SystemInfo.graphicsDeviceVendor);
-        Debug.Log(SystemInfo.graphicsDeviceVersion);
+        rawImage = this.gameObject.GetComponent<RawImage>();
+        rawImage.texture = StaticClass.GetTexture2D("/media/ltbk/P_10(2)/Programs/BMS/BOF(2)/T2o(BOF2008)/TeaHouse/A03.bmp");
         //Debug.Log(Application.persistentDataPath);
         //Debug.Log(temp - Math.Truncate(temp));
         //Debug.Log(Path.GetDirectoryName(@"\Programs\BMS"));
