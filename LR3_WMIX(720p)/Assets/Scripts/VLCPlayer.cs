@@ -19,11 +19,11 @@ public static class VLCPlayer{
         IntPtr player, uint offset, out uint width, out uint height);
     [DllImport("libvlc")] public extern static void libvlc_video_set_format(
         IntPtr player, string chroma, uint width, uint height, uint pitch);
-    [DllImport("TestPlugin")] public extern static void VLC_callback(
+    [DllImport("VLCPlugin")] public extern static void VLC_callback(
         IntPtr player, IntPtr data);
     [DllImport("libvlc")] public extern static int libvlc_media_player_play(
         IntPtr player);
-    [DllImport("TestPlugin")] public extern static bool LibVLC_IsPlaying(
+    [DllImport("VLCPlugin")] public extern static bool LibVLC_IsPlaying(
         IntPtr player);
     [DllImport("libvlc")] public extern static void libvlc_media_player_release(
         IntPtr player);
@@ -50,12 +50,10 @@ public static class VLCPlayer{
             media_textures[p] = null;
             color32s[p] = null;
         }
-        //Debug.Log(medias.Count);
         foreach(ushort num in medias.Keys){
             if(medias[num] != IntPtr.Zero){
                 libvlc_media_release(medias[num]);
                 //medias[num] = IntPtr.Zero;
-                //medias.Remove(num);
             }
         }
         medias.Clear();

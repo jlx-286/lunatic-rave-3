@@ -47,9 +47,12 @@
 + Unity 2018.2.0f2 (64-bit)
 
 ### Other Program(s) Required:
-1. Microsoft Windows
-+ <http://ffmpeg.org>
-2. Debian & other Debian-based Linux distributions
+1. Debian & other Debian-based Linux distributions
 ```shell
-sudo apt install libvlc-dev vlc-plugin-base vlc-plugin-video-output ffmpeg
+sudo apt install libvlc5 libvlccore9 libvlc-bin vlc-plugin-base vlc-plugin-video-output
+sudo apt install ffmpeg
+sudo apt install libfluidsynth
+#sudo apt install fluid-soundfont-gm
+#sudo apt install libavfilter-dev libvlc-dev libfluidsynth-dev2
+#sudo apt install pulseaudio-module-jack libsdl2-dev
 ```

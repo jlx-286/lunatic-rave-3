@@ -1,7 +1,7 @@
-﻿using FFmpeg.NET;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using UnityEngine;
@@ -10,13 +10,38 @@ using UnityEngine.Networking;
 using UnityEngine.UI;
 using UnityEngine.Video;
 using Debug = UnityEngine.Debug;
-
 public class Test : MonoBehaviour {
-    private RawImage rawImage;
+    public Button play_b;
+    public AudioSource audioSource;
+    //private byte count;
     // Start is called before the first frame update
     private void Start(){
-        rawImage = this.gameObject.GetComponent<RawImage>();
-        rawImage.texture = StaticClass.GetTexture2D("/media/ltbk/P_10(2)/Programs/BMS/BOF(2)/T2o(BOF2008)/TeaHouse/A03.bmp");
+        //count = 16;
+        AudioClip clip = null;
+        int channels, frequency, length, lengthSamples;
+        float[] samples = null;
+        Application.quitting += () => {
+            FluidManager.CleanUp();
+        };
+        // FluidManager.Init(Application.streamingAssetsPath + "/FluidR3_GM.sf2");
+        // FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 2.8d);
+        // FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 3d, 1000d);
+        samples = StaticClass.AudioToSamples(Application.dataPath + "/~Media~/2.wav", out channels, out frequency);
+        // samples = FluidManager.MidiToSamples(Application.dataPath + "/~Media~/2.wav", out lengthSamples, out frequency);
+        if(samples != null){
+            // clip = AudioClip.Create("midiclip", lengthSamples, FluidManager.channels, frequency, false);
+            // clip = AudioClip.Create("midiclip", samples.Length / FluidManager.channels, FluidManager.channels, frequency, false);
+            clip = AudioClip.Create("ffmpeg", samples.Length / channels, channels, frequency, false);
+            clip.SetData(samples, 0);
+            // Debug.Log(clip.samples);
+            // Debug.Log(clip.length);
+            Debug.Log(samples.Length);
+        }
+        audioSource.clip = clip;
+        play_b.onClick.AddListener(() => {
+            audioSource.Play();
+            Debug.Log(audioSource.isPlaying);
+        });
         //Debug.Log(Application.persistentDataPath);
         //Debug.Log(temp - Math.Truncate(temp));
         //Debug.Log(Path.GetDirectoryName(@"\Programs\BMS"));
@@ -32,12 +57,19 @@ public class Test : MonoBehaviour {
     }
     
     // Update is called once per frame
-    private void Update(){
-        //if (Input.GetKeyUp(KeyCode.Space)){
-        //    Debug.Log(KeyCode.Space);
-        //}
-    }
-    private void FixedUpdate(){
+    // private void Update(){
+    //     if (Input.GetKeyUp(KeyCode.Space)){
+    //        Debug.Log(KeyCode.Space);
+    //     }
+    // }
+    /*private void FixedUpdate(){
+        if(count > 0){
+            Debug.Log(count);
+            // audioSource.Play();
+            Debug.Log(Time.time);
+            Debug.Log(Time.realtimeSinceStartup);
+            count--;
+        }
         //if (Input.GetKey(KeyCode.Space)){
         //    playingTime += Time.fixedDeltaTime;
         //    Debug.Log(playingTime);
@@ -49,7 +81,10 @@ public class Test : MonoBehaviour {
         //if (Input.GetKeyUp(KeyCode.Return)){
         //    Debug.Log(KeyCode.Return);
         //}
+    }*/
+    private void OnApplicationQuit(){
+        FluidManager.CleanUp();
+        Debug.Log("quit");
     }
-
 }
 

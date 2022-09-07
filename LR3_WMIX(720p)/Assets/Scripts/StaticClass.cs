@@ -1,6 +1,4 @@
-﻿using FFmpeg.NET;
-using FFmpeg.NET.Enums;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
@@ -13,13 +11,13 @@ using SixLabors.ImageSharp.Formats;
 #endif
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Ude;
 using UnityEngine;
 using UnityEngine.Networking;
-using FFmpegEngine = FFmpeg.NET.Engine;
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
 using Image = System.Drawing.Image;
 #else
@@ -28,8 +26,8 @@ using Image = SixLabors.ImageSharp.Image;
 
 public static class StaticClass{
     public static RegexOptions regexOption = RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
-    public static FFmpegEngine ffmpegEngine;
-
+    [DllImport("FFmpegPlugin", EntryPoint = "GetVideoSize")] private extern static bool __GetVideoSize(string path, out int width, out int height);
+    [DllImport("FFmpegPlugin")] private extern static IntPtr GetAudioSamples(string path, out int channels, out int frequency, out int length);
     public static TaskAwaiter GetAwaiter(this AsyncOperation operation){
         TaskCompletionSource<object> source = new TaskCompletionSource<object>();
         operation.completed += obj => { source.SetResult(null); };
@@ -42,25 +40,23 @@ public static class StaticClass{
     /// <param name="path"></param>
     /// <returns></returns>
     public static async Task<AudioClip> LoadAudioClipAsync(string path){
-        if (!File.Exists(path)){
-            return null;
-        }
+        if (!File.Exists(path) || File.ReadAllBytes(path).Length < 100){ return null; }
         AudioClip clip = null;
-        UnityWebRequest request = null;
         try {
+            UnityWebRequest request = null;
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
             request = UnityWebRequestMultimedia.GetAudioClip(path, AudioType.UNKNOWN);
 #else
             request = UnityWebRequestMultimedia.GetAudioClip("file://" + path, AudioType.UNKNOWN);
 #endif
             await request.SendWebRequest();
-            if (request.isNetworkError || request.isHttpError){
-                // more errors in Linux?
-                Debug.LogWarning("request.error:" + request.error);
-            }
-            else {
+            // if (request.isNetworkError || request.isHttpError){
+            //     // more errors in Linux?
+            //     Debug.LogWarning("request.error:" + request.error);
+            // }
+            // else {
                 clip = DownloadHandlerAudioClip.GetContent(request);
-            }
+            // }
             request.Dispose();
         } catch (Exception e){
             Debug.LogWarning(e.Message);
@@ -68,30 +64,19 @@ public static class StaticClass{
         return clip;
     }
 
-    /// <summary>
-    /// FFmpeg (http://ffmpeg.org) required
-    /// </summary>
-    /// <param name="path"></param>
-    /// <param name="ffmpegEngine"></param>
-    /// <returns></returns>
-    public static async Task<AudioClip> GetAudioClipByFilePath(string path, FFmpegEngine ffmpegEngine){
-        if (ffmpegEngine == null || !File.Exists(path)) { return null; }
-        MediaFile mediaFile = new MediaFile(path);
-        if (mediaFile == null) { return null; }
-        MetaData metaData = await ffmpegEngine.GetMetaDataAsync(mediaFile);
-        if (metaData == null) { return null; }
-        string format = metaData.AudioData.Format.Trim().ToLower();
+    public static AudioClip GetAudioClipByFilePath(string path){
         AudioClip audioClip = null;
-        Debug.Log($"{Path.GetFileName(path)}:{format}");
-        if (format.StartsWith("mp3")){
-            audioClip = WAV.Mp3ToClip(path);
+        //if(audioClip == null){
+        //    audioClip = FluidMIDI.MidiToClip(path);
+        //}
+        if(audioClip == null){
+            audioClip = WAV.AudioToClip(path);
         }
-        else if (format.StartsWith("pcm")){
-            // abnormal in Linux?
-            audioClip = WAV.WavToClip(File.ReadAllBytes(path), metaData);
-        }
-        else if (format.StartsWith("vorbis")){
+        if(audioClip == null){
             audioClip = WAV.OggToClip(path);
+        }
+        if(audioClip == null){
+            audioClip = WAV.Mp3ToClip(path);
         }
         return audioClip;
     }
@@ -204,5 +189,25 @@ public static class StaticClass{
         texture2D.Apply(false);
         return texture2D;
     }
-    
+    public static float[] AudioToSamples(string path, out int channels, out int frequency){
+        float[] result = null;
+        IntPtr ptr = IntPtr.Zero;
+        int length = 0;
+        ptr = GetAudioSamples(path, out channels, out frequency, out length);
+        if(ptr != IntPtr.Zero && frequency > 0 && channels > 0){
+            result = new float[length];
+            Marshal.Copy(ptr, result, 0, length);
+        }
+        return result;
+    }
+    public static bool GetVideoSize(string path, out int width, out int height){
+        if(!File.Exists(path)){
+            width = height = 0;
+            return false;
+        }
+        if(!__GetVideoSize(path, out width, out height) || width < 1 || height < 1){
+            return false;
+        }
+        return true;
+    }
 }

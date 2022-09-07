@@ -17,16 +17,14 @@ public class BMSPlayer : MonoBehaviour {
     [HideInInspector] public bool no_bgm_notes;
     [HideInInspector] public bool no_bgi;
     //private sbyte channel;
-    public AudioSource audioSourceForm;
-    [HideInInspector] public AudioSource currSrc;
     [HideInInspector] public ushort currClipNum;
     [HideInInspector] public double playing_time;
     public Slider[] sliders;
     [HideInInspector] public bool escaped;
-    [HideInInspector] public Dictionary<ushort, AudioSource> totalSrcs;
     [HideInInspector] public int bgm_table_row;
     [HideInInspector] public int bga_table_row;
     [HideInInspector] public int row_key;
+    // [HideInInspector] public double playing_time_frame;
     // Use this for initialization
     private void Start () {
         BMS_Reader = MainVars.BMSReader;
@@ -34,8 +32,6 @@ public class BMSPlayer : MonoBehaviour {
         MainVars.cur_scene_name = BMS_Reader.playing_scene_name;
         no_key_notes = no_bgm_notes = no_bgi = false;
         title_text.text = MainVars.BMSReader.title.text;
-        totalSrcs = new Dictionary<ushort, AudioSource>();
-        currSrc = null;
         currClipNum = 0;
         escaped = false;
         for(int a = 0; a < sliders.Length; a++){
@@ -43,17 +39,13 @@ public class BMSPlayer : MonoBehaviour {
         }
         bgm_table_row = bga_table_row = row_key = 0;
         playing_time = double.Epsilon / 2;
+        // playing_time_frame = double.Epsilon / 2;
     }
-
-    private void FixedUpdate(){
+    private void Update() {
         if (escaped) { return; }
         if (Input.GetKeyUp(KeyCode.Escape) && !escaped){
             //StartCoroutine(BMS_Reader.NoteTableClear());
             BMS_Reader.NoteTableClear();
-            if (totalSrcs != null){
-                totalSrcs.Clear();
-                totalSrcs = null;
-            }
             escaped = true;
             VLCPlayer.VLCRelease();
             SceneManager.UnloadSceneAsync(MainVars.cur_scene_name);
@@ -61,6 +53,17 @@ public class BMSPlayer : MonoBehaviour {
             return;
         }
         if (!no_bgm_notes && !no_key_notes && !no_bgi){
+            // playing_time_frame += Time.deltaTime;
+            for (int a = 0; a < sliders.Length; a++){
+                sliders[a].value = Convert.ToSingle(playing_time / BMS_Reader.total_time);
+                // sliders[a].value = Convert.ToSingle(playing_time_frame / BMS_Reader.total_time);
+            }
+            //return;
+        }
+    }
+    private void FixedUpdate(){
+        if (escaped) { return; }
+        if(!no_bgm_notes && !no_key_notes && !no_bgi){
             if (row_key >= BMS_Reader.note_dataTable.Rows.Count
                 && bgm_table_row >= BMS_Reader.bgm_note_table.Rows.Count
                 && bga_table_row >= BMS_Reader.bga_table.Rows.Count
@@ -69,10 +72,6 @@ public class BMSPlayer : MonoBehaviour {
                 Debug.Log("last note");
             }
             playing_time += Time.fixedDeltaTime;
-            for (int a = 0; a < sliders.Length; a++){
-                sliders[a].value = Convert.ToSingle(playing_time / BMS_Reader.total_time);
-            }
-            //return;
         }
     }
 

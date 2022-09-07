@@ -1,5 +1,4 @@
-﻿using FFmpeg.NET;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
@@ -18,7 +17,6 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.Video;
 using Debug = UnityEngine.Debug;
-using FFmpegEngine = FFmpeg.NET.Engine;
 
 public class MainVars : MonoBehaviour {
     public static string Bms_root_dir { internal set; get; }
@@ -51,7 +49,6 @@ public class MainVars : MonoBehaviour {
         BMSReader = null;
         //BMSPlayer = null;
         bms_file_path = string.Empty;
-        StaticClass.ffmpegEngine = null;
         freq = pitch = 0;
         master_vol = bgm_vol = key_vol = 100;
         mixer.SetFloat("freq", Mathf.Pow(2f, freq / 12f));
@@ -62,9 +59,19 @@ public class MainVars : MonoBehaviour {
         highPassFilter = this.gameObject.GetComponent<AudioHighPassFilter>();
         lowPassFilter = this.gameObject.GetComponent<AudioLowPassFilter>();
         reverbFilter = this.gameObject.GetComponent<AudioReverbFilter>();
+        Application.quitting += () => {
+            FluidManager.CleanUp();
+            VLCPlayer.VLCRelease();
+        };
+        // FluidManager.Init(Application.streamingAssetsPath + "/FluidR3_GM.sf2");
+        // FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 1000d, 3d);
+        FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 2.8d);
     }
 	
 	// Update is called once per frame
 	private void Update () {}
-    
+    private void OnApplicationQuit() {
+        FluidManager.CleanUp();
+        VLCPlayer.VLCRelease();
+    }
 }

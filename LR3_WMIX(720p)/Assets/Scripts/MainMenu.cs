@@ -8,11 +8,12 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using FFmpegEngine = FFmpeg.NET.Engine;
 
 public class MainMenu : MonoBehaviour {
     public Button play_btn;
     public Button exit_btn;
+	[HideInInspector] public static AudioSource[] audioSources;
+	public AudioSource audioSource;
 	// Use this for initialization
 	void Start () {
         exit_btn.onClick.AddListener(() => {
@@ -27,14 +28,17 @@ public class MainMenu : MonoBehaviour {
                     break;
             }
         });
+        //play_btn.interactable = LoadConfig();
         play_btn.onClick.AddListener(() => {
             if (LoadConfig()){
+                audioSources = new AudioSource[36 * 36];
+                for(int i = 0; i < 36 * 36; i++){
+                    audioSources[i] = Instantiate(audioSource, this.gameObject.transform);
+                    audioSources[i].name = $"#WAV{i}";
+                }
                 SceneManager.LoadScene("Select", LoadSceneMode.Additive);
             }
         });
-        Application.quitting += () => {
-            VLCPlayer.VLCRelease();
-        };
 	}
 	
 	// Update is called once per frame
@@ -42,32 +46,9 @@ public class MainMenu : MonoBehaviour {
 
     private bool LoadConfig(){
         string configPath = Application.dataPath + "/config.json";
-        if (!File.Exists(configPath)) {
-            //play_btn.interactable = false;
-            return false;
-        }
+        if (!File.Exists(configPath)){ return false; }
         JObject jObject = JObject.Parse(File.ReadAllText(configPath));
-        if (jObject == null) {
-            //play_btn.interactable = false;
-            return false;
-        }
-        if(jObject["BMS_root_dir"] == null){
-            //play_btn.interactable = false;
-            return false;
-        }
-        MainVars.Bms_root_dir = jObject["BMS_root_dir"].ToString();
-        MainVars.Bms_root_dir = MainVars.Bms_root_dir.Replace('\\', '/');
-        if (Regex.IsMatch(MainVars.Bms_root_dir, @"^file://", StaticClass.regexOption)){
-            MainVars.Bms_root_dir = MainVars.Bms_root_dir.Substring(7);
-        }
-        MainVars.Bms_root_dir = MainVars.Bms_root_dir.TrimEnd('/') + '/';
-        if (!Directory.Exists(MainVars.Bms_root_dir)){
-            //play_btn.interactable = false;
-            return false;
-        }
-        MainVars.bms_file_path = MainVars.Bms_root_dir;
-        if(jObject["FFmpegPath"] == null) { return false; }
-        string ffmpegPath = string.Empty;
+        if (jObject == null){ return false; }
         string platform = string.Empty;
         switch (Application.platform){
             case RuntimePlatform.WindowsEditor:
@@ -90,16 +71,16 @@ public class MainMenu : MonoBehaviour {
                 platform = "Others";
                 break;
         }
-        if (jObject["FFmpegPath"][platform] == null){ return false; }
-        ffmpegPath = jObject["FFmpegPath"][platform].ToString();
-        if (!File.Exists(ffmpegPath)){ return false; }
-        try{
-            StaticClass.ffmpegEngine = new FFmpegEngine(ffmpegPath);
+        if(jObject[platform] == null) { return false; }
+        if(jObject[platform]["BMS_root_dir"] == null){ return false; }
+        MainVars.Bms_root_dir = jObject[platform]["BMS_root_dir"].ToString();
+        MainVars.Bms_root_dir = MainVars.Bms_root_dir.Replace('\\', '/');
+        if (Regex.IsMatch(MainVars.Bms_root_dir, @"^file://", StaticClass.regexOption)){
+            MainVars.Bms_root_dir = MainVars.Bms_root_dir.Substring(7);
         }
-        catch (Exception e){
-            Debug.LogWarning(e.Message);
-            return false;
-        }
+        MainVars.Bms_root_dir = MainVars.Bms_root_dir.TrimEnd('/') + '/';
+        if (!Directory.Exists(MainVars.Bms_root_dir)){ return false; }
+        MainVars.bms_file_path = MainVars.Bms_root_dir;
         return true;
     }
 }

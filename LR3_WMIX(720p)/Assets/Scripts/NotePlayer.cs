@@ -5,7 +5,7 @@ using UnityEngine;
 public class NotePlayer : MonoBehaviour {
     private BMSReader BMS_Reader;
     public BMSPlayer BMS_Player;
-    private string str_note = string.Empty;
+    // private string str_note = string.Empty;
     public GameObject[] lanes;
     private Dictionary<string, sbyte> laneDict;
     private enum KeyState{
@@ -65,25 +65,19 @@ public class NotePlayer : MonoBehaviour {
         if (BMS_Player.escaped) { return; }
         if (!BMS_Player.no_key_notes){
             while(BMS_Player.row_key < BMS_Reader.note_dataTable.Rows.Count){
-                if ((double)BMS_Reader.note_dataTable.Rows[BMS_Player.row_key][1] - BMS_Player.playing_time < Time.fixedDeltaTime){
+                if(BMS_Reader.note_time_arr[BMS_Player.row_key] - BMS_Player.playing_time < Time.fixedDeltaTime){
+                // if ((double)BMS_Reader.note_dataTable.Rows[BMS_Player.row_key][1] - BMS_Player.playing_time < Time.fixedDeltaTime){
                     //Debug.Log("while?");
-                    str_note = BMS_Reader.note_dataTable.Rows[BMS_Player.row_key][0].ToString();
-                    if (laneDict.ContainsKey(str_note)){
-                        //channel = laneDict[str_note];
-                        //if (channel >= 0 && channel < 16){
-                        BMS_Player.currClipNum = (ushort)BMS_Reader.note_dataTable.Rows[BMS_Player.row_key][2];
-                        if (BMS_Player.totalSrcs.ContainsKey(BMS_Player.currClipNum)){
-                            DestroyImmediate(BMS_Player.totalSrcs[BMS_Player.currClipNum].gameObject);
-                            BMS_Player.totalSrcs.Remove(BMS_Player.currClipNum);
-                        }
-                        BMS_Player.currSrc = Instantiate(BMS_Player.audioSourceForm, lanes[laneDict[str_note]].GetComponent<RectTransform>());
-                        BMS_Player.currSrc.clip = BMS_Reader.audioClips[BMS_Player.currClipNum];
-                        BMS_Player.totalSrcs.Add(BMS_Player.currClipNum, BMS_Player.currSrc);
-                        DelAudio delAudio = BMS_Player.currSrc.GetComponent<DelAudio>();
-                        delAudio.clipNum = BMS_Player.currClipNum;
-                        delAudio.hasClip = true;
-                        //}
-                    }//else { channel = -1; }
+                    // BMS_Player.currClipNum = (ushort)BMS_Reader.note_dataTable.Rows[BMS_Player.row_key][2];
+                    BMS_Player.currClipNum = BMS_Reader.note_num_arr[BMS_Player.row_key];
+                    //Debug.Log(Time.realtimeSinceStartup - BMS_Player.playing_time);
+                    MainMenu.audioSources[BMS_Player.currClipNum].Play();
+                    // str_note = BMS_Reader.note_dataTable.Rows[BMS_Player.row_key][0].ToString();
+                    // if (laneDict.ContainsKey(str_note)){
+                    //     //channel = laneDict[str_note];
+                    //     //if (channel >= 0 && channel < 16){
+                    //     //}
+                    // }//else { channel = -1; }
                     if (BMS_Player.row_key >= BMS_Reader.note_dataTable.Rows.Count - 10){
                         Debug.Log("near note end");
                     }

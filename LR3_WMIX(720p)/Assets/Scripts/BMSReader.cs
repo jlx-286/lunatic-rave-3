@@ -1,5 +1,4 @@
-﻿using FFmpeg.NET;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -45,15 +44,11 @@ public class BMSReader : MonoBehaviour{
     private DataTable bpm_index_table;
     [HideInInspector] public DataTable bga_table;
     [HideInInspector] public int bgm_note_id = 0;
-    //[HideInInspector] public double playing_time;
     [HideInInspector] public string[] bga_paths;
     [HideInInspector] public bool[] isVideo;
     [HideInInspector] public Texture2D[] textures;
     public Texture2D transparent;
-    //[HideInInspector] public VideoClip[] videoClips;
-    //[HideInInspector] public int channel = 8;
     private bool table_loaded;
-    [HideInInspector] public AudioClip[] audioClips;
     private ushort total_medias_count;
     private ushort loaded_medias_count;
     [HideInInspector] public Dictionary<ushort,double> time_before_track;
@@ -155,6 +150,12 @@ public class BMSReader : MonoBehaviour{
     DataRow[] dataRows = null;
     List<float> track_end_bpms;
     #endregion
+    [HideInInspector] public string[] note_channel_arr;
+    [HideInInspector] public double[] note_time_arr;
+    [HideInInspector] public ushort[] note_num_arr;
+    [HideInInspector] public NoteType[] note_type_arr;
+    [HideInInspector] public double[] bgm_time_arr;
+    [HideInInspector] public ushort[] bgm_num_arr;
     // Use this for initialization
     private void Start () {
         thread = new Thread(ReadScript);
@@ -170,9 +171,6 @@ public class BMSReader : MonoBehaviour{
             thread.Abort();
         });
         unityActions = new Queue<UnityAction>();
-        //if (StaticClass.ffmpegEngine == null){
-        //    StaticClass.ffmpegEngine = new FFmpeg.NET.Engine(StaticClass.ffmpegPath);
-        //}
         unityActions.Enqueue(() => {
             MainVars.BMSReader = this.gameObject.GetComponent<BMSReader>();
             doingAction = false;
@@ -206,10 +204,7 @@ public class BMSReader : MonoBehaviour{
         ArrayList.Repeat(transparent, textures.Length).CopyTo(textures);
         beats_tracks = new Dictionary<ushort, double>();
         exbpm_dict = new Dictionary<ushort, float>();
-        audioClips = new AudioClip[36 * 36];
-        ArrayList.Repeat(null, audioClips.Length).CopyTo(audioClips);
         total_medias_count = loaded_medias_count = 0;
-        //LoadAudioClipHelper.counter = 0;
         bms_head = new Dictionary<string, List<string>>{
             { "GENRE", new List<string>() },
             { "BPM", new List<string>() },
@@ -442,35 +437,54 @@ public class BMSReader : MonoBehaviour{
                         string name = line.Substring(6).TrimStart();//with extension in BMS "*.wav"
                         name = Path.GetDirectoryName(name) + '/' + Path.GetFileNameWithoutExtension(name);
                         name = name.Replace('\\', '/').TrimStart('/');
-                        name = Regex.Match(
-                            file_names.ToString(),
+                        name = Regex.Match(file_names.ToString(),
                             name.Replace("+", @"\+").Replace("-", @"\-").Replace("[", @"\[").Replace("]", @"\]").Replace("(", @"\(").Replace("\t", @"\s")
                             .Replace(")", @"\)").Replace("^", @"\^").Replace("{", @"\{").Replace("}", @"\}").Replace(" ", @"\s").Replace(".", @"\.")
-                            + @"\.(WAV|OGG|MP3|AIFF|AIF|MOD|IT|S3M|XM|AAC|M3A|WMA|AMR|FLAC)\n", StaticClass.regexOption).Value;
+                            + @"\.(WAV|OGG|MP3|AIFF|AIF|MOD|IT|S3M|XM|MID|AAC|M3A|WMA|AMR|FLAC)\n", StaticClass.regexOption).Value;
                         name = name.Trim();
                         total_medias_count++;
                         if (File.Exists(bms_directory + name)){
                             ushort a = u;
-                            unityActions.Enqueue(async()=>{
-                                AudioClip clip;
-                                clip = await StaticClass.LoadAudioClipAsync(bms_directory + name);
-                                if (clip == null || clip.length < Time.fixedDeltaTime){
-                                    clip = await StaticClass.GetAudioClipByFilePath(bms_directory + name, StaticClass.ffmpegEngine);
+                            //float[] samples = null;
+                            //int channels = 0, frequency = 0, lengSamples = 0;
+                            //if (Regex.IsMatch(name, @"\.mid$", StaticClass.regexOption)){
+                            //    samples = FluidManager.MidiToSamples(bms_directory + name, out lengSamples, out frequency);
+                            //    channels = FluidManager.channels;
+                            //}else{
+                            //    samples = StaticClass.AudioToSamples(bms_directory + name, out channels, out frequency);
+                            //}
+                            //if (samples != null && samples.Length >= channels && channels > 0 && frequency > 0){
+                            //    unityActions.Enqueue(() => {
+                            //        AudioClip clip = null;
+                            //        clip = AudioClip.Create("ffmpeg", samples.Length / channels,
+                            //            channels, frequency, false);
+                            //        clip.SetData(samples, 0);
+                            //        if (clip != null && !float.IsNaN(clip.length)){
+                            //            MainMenu.audioSources[a].clip = clip;
+                            //            if (clip.length > 60f)
+                            //                illegal = true;
+                            //        }
+                            //        doingAction = false;
+                            //    });
+                            //}
+                            unityActions.Enqueue(async () => {
+                                AudioClip clip = StaticClass.GetAudioClipByFilePath(bms_directory + name);
+                                if (clip == null || float.IsNaN(clip.length) || clip.length < Time.fixedDeltaTime){
+                                    clip = await StaticClass.LoadAudioClipAsync(bms_directory + name);
                                 }
-                                if (clip != null && clip.length > 60f) { illegal = true; }
-                                audioClips[a] = clip;
-                                loaded_medias_count++;
-                                slider.value = (float)loaded_medias_count / total_medias_count;
+                                if (clip != null && !float.IsNaN(clip.length)){
+                                    MainMenu.audioSources[a].clip = clip;
+                                    if (clip.length > 60f)
+                                        illegal = true;
+                                }
                                 doingAction = false;
                             });
                         }
-                        else{
-                            unityActions.Enqueue(() =>{
-                                loaded_medias_count++;
-                                slider.value = (float)loaded_medias_count / total_medias_count;
-                                doingAction = false;
-                            });
-                        }
+                        unityActions.Enqueue(() =>{
+                            loaded_medias_count++;
+                            slider.value = (float)loaded_medias_count / total_medias_count;
+                            doingAction = false;
+                        });
                     }
                     else if (Regex.IsMatch(line, @"^#BMP[0-9A-Z]{2}\s", StaticClass.regexOption)){
                         u = StaticClass.Convert36To10(line.Substring(4, 2));
@@ -482,36 +496,21 @@ public class BMSReader : MonoBehaviour{
                         ){
                             bga_paths[u] = name;
                             isVideo[u] = true;
-                            //if (!File.Exists(bms_directory + name)){
-                            //    unityActions.Enqueue(() => {
-                            //        loaded_medias_count++;
-                            //        slider.value = (float)loaded_medias_count / total_medias_count;
-                            //        doingAction = false;
-                            //    });
-                            //}else{
-                            //}
                             string tmp_path = bms_directory + name;
-                            ushort uu = u;
-                            unityActions.Enqueue(async() => {
+                            int width, height;
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
                                 tmp_path = tmp_path.Replace('/', '\\');
 #else
                                 tmp_path = tmp_path.Replace('\\', '/');
 #endif
-                                if (File.Exists(tmp_path) && VLCPlayer.instance != IntPtr.Zero){
-                                    MediaFile mediaFile = new MediaFile(tmp_path);
-                                    MetaData metaData = null;
-                                    if(mediaFile != null){
-                                        metaData = await StaticClass.ffmpegEngine.GetMetaDataAsync(mediaFile);
-                                    }
-                                    if(metaData != null){
-                                        VLCPlayer.medias[uu] = VLCPlayer.libvlc_media_new_path(VLCPlayer.instance, tmp_path);
-                                        if(VLCPlayer.medias[uu] != IntPtr.Zero){
-                                            VLCPlayer.libvlc_media_parse(VLCPlayer.medias[uu]);
-                                            VLCPlayer.media_sizes[uu] = metaData.VideoData.FrameSize.Replace('x', ' ');
-                                        } else { VLCPlayer.medias.Remove(uu); }
-                                    }
-                                }
+                            if (File.Exists(tmp_path) && VLCPlayer.instance != IntPtr.Zero){
+                                VLCPlayer.medias[u] = VLCPlayer.libvlc_media_new_path(VLCPlayer.instance, tmp_path);
+                                if(VLCPlayer.medias[u] != IntPtr.Zero && StaticClass.GetVideoSize(tmp_path, out width, out height)){
+                                    VLCPlayer.libvlc_media_parse(VLCPlayer.medias[u]);
+                                    VLCPlayer.media_sizes[u] = $"{width} {height}";
+                                }else{ VLCPlayer.medias.Remove(u); }
+                            }
+                            unityActions.Enqueue(() => {
                                 loaded_medias_count++;
                                 slider.value = (float)loaded_medias_count / total_medias_count;
                                 doingAction = false;
@@ -890,17 +889,35 @@ public class BMSReader : MonoBehaviour{
         playing_scene_name = string.Empty;
         if (scriptType == ScriptType.BMS) { BMS_region(); }
         else if (scriptType == ScriptType.PMS) { PMS_region(); }
+        Debug.Log("sorting");
         note_dataTable.DefaultView.Sort = "time ASC";
         note_dataTable = note_dataTable.DefaultView.ToTable();
         bgm_note_table.DefaultView.Sort = "time ASC";
-        bgm_note_table = bgm_note_table.DefaultView.ToTable(); 
+        bgm_note_table = bgm_note_table.DefaultView.ToTable();
         bga_table.DefaultView.Sort = "time ASC";
-        bga_table = bga_table.DefaultView.ToTable(); 
+        bga_table = bga_table.DefaultView.ToTable();
+        Debug.Log("parsing?");
+        note_channel_arr = new string[note_dataTable.Rows.Count];
+        note_time_arr = new double[note_dataTable.Rows.Count];
+        note_num_arr = new ushort[note_dataTable.Rows.Count];
+        note_type_arr = new NoteType[note_dataTable.Rows.Count];
+        for(int i = 0; i < note_dataTable.Rows.Count; i++){
+            note_channel_arr[i] = note_dataTable.Rows[i]["channel"].ToString();
+            note_time_arr[i] = (double)note_dataTable.Rows[i]["time"];
+            note_num_arr[i] = (ushort)note_dataTable.Rows[i]["clipNum"];
+            note_type_arr[i] = (NoteType)note_dataTable.Rows[i]["LNtype"];
+        }
+        bgm_time_arr = new double[bgm_note_table.Rows.Count];
+        bgm_num_arr = new ushort[bgm_note_table.Rows.Count];
+        for(int i = 0; i < bgm_note_table.Rows.Count; i++){
+            bgm_time_arr[i] = (double)bgm_note_table.Rows[i]["time"];
+            bgm_num_arr[i] = (ushort)bgm_note_table.Rows[i]["clipNum"];
+        }
+        Debug.Log("completed");
         started = true;
     }
-    
-    private void FixedUpdate(){}
 
+    private void FixedUpdate() { }
     private void Update(){
         if (!table_loaded && unityActions != null && unityActions.Count != 0
             && !doingAction
@@ -911,7 +928,8 @@ public class BMSReader : MonoBehaviour{
         if (started && !table_loaded && loaded_medias_count == total_medias_count){
             Debug.Log(illegal);
             table_loaded = true;
-            if (!illegal && !string.IsNullOrEmpty(playing_scene_name)){
+            // if (!illegal && !string.IsNullOrEmpty(playing_scene_name)){
+            if (!string.IsNullOrEmpty(playing_scene_name)){
                 auto_btn.interactable = true;
                 auto_btn.onClick.AddListener(() => {
                     SceneManager.UnloadSceneAsync(MainVars.cur_scene_name);
@@ -933,10 +951,6 @@ public class BMSReader : MonoBehaviour{
             this.bpm_index_table.Clear();
             this.bpm_index_table = null;
         }
-        //if (this.totalSrcs != null){
-        //    this.totalSrcs.Clear();
-        //    this.totalSrcs = null;
-        //}
         GC.Collect();
         //GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true);
         //yield return new WaitForFixedUpdate();

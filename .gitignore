@@ -73,6 +73,13 @@ crashlytics-build.properties
 # keep the *.asset files from Library
 !/*/[Ll]ibrary/*.asset
 
-# ignore ffmpeg.exe and ffprobe.exe
-[Ff]*.exe
-[Ff]*.exe.meta
+# ignore *.exe
+*.exe
+*.exe.meta
+
+/test/
+.vscode/
+/*/[Aa]ssets/**/.*/
+/*/[Aa]ssets/**/*~/
+/*/[Aa]ssets/**/cvs/
+/*/[Aa]ssets/**/[Pp]lugins/**/*.meta

@@ -31,8 +31,11 @@ public class SongList : MonoBehaviour ,IPointerClickHandler {
         MainVars.cur_scene_name = "Select";
         MainVars.BMSReader = null;
         //MainVars.BMSPlayer = null;
-        Resources.UnloadUnusedAssets();
         GC.Collect();
+        for(int i = 0; i < 36 * 36; i++){
+            MainMenu.audioSources[i].clip = null;
+        }
+        Resources.UnloadUnusedAssets();
     }
 
     // Update is called once per frame
