@@ -23,15 +23,15 @@ using Random = System.Random;
 /// also supports PMS files
 /// </summary>
 public class BMSReader : MonoBehaviour{
-    [HideInInspector] public float start_bpm, min_bpm, max_bpm;
+    [HideInInspector] public decimal start_bpm, min_bpm, max_bpm;
     [HideInInspector] public double total_time = double.Epsilon / 2;
-    private float curr_bpm;
+    private decimal curr_bpm;
     //private float total;
     //float beat_timer = 1.0f, beat_timing = 0.0f;
-    private Dictionary<ushort,float> exbpm_dict;
+    private Dictionary<ushort,decimal> exbpm_dict;
     //private int key_row_count = 0;
     //private int bgm_row_count = 0;
-    private Dictionary<ushort,double> beats_tracks;
+    private Dictionary<ushort,decimal> beats_tracks;
     private List<ushort> lnobj;
     //private DataTable bpm_table;
     //private int bpm_row;
@@ -48,7 +48,7 @@ public class BMSReader : MonoBehaviour{
     [HideInInspector] public bool[] isVideo;
     [HideInInspector] public Texture2D[] textures;
     public Texture2D transparent;
-    private bool table_loaded;
+    private bool isDone = false;
     private ushort total_medias_count;
     private ushort loaded_medias_count;
     [HideInInspector] public Dictionary<ushort,double> time_before_track;
@@ -116,9 +116,8 @@ public class BMSReader : MonoBehaviour{
     public Slider slider;
     [HideInInspector] public Task task;
     private Queue<UnityAction> unityActions;
-    private bool started;
-    private bool doingAction;
-    private bool illegal;
+    private bool doingAction = false;
+    private bool illegal = false;
     public Button play_btn;
     public Button back_btn;
     public Button auto_btn;
@@ -140,15 +139,15 @@ public class BMSReader : MonoBehaviour{
     string message = string.Empty;
     ushort track = 0;
     int k = 0;
-    float f = 0f;
-    double d = 0d;
+    decimal ld = decimal.Zero;
+    // double d = double.Epsilon / 2;
     ushort tracks_count = 0;
     ushort u = 0;
     string hex_digits = "0123456789ABCDEF";
     string channel = string.Empty;
-    double trackOffset = 0d;
+    decimal trackOffset = decimal.Zero;
     DataRow[] dataRows = null;
-    List<float> track_end_bpms;
+    List<decimal> track_end_bpms;
     #endregion
     [HideInInspector] public string[] note_channel_arr;
     [HideInInspector] public double[] note_time_arr;
@@ -165,6 +164,7 @@ public class BMSReader : MonoBehaviour{
     private void ReadScript(){
         MainVars.cur_scene_name = "Decide";
         back_btn.onClick.AddListener(() => {
+            NoteTableClear();
             VLCPlayer.VLCRelease();
             SceneManager.UnloadSceneAsync(MainVars.cur_scene_name);
             SceneManager.LoadScene("Select", LoadSceneMode.Additive);
@@ -175,19 +175,15 @@ public class BMSReader : MonoBehaviour{
             MainVars.BMSReader = this.gameObject.GetComponent<BMSReader>();
             doingAction = false;
         });
-        table_loaded = false;
-        started = false;
-        doingAction = false;
-        illegal = false;
-        unityActions.Enqueue(() => {
-            auto_btn.interactable = play_btn.interactable = replay_btn.interactable = false;
-            doingAction = false;
-        });
+        // unityActions.Enqueue(() => {
+        //     auto_btn.interactable = play_btn.interactable = replay_btn.interactable = false;
+        //     doingAction = false;
+        // });
         slider.onValueChanged.AddListener((value) => {
             progress.text = $"Loaded/Total:{loaded_medias_count}/{total_medias_count}";
         });
-        min_bpm = float.PositiveInfinity;
-        max_bpm = float.Epsilon;
+        min_bpm = decimal.MaxValue;
+        max_bpm = decimal.Zero;
         bms_directory = Path.GetDirectoryName(MainVars.bms_file_path).Replace('\\', '/') + '/';
         bms_file_name = Path.GetFileName(MainVars.bms_file_path);
         if(Regex.IsMatch(bms_file_name, @"\.bm(s|e|l)$", StaticClass.regexOption)){
@@ -202,8 +198,8 @@ public class BMSReader : MonoBehaviour{
         ArrayList.Repeat(false, isVideo.Length).CopyTo(isVideo);
         textures = new Texture2D[36 * 36];
         ArrayList.Repeat(transparent, textures.Length).CopyTo(textures);
-        beats_tracks = new Dictionary<ushort, double>();
-        exbpm_dict = new Dictionary<ushort, float>();
+        beats_tracks = new Dictionary<ushort, decimal>();
+        exbpm_dict = new Dictionary<ushort, decimal>();
         total_medias_count = loaded_medias_count = 0;
         bms_head = new Dictionary<string, List<string>>{
             { "GENRE", new List<string>() },
@@ -236,8 +232,8 @@ public class BMSReader : MonoBehaviour{
         bgm_note_table.Columns.Add("clipNum", typeof(ushort));
         bgm_note_table.Columns.Add("Id", typeof(int)).Unique = true;
         bpm_index_table.Columns.Add("track", typeof(ushort));
-        bpm_index_table.Columns.Add("index", typeof(double));
-        bpm_index_table.Columns.Add("value", typeof(float));
+        bpm_index_table.Columns.Add("index", typeof(decimal));
+        bpm_index_table.Columns.Add("value", typeof(decimal));
         bpm_index_table.PrimaryKey = new DataColumn[]{
             bpm_index_table.Columns["track"],
             bpm_index_table.Columns["index"]
@@ -245,15 +241,7 @@ public class BMSReader : MonoBehaviour{
         //bpm_row = 0;
         //curr_bpm = 0d;
         file_lines = new List<string>();
-        Encoding encoding;
-        try{
-            encoding = StaticClass.GetEncodingByFilePath(bms_directory + bms_file_name);
-            // encoding = Encoding.GetEncoding("shift_jis");
-        }catch (Exception){
-            //encoding = Encoding.Default;
-            encoding = Encoding.GetEncoding("shift_jis");
-            //throw;
-        }
+        Encoding encoding = StaticClass.GetEncodingByFilePath(bms_directory + bms_file_name);
         Stack<int> random_nums = new Stack<int>();
         Stack<bool> is_true_if = new Stack<bool>();
         Stack<int> ifs_count = new Stack<int>();
@@ -387,8 +375,7 @@ public class BMSReader : MonoBehaviour{
                     if (Regex.IsMatch(line, @"^#BPM\s{1,}\d{1,}(\.\d{1,})?", StaticClass.regexOption)){
                         Match match = Regex.Match(line, @"^#BPM\s{1,}\d{1,}(\.\d{1,})?", StaticClass.regexOption);
                         line = match.Value.Substring(4).TrimStart();
-                        float.TryParse(line, out f);
-                        if (f > float.Epsilon){
+                        if(decimal.TryParse(line, out ld) && ld > decimal.Zero){
                             bms_head["BPM"].Add(line);
                         }
                     }
@@ -427,116 +414,8 @@ public class BMSReader : MonoBehaviour{
                     else if (Regex.IsMatch(line, @"^#(EX)?BPM[0-9A-Z]{2}\s", StaticClass.regexOption)){
                         line = line.ToUpper().Replace("#BPM", "").Replace("#EXBPM", "");//xx 294
                         u = StaticClass.Convert36To10(line.Substring(0, 2));
-                        float.TryParse(line.Substring(2).TrimStart(), out f);
-                        if(f > float.Epsilon && u > 0 && !exbpm_dict.ContainsKey(u)){
-                            exbpm_dict.Add(u, f * Mathf.Pow(2f, MainVars.freq / 12f));
-                        }
-                    }
-                    else if (Regex.IsMatch(line, @"^#WAV[0-9A-Z]{2}\s", StaticClass.regexOption)){
-                        u = StaticClass.Convert36To10(line.Substring(4, 2));
-                        string name = line.Substring(6).TrimStart();//with extension in BMS "*.wav"
-                        name = Path.GetDirectoryName(name) + '/' + Path.GetFileNameWithoutExtension(name);
-                        name = name.Replace('\\', '/').TrimStart('/');
-                        name = Regex.Match(file_names.ToString(),
-                            name.Replace("+", @"\+").Replace("-", @"\-").Replace("[", @"\[").Replace("]", @"\]").Replace("(", @"\(").Replace("\t", @"\s")
-                            .Replace(")", @"\)").Replace("^", @"\^").Replace("{", @"\{").Replace("}", @"\}").Replace(" ", @"\s").Replace(".", @"\.")
-                            + @"\.(WAV|OGG|MP3|AIFF|AIF|MOD|IT|S3M|XM|MID|AAC|M3A|WMA|AMR|FLAC)\n", StaticClass.regexOption).Value;
-                        name = name.Trim();
-                        total_medias_count++;
-                        if (File.Exists(bms_directory + name)){
-                            ushort a = u;
-                            //float[] samples = null;
-                            //int channels = 0, frequency = 0, lengSamples = 0;
-                            //if (Regex.IsMatch(name, @"\.mid$", StaticClass.regexOption)){
-                            //    samples = FluidManager.MidiToSamples(bms_directory + name, out lengSamples, out frequency);
-                            //    channels = FluidManager.channels;
-                            //}else{
-                            //    samples = StaticClass.AudioToSamples(bms_directory + name, out channels, out frequency);
-                            //}
-                            //if (samples != null && samples.Length >= channels && channels > 0 && frequency > 0){
-                            //    unityActions.Enqueue(() => {
-                            //        AudioClip clip = null;
-                            //        clip = AudioClip.Create("ffmpeg", samples.Length / channels,
-                            //            channels, frequency, false);
-                            //        clip.SetData(samples, 0);
-                            //        if (clip != null && !float.IsNaN(clip.length)){
-                            //            MainMenu.audioSources[a].clip = clip;
-                            //            if (clip.length > 60f)
-                            //                illegal = true;
-                            //        }
-                            //        doingAction = false;
-                            //    });
-                            //}
-                            unityActions.Enqueue(async () => {
-                                AudioClip clip = StaticClass.GetAudioClipByFilePath(bms_directory + name);
-                                if (clip == null || float.IsNaN(clip.length) || clip.length < Time.fixedDeltaTime){
-                                    clip = await StaticClass.LoadAudioClipAsync(bms_directory + name);
-                                }
-                                if (clip != null && !float.IsNaN(clip.length)){
-                                    MainMenu.audioSources[a].clip = clip;
-                                    if (clip.length > 60f)
-                                        illegal = true;
-                                }
-                                doingAction = false;
-                            });
-                        }
-                        unityActions.Enqueue(() =>{
-                            loaded_medias_count++;
-                            slider.value = (float)loaded_medias_count / total_medias_count;
-                            doingAction = false;
-                        });
-                    }
-                    else if (Regex.IsMatch(line, @"^#BMP[0-9A-Z]{2}\s", StaticClass.regexOption)){
-                        u = StaticClass.Convert36To10(line.Substring(4, 2));
-                        total_medias_count++;
-                        string name = line.Substring(6).TrimStart();
-                        if(Regex.IsMatch(name,
-                            @"\.(ogv|webm|vp8|mpg|mpeg|mp4|mov|m4v|dv|wmv|avi|asf|3gp|mkv|m2p|flv|swf|ogm)\n?$",
-                            RegexOptions.ECMAScript | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)
-                        ){
-                            bga_paths[u] = name;
-                            isVideo[u] = true;
-                            string tmp_path = bms_directory + name;
-                            int width, height;
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-                                tmp_path = tmp_path.Replace('/', '\\');
-#else
-                                tmp_path = tmp_path.Replace('\\', '/');
-#endif
-                            if (File.Exists(tmp_path) && VLCPlayer.instance != IntPtr.Zero){
-                                VLCPlayer.medias[u] = VLCPlayer.libvlc_media_new_path(VLCPlayer.instance, tmp_path);
-                                if(VLCPlayer.medias[u] != IntPtr.Zero && StaticClass.GetVideoSize(tmp_path, out width, out height)){
-                                    VLCPlayer.libvlc_media_parse(VLCPlayer.medias[u]);
-                                    VLCPlayer.media_sizes[u] = $"{width} {height}";
-                                }else{ VLCPlayer.medias.Remove(u); }
-                            }
-                            unityActions.Enqueue(() => {
-                                loaded_medias_count++;
-                                slider.value = (float)loaded_medias_count / total_medias_count;
-                                doingAction = false;
-                            });
-                        }
-                        else if (Regex.IsMatch(name,
-                            @"\.(bmp|png|jpg|jpeg|gif|mag|wmf|emf|cur|ico|tga|dds|dib|tiff|webp|pbm|pgm|ppm|xcf|pcx|iff|ilbm|pxr|svg|psd)\n?$",
-                            RegexOptions.ECMAScript | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)
-                        ){
-                            isVideo[u] = false;
-                            if (File.Exists(bms_directory + name)){
-                                ushort a = u;
-                                unityActions.Enqueue(() => {
-                                    textures[a] = StaticClass.GetTexture2D(bms_directory + name);
-                                    loaded_medias_count++;
-                                    slider.value = (float)loaded_medias_count / total_medias_count;
-                                    doingAction = false;
-                                });
-                            }
-                            else {
-                                unityActions.Enqueue(() => {
-                                    loaded_medias_count++;
-                                    slider.value = (float)loaded_medias_count / total_medias_count;
-                                    doingAction = false;
-                                });
-                            }
+                        if(u > 0 && !exbpm_dict.ContainsKey(u) && decimal.TryParse(line.Substring(2).TrimStart(), out ld) && ld > decimal.Zero){
+                            exbpm_dict.Add(u, ld * (decimal)Math.Pow(2d, MainVars.freq / 12d));
                         }
                     }
                     else if (Regex.IsMatch(line, @"^#LNOBJ\s{1,}[0-9A-Z]{2,}", StaticClass.regexOption)){
@@ -551,20 +430,28 @@ public class BMSReader : MonoBehaviour{
                                 tracks_count = u;
                             }
                             if (Regex.IsMatch(line, @"^#[0-9]{3}02:", StaticClass.regexOption)){
-                                double.TryParse(line.Substring(7), out d);
-                                if (Math.Abs(d) >= double.Epsilon && !beats_tracks.ContainsKey(u)){
-                                    beats_tracks.Add(u, d);
+                                if (!beats_tracks.ContainsKey(u) && decimal.TryParse(line.Substring(7), out ld) && ld != decimal.Zero){
+                                    beats_tracks.Add(u, Math.Abs(ld));
                                 }
                             }
+                        }
+                        else if (Regex.IsMatch(line, @"^#(BMP|WAV)[0-9A-Z]{2}\s", StaticClass.regexOption)){
+                            total_medias_count++;
                         }
                     }
                 }
             }
         }
+        unityActions.Enqueue(() => {
+            slider.maxValue = total_medias_count;
+            slider.value = float.Epsilon / 2;
+            progress.text = $"Loaded/Total:0/{total_medias_count}";
+            doingAction = false;
+        });
         streamReader.Close();
         streamReader.Dispose();
-        start_bpm = bms_head.ContainsKey("BPM") ? Convert.ToSingle(bms_head["BPM"][0]) : 130f;
-        start_bpm *= Mathf.Pow(2f, MainVars.freq / 12f);
+        start_bpm = bms_head.ContainsKey("BPM") ? Convert.ToDecimal(bms_head["BPM"][0]) : 130m;
+        start_bpm *= (decimal)Math.Pow(2d, MainVars.freq / 12d);
         foreach (string tmp_line in file_lines){
             line = tmp_line;
             if (Regex.IsMatch(line, @"^#[0-9]{3}03:", StaticClass.regexOption)){// bpm index
@@ -573,9 +460,13 @@ public class BMSReader : MonoBehaviour{
                 track = Convert.ToUInt16(line.Substring(1, 3));
                 for (int i = 0; i < message.Length; i += 2){
                     if (message.Substring(i, 2) != "00"){
-                        bpm_index_table.Rows.Add(track, (double)(i / 2) / (double)(message.Length / 2),
-                            (float)(hex_digits.IndexOf(message[i]) * 16f + hex_digits.IndexOf(message[i + 1]))
-                            * Mathf.Pow(2f, MainVars.freq / 12f));
+                        try{
+                            bpm_index_table.Rows.Add(track, (decimal)(i / 2) / (decimal)(message.Length / 2),
+                                (decimal)(hex_digits.IndexOf(message[i]) * 16d + hex_digits.IndexOf(message[i + 1]))
+                                * (decimal)Math.Pow(2d, MainVars.freq / 12d));
+                        }catch(Exception e){
+                            Debug.Log(e.Message);
+                        }
                     }
                 }
             }
@@ -587,27 +478,153 @@ public class BMSReader : MonoBehaviour{
                     u = StaticClass.Convert36To10(message.Substring(i, 2));
                     if (u > 0){
                         if(exbpm_dict.ContainsKey(u)){
-                            bpm_index_table.Rows.Add(track, (double)(i / 2) / (double)(message.Length / 2),
-                                exbpm_dict[u]);
+                            try{
+                                bpm_index_table.Rows.Add(track, (decimal)(i / 2) / (decimal)(message.Length / 2),
+                                    exbpm_dict[u]);
+                            }catch(Exception e){
+                                Debug.Log(e.Message);
+                            }
                         }
                     }
                 }
             }
+            else if (Regex.IsMatch(line, @"^#BMP[0-9A-Z]{2}\s", StaticClass.regexOption)){
+                u = StaticClass.Convert36To10(line.Substring(4, 2));
+                string name = line.Substring(6).TrimStart();
+                if (Regex.IsMatch(name,
+                    @"\.(ogv|webm|vp8|mpg|mpeg|mp4|mov|m4v|dv|wmv|avi|asf|3gp|mkv|m2p|flv|swf|ogm)\n?$",
+                    RegexOptions.ECMAScript | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)
+                ){
+                    bga_paths[u] = name;
+                    isVideo[u] = true;
+                    string tmp_path = bms_directory + name;
+                    int width, height;
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+                    tmp_path = tmp_path.Replace('/', '\\');
+#else
+                    tmp_path = tmp_path.Replace('\\', '/');
+#endif
+                    if (File.Exists(tmp_path) && VLCPlayer.instance != IntPtr.Zero){
+                        VLCPlayer.medias[u] = VLCPlayer.libvlc_media_new_path(VLCPlayer.instance, tmp_path);
+                        if (VLCPlayer.medias[u] != IntPtr.Zero && StaticClass.GetVideoSize(tmp_path, out width, out height)){
+                            VLCPlayer.libvlc_media_parse(VLCPlayer.medias[u]);
+                            VLCPlayer.media_sizes[u] = $"{width} {height}";
+                        }
+                        else { VLCPlayer.medias.Remove(u); }
+                    }
+                }
+                else if (Regex.IsMatch(name,
+                    @"\.(bmp|png|jpg|jpeg|gif|mag|wmf|emf|cur|ico|tga|dds|dib|tiff|webp|pbm|pgm|ppm|xcf|pcx|iff|ilbm|pxr|svg|psd)\n?$",
+                    RegexOptions.ECMAScript | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)
+                ){
+                    isVideo[u] = false;
+                    if (File.Exists(bms_directory + name)){
+                        ushort a = u;
+                        int width, height;
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+                        byte[] dist = StaticClass.GetTextureInfo(bms_directory + name, out width, out height);
+                        if (width > 0 && height > 0){
+                            unityActions.Enqueue(() => {
+                                Texture2D texture2D = new Texture2D(width, height, TextureFormat.RGBA32, false);
+                                texture2D.LoadImage(dist);
+                                texture2D.Apply(false);
+                                textures[a] = texture2D;
+                                doingAction = false;
+                            });
+                        }
+                        //unityActions.Enqueue(() => {
+                        //    textures[a] = StaticClass.GetTexture2D(bms_directory + name);
+                        //    doingAction = false;
+                        //});
+#else
+                        Color32[] color32s = StaticClass.GetTextureInfo(bms_directory + name, out width, out height);
+                        if (width > 0 && height > 0){
+                            unityActions.Enqueue(() => {
+                                Texture2D texture2D = new Texture2D(width, height, TextureFormat.RGBA32, false);
+                                texture2D.SetPixels32(color32s);
+                                texture2D.Apply(false);
+                                textures[a] = texture2D;
+                                doingAction = false;
+                            });
+                        }
+#endif
+                    }
+                }
+                unityActions.Enqueue(() => {
+                    loaded_medias_count++;
+                    slider.value = loaded_medias_count;
+                    doingAction = false;
+                });
+            }
+            else if (Regex.IsMatch(line, @"^#WAV[0-9A-Z]{2}\s", StaticClass.regexOption)){
+                u = StaticClass.Convert36To10(line.Substring(4, 2));
+                string name = line.Substring(6).TrimStart();//with extension in BMS "*.wav"
+                name = Path.GetDirectoryName(name) + '/' + Path.GetFileNameWithoutExtension(name);
+                name = name.Replace('\\', '/').TrimStart('/');
+                name = Regex.Match(file_names.ToString(),
+                    name.Replace("+", @"\+").Replace("-", @"\-").Replace("[", @"\[").Replace("]", @"\]").Replace("(", @"\(").Replace("\t", @"\s")
+                    .Replace(")", @"\)").Replace("^", @"\^").Replace("{", @"\{").Replace("}", @"\}").Replace(" ", @"\s").Replace(".", @"\.")
+                    + @"\.(WAV|OGG|MP3|AIFF|AIF|MOD|IT|S3M|XM|MID|AAC|M3A|WMA|AMR|FLAC)\n", StaticClass.regexOption).Value;
+                name = name.Trim();
+                if (File.Exists(bms_directory + name)){
+                    ushort a = u;
+                    int channels = 0, frequency = 0;
+                    float[] samples = StaticClass.AudioToSamples(bms_directory + name, out channels, out frequency);
+                    if (samples != null && samples.Length >= channels && channels > 0 && frequency > 0){
+                        unityActions.Enqueue(() => {
+                            AudioClip clip = null;
+                            clip = AudioClip.Create("clip", samples.Length / channels,
+                                channels, frequency, false);
+                            clip.SetData(samples, 0);
+                            if (clip != null && !float.IsNaN(clip.length)){
+                                MainMenu.audioSources[a].clip = clip;
+                                if (clip.length > 60f)
+                                    illegal = true;
+                            }
+                            else {
+                                Debug.Log(Time.time);
+                                Debug.Log(Time.unscaledTime);
+                            }
+                            doingAction = false;
+                        });
+                    }
+                    /*else{
+                        unityActions.Enqueue(async () => {
+                            AudioClip clip = await StaticClass.LoadAudioClipAsync(bms_directory + name);
+                            if (clip != null && !float.IsNaN(clip.length)){
+                                MainMenu.audioSources[a].clip = clip;
+                                if (clip.length > 60f)
+                                    illegal = true;
+                            }
+                            doingAction = false;
+                        });
+                    }*/
+                }
+                unityActions.Enqueue(() => {
+                    loaded_medias_count++;
+                    slider.value = loaded_medias_count;
+                    doingAction = false;
+                });
+            }
         }
+        unityActions.Enqueue(()=>{
+            progress.text = "Parsing";
+            doingAction = false;
+        });
         try{
             dataRows = bpm_index_table.Select("track=0");
             if(dataRows == null || dataRows.Length == 0){
-                bpm_index_table.Rows.Add(0, double.Epsilon / 2, start_bpm);
+                bpm_index_table.Rows.Add(0, decimal.Zero, start_bpm);
             }
             else {
                 for(int i = 0; i < dataRows.Length; i++){
-                    double.TryParse(dataRows[i]["index"].ToString(), out d);
-                    bpm_index_table.Rows.Add(0, d, (float)dataRows[i]["value"]);
+                    decimal.TryParse(dataRows[i]["index"].ToString(), out ld);
+                    bpm_index_table.Rows.Add(0, ld, (decimal)dataRows[i]["value"]);
                 }
             }
         }catch (Exception e){
             Debug.Log(e.Message);
-            //bpm_index_table.Rows.Add(0, double.Epsilon / 2, start_bpm);
+            //bpm_index_table.Rows.Add(0, decimal.Zero, start_bpm);
         }
         bpm_index_table.DefaultView.Sort = "track ASC,index ASC";
         bpm_index_table = bpm_index_table.DefaultView.ToTable();
@@ -616,13 +633,11 @@ public class BMSReader : MonoBehaviour{
         time_before_track = new Dictionary<ushort, double>{
             { 0, double.Epsilon / 2 }
         };
-        track_end_bpms = new List<float>();
+        track_end_bpms = new List<decimal>();
         for (ushort i = 0; i <= tracks_count; i++){
             dataRows = bpm_index_table.Select($"track={i}");
             if (dataRows == null || dataRows.Length == 0){
-                //trackOffset = 0d;
-                trackOffset = 60d / curr_bpm * 4d *
-                    (beats_tracks.ContainsKey(i) ? beats_tracks[i] : 1d);
+                trackOffset = 60m * 4m * (beats_tracks.ContainsKey(i) ? beats_tracks[i] : decimal.One) / curr_bpm;
                 if (track_end_bpms.Count > 0){
                     track_end_bpms.Add(track_end_bpms[track_end_bpms.Count - 1]);
                 }
@@ -631,35 +646,33 @@ public class BMSReader : MonoBehaviour{
                 }
             }
             else if(dataRows.Length > 1){
-                //trackOffset = 0d;
-                trackOffset = 60d / curr_bpm * 4d *
-                    (beats_tracks.ContainsKey(i) ? beats_tracks[i] : 1d)
-                    * Convert.ToDouble(dataRows[0]["index"]);
+                trackOffset = 60m * 4m *
+                    (beats_tracks.ContainsKey(i) ? beats_tracks[i] : decimal.One)
+                    * Convert.ToDecimal(dataRows[0]["index"]) / curr_bpm;
                 for (int a = 1; a < dataRows.Length; a++){
-                    // track(ushort) index(double) value(float)
-                    curr_bpm = Convert.ToSingle(dataRows[a - 1]["value"]);
-                    trackOffset += 60d / curr_bpm * 4d *
-                        (beats_tracks.ContainsKey(i) ? beats_tracks[i] : 1d)
-                        * (Convert.ToDouble(dataRows[a]["index"]) - Convert.ToDouble(dataRows[a - 1]["index"]));
+                    // track(ushort) index(decimal) value(decimal)
+                    curr_bpm = Convert.ToDecimal(dataRows[a - 1]["value"]);
+                    trackOffset += 60m * 4m *
+                        (Convert.ToDecimal(dataRows[a]["index"]) - Convert.ToDecimal(dataRows[a - 1]["index"]))
+                        * (beats_tracks.ContainsKey(i) ? beats_tracks[i] : decimal.One) / curr_bpm;
                 }
-                curr_bpm = Convert.ToSingle(dataRows[dataRows.Length - 1]["value"]);
-                trackOffset += 60d / curr_bpm * 4d *
-                        (beats_tracks.ContainsKey(i) ? beats_tracks[i] : 1d)
-                        * (1d - Convert.ToDouble(dataRows[dataRows.Length - 1]["index"]));
-                track_end_bpms.Add(Convert.ToSingle(dataRows[dataRows.Length - 1]["value"]));
+                curr_bpm = Convert.ToDecimal(dataRows[dataRows.Length - 1]["value"]);
+                trackOffset += 60m * 4m *
+                        (decimal.One - Convert.ToDecimal(dataRows[dataRows.Length - 1]["index"]))
+                        * (beats_tracks.ContainsKey(i) ? beats_tracks[i] : decimal.One) / curr_bpm;
+                track_end_bpms.Add(Convert.ToDecimal(dataRows[dataRows.Length - 1]["value"]));
             }
             else if (dataRows.Length == 1){
-                trackOffset = 0d;
-                trackOffset += 60d / curr_bpm * 4d *
-                    (beats_tracks.ContainsKey(i) ? beats_tracks[i] : 1d)
-                    * Convert.ToDouble(dataRows[0]["index"]);
-                curr_bpm = Convert.ToSingle(dataRows[0]["value"]);
-                trackOffset += 60d / curr_bpm * 4d *
-                    (beats_tracks.ContainsKey(i) ? beats_tracks[i] : 1d)
-                    * (1d - Convert.ToDouble(dataRows[0]["index"]));
-                track_end_bpms.Add(Convert.ToSingle(dataRows[0]["value"]));
+                trackOffset = 60m * 4m *
+                    (beats_tracks.ContainsKey(i) ? beats_tracks[i] : decimal.One)
+                    * Convert.ToDecimal(dataRows[0]["index"]) / curr_bpm;
+                curr_bpm = Convert.ToDecimal(dataRows[0]["value"]);
+                trackOffset += 60m * 4m *
+                    (beats_tracks.ContainsKey(i) ? beats_tracks[i] : decimal.One)
+                    * (decimal.One - Convert.ToDecimal(dataRows[0]["index"])) / curr_bpm;
+                track_end_bpms.Add(Convert.ToDecimal(dataRows[0]["value"]));
             }
-            time_before_track.Add(Convert.ToUInt16(i + 1), time_before_track[i] + trackOffset);
+            time_before_track.Add(Convert.ToUInt16(i + 1), time_before_track[i] + (double)trackOffset);
         }
         curr_bpm = start_bpm;
         bgm_note_id = 0;
@@ -675,15 +688,12 @@ public class BMSReader : MonoBehaviour{
                         for(int i = 0; i < message.Length; i += 2){
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if (u > 0){
-                                d = (double)(i / 2) / (double)(message.Length / 2);
+                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : start_bpm;
-                                trackOffset = 60d / curr_bpm * 4d *
-                                    (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d)
-                                    * d;
-                                if (total_time < time_before_track[track] + trackOffset){
-                                    total_time = time_before_track[track] + trackOffset;
-                                }
-                                bgm_note_table.Rows.Add(Math.Round(time_before_track[track] + trackOffset, 3, MidpointRounding.AwayFromZero), u, bgm_note_id);
+                                trackOffset = 60m * 4m * ld * 
+                                    (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
+                                CalcTotalTime();
+                                bgm_note_table.Rows.Add(Math.Round(time_before_track[track] + (double)trackOffset, 3), u, bgm_note_id);
                                 bgm_note_id++;
                             }
                         }
@@ -692,28 +702,24 @@ public class BMSReader : MonoBehaviour{
                         for(int i = 0; i < message.Length; i += 2){
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if (u > 0){
-                                trackOffset = double.Epsilon / 2;
-                                d = (double)(i / 2) / (double)(message.Length / 2);
+                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : start_bpm;
-                                if(d <= Convert.ToDouble(dataRows[0]["index"])){
-                                    trackOffset += 60d / curr_bpm * 4d *
-                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d)
-                                        * d;
+                                if(ld <= Convert.ToDecimal(dataRows[0]["index"])){
+                                    trackOffset = 60m * 4m * ld *
+                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                 }
-                                else if(d > Convert.ToDouble(dataRows[0]["index"])){
-                                    trackOffset += 60d / curr_bpm * 4d *
-                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d)
-                                        * Convert.ToDouble(dataRows[0]["index"]);
-                                    curr_bpm = Convert.ToSingle(dataRows[0]["value"]);
-                                    trackOffset += 60d / curr_bpm * 4d *
-                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d)
-                                        * (d - Convert.ToDouble(dataRows[0]["index"]));
+                                else if(ld > Convert.ToDecimal(dataRows[0]["index"])){
+                                    trackOffset = 60m * 4m *
+                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One)
+                                        * Convert.ToDecimal(dataRows[0]["index"]) / curr_bpm;
+                                    curr_bpm = Convert.ToDecimal(dataRows[0]["value"]);
+                                    trackOffset = 60m * 4m *
+                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One)
+                                        * (ld - Convert.ToDecimal(dataRows[0]["index"])) / curr_bpm;
                                 }
-                                //curr_bpm = Convert.ToSingle(dataRows[0]["value"]);
-                                if (total_time < time_before_track[track] + trackOffset){
-                                    total_time = time_before_track[track] + trackOffset;
-                                }
-                                bgm_note_table.Rows.Add(Math.Round(time_before_track[track] + trackOffset, 3, MidpointRounding.AwayFromZero), u, bgm_note_id);
+                                //curr_bpm = Convert.ToDecimal(dataRows[0]["value"]);
+                                CalcTotalTime();
+                                bgm_note_table.Rows.Add(Math.Round(time_before_track[track] + (double)trackOffset, 3), u, bgm_note_id);
                                 bgm_note_id++;
                             }
                         }
@@ -722,53 +728,45 @@ public class BMSReader : MonoBehaviour{
                         for (int i = 0; i < message.Length; i += 2){
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if(u > 0){
-                                trackOffset = double.Epsilon / 2;
-                                d = (double)(i / 2) / (double)(message.Length / 2);
-                                if (d <= Convert.ToDouble(dataRows[0]["index"])){
+                                trackOffset = decimal.Zero;
+                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
+                                if (ld <= Convert.ToDecimal(dataRows[0]["index"])){
                                     curr_bpm = track > 0 ? track_end_bpms[track - 1] : start_bpm;
-                                    trackOffset += 60d / curr_bpm * 4d *
-                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d)
-                                        * d;
-                                    if (total_time < time_before_track[track] + trackOffset){
-                                        total_time = time_before_track[track] + trackOffset;
-                                    }
-                                    bgm_note_table.Rows.Add(Math.Round(time_before_track[track] + trackOffset, 3, MidpointRounding.AwayFromZero), u, bgm_note_id);
+                                    trackOffset += 60m * 4m * ld *
+                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
+                                    CalcTotalTime();
+                                    bgm_note_table.Rows.Add(Math.Round(time_before_track[track] + (double)trackOffset, 3), u, bgm_note_id);
                                     bgm_note_id++;
-                                    trackOffset += 60d / curr_bpm * 4d *
-                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d)
-                                        * (Convert.ToDouble(dataRows[0]["index"]) - d);
+                                    trackOffset += 60m * 4m *
+                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One)
+                                        * (Convert.ToDecimal(dataRows[0]["index"]) - ld) / curr_bpm;
                                 }
                                 for (int a = 1; a < dataRows.Length; a++){
-                                    curr_bpm = Convert.ToSingle(dataRows[a - 1]["value"]);
-                                    if (d > Convert.ToDouble(dataRows[a - 1]["index"])
-                                        && d <= Convert.ToDouble(dataRows[a]["index"])
+                                    curr_bpm = Convert.ToDecimal(dataRows[a - 1]["value"]);
+                                    if (ld > Convert.ToDecimal(dataRows[a - 1]["index"])
+                                        && ld <= Convert.ToDecimal(dataRows[a]["index"])
                                     ){
-                                        trackOffset += 60d / curr_bpm * 4d *
-                                            (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d)
-                                            * (d - Convert.ToDouble(dataRows[a - 1]["index"]));
-                                        if (total_time < time_before_track[track] + trackOffset){
-                                            total_time = time_before_track[track] + trackOffset;
-                                        }
-                                        bgm_note_table.Rows.Add(Math.Round(time_before_track[track] + trackOffset, 3, MidpointRounding.AwayFromZero), u, bgm_note_id);
+                                        trackOffset += 60m * 4m *
+                                            (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One)
+                                            * (ld - Convert.ToDecimal(dataRows[a - 1]["index"])) / curr_bpm;
+                                        CalcTotalTime();
+                                        bgm_note_table.Rows.Add(Math.Round(time_before_track[track] + (double)trackOffset, 3), u, bgm_note_id);
                                         bgm_note_id++;
-                                        trackOffset += 60d / curr_bpm * 4d *
-                                            (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d)
-                                            * (Convert.ToDouble(dataRows[a]["index"]) - d);
+                                        trackOffset += 60m * 4m *
+                                            (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One)
+                                            * (Convert.ToDecimal(dataRows[a]["index"]) - ld) / curr_bpm;
                                         break;
                                     }
-                                    trackOffset += 60d / curr_bpm * 4d *
-                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d)
-                                        * (Convert.ToDouble(dataRows[a]["index"]) - Convert.ToDouble(dataRows[a - 1]["index"]));
+                                    trackOffset += 60m * 4m *
+                                        (Convert.ToDecimal(dataRows[a]["index"]) - Convert.ToDecimal(dataRows[a - 1]["index"]))
+                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                 }
-                                if (d > Convert.ToDouble(dataRows[dataRows.Length - 1]["index"])){
-                                    curr_bpm = Convert.ToSingle(dataRows[dataRows.Length - 1]["value"]);
-                                    trackOffset += 60d / curr_bpm * 4d *
-                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d)
-                                        * (d - Convert.ToDouble(dataRows[dataRows.Length - 1]["index"]));
-                                    if (total_time < time_before_track[track] + trackOffset){
-                                        total_time = time_before_track[track] + trackOffset;
-                                    }
-                                    bgm_note_table.Rows.Add(Math.Round(time_before_track[track] + trackOffset, 3, MidpointRounding.AwayFromZero), u, bgm_note_id);
+                                if (ld > Convert.ToDecimal(dataRows[dataRows.Length - 1]["index"])){
+                                    curr_bpm = Convert.ToDecimal(dataRows[dataRows.Length - 1]["value"]);
+                                    trackOffset += 60m * 4m * (ld - Convert.ToDecimal(dataRows[dataRows.Length - 1]["index"]))
+                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
+                                    CalcTotalTime();
+                                    bgm_note_table.Rows.Add(Math.Round(time_before_track[track] + (double)trackOffset, 3), u, bgm_note_id);
                                     bgm_note_id++;
                                 }
                             }
@@ -781,15 +779,13 @@ public class BMSReader : MonoBehaviour{
                         for (int i = 0; i < message.Length; i += 2){
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if (u > 0){
-                                d = (double)(i / 2) / (double)(message.Length / 2);
+                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : start_bpm;
-                                trackOffset = 60d / curr_bpm * 4d * d *
-                                    (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                trackOffset = 60m * 4m * ld *
+                                    (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                 try{
-                                    if (total_time < time_before_track[track] + trackOffset){
-                                        total_time = time_before_track[track] + trackOffset;
-                                    }
-                                    bga_table.Rows.Add(channel.ToUpper(), Math.Round(time_before_track[track] + trackOffset, 3, MidpointRounding.AwayFromZero), message.Substring(i, 2));
+                                    CalcTotalTime();
+                                    bga_table.Rows.Add(channel.ToUpper(), Math.Round(time_before_track[track] + (double)trackOffset, 3), message.Substring(i, 2));
                                 }catch (Exception e){
                                     Debug.Log(e.Message);
                                 }
@@ -800,26 +796,25 @@ public class BMSReader : MonoBehaviour{
                         for(int i = 0; i < message.Length; i += 2){
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if (u > 0){
-                                trackOffset = double.Epsilon / 2;
-                                d = (double)(i / 2) / (double)(message.Length / 2);
+                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : start_bpm;
-                                if (d <= Convert.ToDouble(dataRows[0]["index"])){
-                                    trackOffset += 60d / curr_bpm * 4d * d
-                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                if (ld <= Convert.ToDecimal(dataRows[0]["index"])){
+                                    trackOffset = 60m * 4m * ld *
+                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                 }
-                                else if (d > Convert.ToDouble(dataRows[0]["index"])){
-                                    trackOffset += 60d / curr_bpm * 4d * Convert.ToDouble(dataRows[0]["index"])
-                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
-                                    curr_bpm = Convert.ToSingle(dataRows[0]["value"]);
-                                    trackOffset += 60d / curr_bpm * 4d * (d - Convert.ToDouble(dataRows[0]["index"]))
-                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                else if (ld > Convert.ToDecimal(dataRows[0]["index"])){
+                                    trackOffset = 60m * 4m *
+                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One)
+                                        * Convert.ToDecimal(dataRows[0]["index"]) / curr_bpm;
+                                    curr_bpm = Convert.ToDecimal(dataRows[0]["value"]);
+                                    trackOffset += 60m * 4m *
+                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One)
+                                        * (ld - Convert.ToDecimal(dataRows[0]["index"])) / curr_bpm;
                                 }
-                                //curr_bpm = Convert.ToSingle(dataRows[0]["value"]);
+                                //curr_bpm = Convert.ToDecimal(dataRows[0]["value"]);
                                 try{
-                                    if (total_time < time_before_track[track] + trackOffset){
-                                        total_time = time_before_track[track] + trackOffset;
-                                    }
-                                    bga_table.Rows.Add(channel.ToUpper(), Math.Round(time_before_track[track] + trackOffset, 3, MidpointRounding.AwayFromZero), message.Substring(i, 2));
+                                    CalcTotalTime();
+                                    bga_table.Rows.Add(channel.ToUpper(), Math.Round(time_before_track[track] + (double)trackOffset, 3), message.Substring(i, 2));
                                 }catch (Exception e){
                                     Debug.Log(e.Message);
                                 }
@@ -830,52 +825,46 @@ public class BMSReader : MonoBehaviour{
                         for(int i = 0; i < message.Length; i += 2){
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if (u > 0){
-                                trackOffset = double.Epsilon / 2;
-                                d = (double)(i / 2) / (double)(message.Length / 2);
-                                if (d <= Convert.ToDouble(dataRows[0]["index"])){
+                                trackOffset = decimal.Zero;
+                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
+                                if (ld <= Convert.ToDecimal(dataRows[0]["index"])){
                                     curr_bpm = track > 0 ? track_end_bpms[track - 1] : start_bpm;
-                                    trackOffset += 60d / curr_bpm * 4d * d *
-                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                    trackOffset += 60m * 4m * ld *
+                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                     try{
-                                        if (total_time < time_before_track[track] + trackOffset){
-                                            total_time = time_before_track[track] + trackOffset;
-                                        }
-                                        bga_table.Rows.Add(channel.ToUpper(), Math.Round(time_before_track[track] + trackOffset, 3, MidpointRounding.AwayFromZero), message.Substring(i, 2));
+                                        CalcTotalTime();
+                                        bga_table.Rows.Add(channel.ToUpper(), Math.Round(time_before_track[track] + (double)trackOffset, 3), message.Substring(i, 2));
                                     }catch (Exception e){
                                         Debug.Log(e.Message);
                                     }
-                                    trackOffset += 60d / curr_bpm * 4d * (Convert.ToDouble(dataRows[0]["index"]) - d) *
-                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                    trackOffset += 60m * 4m * (Convert.ToDecimal(dataRows[0]["index"]) - ld) *
+                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm ;
                                 }
                                 for(int a = 1; a < dataRows.Length; a++){
-                                    curr_bpm = Convert.ToSingle(dataRows[a]["value"]);
-                                    if(d > Convert.ToDouble(dataRows[a - 1]["index"]) && d <= Convert.ToDouble(dataRows[a]["index"])){
-                                        trackOffset += 60d / curr_bpm * 4d * (d - Convert.ToDouble(dataRows[a - 1]["index"])) *
-                                            (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                    curr_bpm = Convert.ToDecimal(dataRows[a]["value"]);
+                                    if(ld > Convert.ToDecimal(dataRows[a - 1]["index"]) && ld <= Convert.ToDecimal(dataRows[a]["index"])){
+                                        trackOffset += 60m * 4m * (ld - Convert.ToDecimal(dataRows[a - 1]["index"])) *
+                                            (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                         try{
-                                            if (total_time < time_before_track[track] + trackOffset){
-                                                total_time = time_before_track[track] + trackOffset;
-                                            }
-                                            bga_table.Rows.Add(channel.ToUpper(), Math.Round(time_before_track[track] + trackOffset, 3, MidpointRounding.AwayFromZero), message.Substring(i, 2));
+                                            CalcTotalTime();
+                                            bga_table.Rows.Add(channel.ToUpper(), Math.Round(time_before_track[track] + (double)trackOffset, 3), message.Substring(i, 2));
                                         }catch (Exception e){
                                             Debug.Log(e.Message);
                                         }
-                                        trackOffset += 60d / curr_bpm * 4d * (Convert.ToDouble(dataRows[a]["index"]) - d) *
-                                            (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                        trackOffset += 60m * 4m * (Convert.ToDecimal(dataRows[a]["index"]) - ld) *
+                                            (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                         break;
                                     }
-                                    trackOffset += 60d / curr_bpm * 4d * (Convert.ToDouble(dataRows[a]["index"]) - Convert.ToDouble(dataRows[a - 1]["index"]))
-                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                    trackOffset += 60m * 4m * (Convert.ToDecimal(dataRows[a]["index"]) - Convert.ToDecimal(dataRows[a - 1]["index"]))
+                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                 }
-                                if(d > Convert.ToDouble(dataRows[dataRows.Length - 1]["index"])){
-                                    curr_bpm = Convert.ToSingle(dataRows[dataRows.Length - 1]["value"]);
-                                    trackOffset += 60d / curr_bpm * 4d * (d - Convert.ToDouble(dataRows[dataRows.Length - 1]["index"])) *
-                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                if(ld > Convert.ToDecimal(dataRows[dataRows.Length - 1]["index"])){
+                                    curr_bpm = Convert.ToDecimal(dataRows[dataRows.Length - 1]["value"]);
+                                    trackOffset += 60m * 4m * (ld - Convert.ToDecimal(dataRows[dataRows.Length - 1]["index"])) *
+                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                     try{
-                                        if (total_time < time_before_track[track] + trackOffset){
-                                            total_time = time_before_track[track] + trackOffset;
-                                        }
-                                        bga_table.Rows.Add(channel.ToUpper(), Math.Round(time_before_track[track] + trackOffset, 3, MidpointRounding.AwayFromZero), message.Substring(i, 2));
+                                        CalcTotalTime();
+                                        bga_table.Rows.Add(channel.ToUpper(), Math.Round(time_before_track[track] + (double)trackOffset, 3), message.Substring(i, 2));
                                     }catch (Exception e){
                                         Debug.Log(e.Message);
                                     }
@@ -896,7 +885,7 @@ public class BMSReader : MonoBehaviour{
         bgm_note_table = bgm_note_table.DefaultView.ToTable();
         bga_table.DefaultView.Sort = "time ASC";
         bga_table = bga_table.DefaultView.ToTable();
-        Debug.Log("parsing?");
+        Debug.Log("---------" + note_dataTable.Rows.Count);
         note_channel_arr = new string[note_dataTable.Rows.Count];
         note_time_arr = new double[note_dataTable.Rows.Count];
         note_num_arr = new ushort[note_dataTable.Rows.Count];
@@ -914,20 +903,9 @@ public class BMSReader : MonoBehaviour{
             bgm_num_arr[i] = (ushort)bgm_note_table.Rows[i]["clipNum"];
         }
         Debug.Log("completed");
-        started = true;
-    }
-
-    private void FixedUpdate() { }
-    private void Update(){
-        if (!table_loaded && unityActions != null && unityActions.Count != 0
-            && !doingAction
-        ){
-            doingAction = true;
-            unityActions.Dequeue()();
-        }
-        if (started && !table_loaded && loaded_medias_count == total_medias_count){
+        unityActions.Enqueue(()=>{
             Debug.Log(illegal);
-            table_loaded = true;
+            progress.text = "Done";
             // if (!illegal && !string.IsNullOrEmpty(playing_scene_name)){
             if (!string.IsNullOrEmpty(playing_scene_name)){
                 auto_btn.interactable = true;
@@ -936,6 +914,19 @@ public class BMSReader : MonoBehaviour{
                     SceneManager.LoadScene(playing_scene_name, LoadSceneMode.Additive);
                 });
             }
+            else Debug.LogWarning("Unknown player type");
+            isDone = true;
+            doingAction = false;
+        });
+    }
+
+    private void Update() { }
+    private void FixedUpdate(){
+        if (!isDone && unityActions != null && unityActions.Count > 0
+            && !doingAction
+        ){
+            doingAction = true;
+            unityActions.Dequeue()();
         }
     }
     public void NoteTableClear(){
@@ -951,10 +942,24 @@ public class BMSReader : MonoBehaviour{
             this.bpm_index_table.Clear();
             this.bpm_index_table = null;
         }
+        if(this.bga_table != null){
+            this.bga_table.Clear();
+            this.bga_table = null;
+        }
         GC.Collect();
         //GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true);
         //yield return new WaitForFixedUpdate();
         //GC.WaitForFullGCComplete();
+    }
+    private void CalcTotalTime(){
+        if (total_time < time_before_track[track] + (double)trackOffset){
+            total_time = time_before_track[track] + (double)trackOffset;
+            if(double.IsNaN(total_time) || double.IsInfinity(total_time) || total_time > StaticClass.OverFlowTime){
+                Debug.LogWarning("time too long or unknown");
+                isDone = true;
+                thread.Abort();
+            }
+        }
     }
     private void BMS_region(){
         foreach (string tmp_line in file_lines){
@@ -979,7 +984,6 @@ public class BMSReader : MonoBehaviour{
                     dataRows = bpm_index_table.Select($"track={track}");
                     if (dataRows == null || dataRows.Length == 0){
                         for (int i = 0; i < message.Length; i += 2){
-                            //trackOffset = double.Epsilon / 2;
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if (u > 0){
                                 if(Regex.IsMatch(channel, @"^(1|5|D)[8-9]$", StaticClass.regexOption)){
@@ -997,15 +1001,13 @@ public class BMSReader : MonoBehaviour{
                                 else if(channelType == ChannelType.Default && !lnobj.Contains(u)){
                                     noteType = NoteType.Default;
                                 }
-                                d = (double)(i / 2) / (double)(message.Length / 2);
+                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : start_bpm;
-                                trackOffset = 60d / curr_bpm * 4d * d *
-                                    (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d) ;
+                                trackOffset = 60m * 4m * ld *
+                                    (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                 try{
-                                    if(total_time < time_before_track[track] + trackOffset){
-                                        total_time = time_before_track[track] + trackOffset;
-                                    }
-                                    note_dataTable.Rows.Add(channel, Math.Round(time_before_track[track] + trackOffset, 3, MidpointRounding.AwayFromZero), u, noteType);
+                                    CalcTotalTime();
+                                    note_dataTable.Rows.Add(channel, Math.Round(time_before_track[track] + (double)trackOffset, 3), u, noteType);
                                 }
                                 catch (Exception e){
                                     Debug.Log(e.Message);
@@ -1032,26 +1034,24 @@ public class BMSReader : MonoBehaviour{
                                 else if (channelType == ChannelType.Default && !lnobj.Contains(u)){
                                     noteType = NoteType.Default;
                                 }
-                                trackOffset = double.Epsilon / 2;
-                                d = (double)(i / 2) / (double)(message.Length / 2);
+                                trackOffset = decimal.Zero;
+                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : start_bpm;
-                                if(d <= Convert.ToDouble(dataRows[0]["index"])){
-                                    trackOffset += 60d / curr_bpm * 4d * d
-                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                if(ld <= Convert.ToDecimal(dataRows[0]["index"])){
+                                    trackOffset = 60m * 4m * ld
+                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                 }
-                                else if (d > Convert.ToDouble(dataRows[0]["index"])){
-                                    trackOffset += 60d / curr_bpm * 4d * Convert.ToDouble(dataRows[0]["index"])
-                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
-                                    curr_bpm = Convert.ToSingle(dataRows[0]["value"]);
-                                    trackOffset += 60d / curr_bpm * 4d * (d - Convert.ToDouble(dataRows[0]["index"]))
-                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                else if (ld > Convert.ToDecimal(dataRows[0]["index"])){
+                                    trackOffset = 60m * 4m * Convert.ToDecimal(dataRows[0]["index"])
+                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
+                                    curr_bpm = Convert.ToDecimal(dataRows[0]["value"]);
+                                    trackOffset += 60m * 4m * (ld - Convert.ToDecimal(dataRows[0]["index"]))
+                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                 }
-                                //curr_bpm = Convert.ToSingle(dataRows[0]["value"]);
+                                //curr_bpm = Convert.ToDecimal(dataRows[0]["value"]);
                                 try{
-                                    if (total_time < time_before_track[track] + trackOffset){
-                                        total_time = time_before_track[track] + trackOffset;
-                                    }
-                                    note_dataTable.Rows.Add(channel, Math.Round(time_before_track[track] + trackOffset, 3, MidpointRounding.AwayFromZero), u, noteType);
+                                    CalcTotalTime();
+                                    note_dataTable.Rows.Add(channel, Math.Round(time_before_track[track] + (double)trackOffset, 3), u, noteType);
                                 }catch (Exception e){
                                     Debug.Log(e.Message);
                                 }
@@ -1077,52 +1077,46 @@ public class BMSReader : MonoBehaviour{
                                 else if (channelType == ChannelType.Default && !lnobj.Contains(u)){
                                     noteType = NoteType.Default;
                                 }
-                                trackOffset = double.Epsilon / 2;
-                                d = (double)(i / 2) / (double)(message.Length / 2);
-                                if (d <= Convert.ToDouble(dataRows[0]["index"])){
+                                trackOffset = decimal.Zero;
+                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
+                                if (ld <= Convert.ToDecimal(dataRows[0]["index"])){
                                     curr_bpm = track > 0 ? track_end_bpms[track - 1] : start_bpm;
-                                    trackOffset += 60d / curr_bpm * 4d * d *
-                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                    trackOffset = 60m * 4m * ld *
+                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                     try{
-                                        if (total_time < time_before_track[track] + trackOffset){
-                                            total_time = time_before_track[track] + trackOffset;
-                                        }
-                                        note_dataTable.Rows.Add(channel, Math.Round(time_before_track[track] + trackOffset, 3, MidpointRounding.AwayFromZero), u, noteType);
+                                        CalcTotalTime();
+                                        note_dataTable.Rows.Add(channel, Math.Round(time_before_track[track] + (double)trackOffset, 3), u, noteType);
                                     }catch (Exception e){
                                         Debug.Log(e.Message);
                                     }
-                                    trackOffset += 60d / curr_bpm * 4d * (Convert.ToDouble(dataRows[0]["index"]) - d) *
-                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                    trackOffset += 60m * 4m * (Convert.ToDecimal(dataRows[0]["index"]) - ld) *
+                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                 }
                                 for (int a = 1; a < dataRows.Length; a++){
-                                    curr_bpm = Convert.ToSingle(dataRows[a - 1]["value"]);
-                                    if (d > Convert.ToDouble(dataRows[a - 1]["index"]) && d <= Convert.ToDouble(dataRows[a]["index"])){
-                                        trackOffset += 60d / curr_bpm * 4d * (d - Convert.ToDouble(dataRows[a - 1]["index"])) *
-                                            (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                    curr_bpm = Convert.ToDecimal(dataRows[a - 1]["value"]);
+                                    if (ld > Convert.ToDecimal(dataRows[a - 1]["index"]) && ld <= Convert.ToDecimal(dataRows[a]["index"])){
+                                        trackOffset += 60m * 4m * (ld - Convert.ToDecimal(dataRows[a - 1]["index"])) *
+                                            (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                         try{
-                                            if (total_time < time_before_track[track] + trackOffset){
-                                                total_time = time_before_track[track] + trackOffset;
-                                            }
-                                            note_dataTable.Rows.Add(channel, Math.Round(time_before_track[track] + trackOffset, 3, MidpointRounding.AwayFromZero), u, noteType);
+                                            CalcTotalTime();
+                                            note_dataTable.Rows.Add(channel, Math.Round(time_before_track[track] + (double)trackOffset, 3), u, noteType);
                                         }catch (Exception e){
                                             Debug.Log(e.Message);
                                         }
-                                        trackOffset += 60d / curr_bpm * 4d * (Convert.ToDouble(dataRows[a]["index"]) - d) *
-                                            (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                        trackOffset += 60m * 4m * (Convert.ToDecimal(dataRows[a]["index"]) - ld) *
+                                            (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                         break;
                                     }
-                                    trackOffset += 60d / curr_bpm * 4d * (Convert.ToDouble(dataRows[a]["index"]) - Convert.ToDouble(dataRows[a - 1]["index"]))
-                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                    trackOffset += 60m * 4m * (Convert.ToDecimal(dataRows[a]["index"]) - Convert.ToDecimal(dataRows[a - 1]["index"]))
+                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                 }
-                                if (d > Convert.ToDouble(dataRows[dataRows.Length - 1]["index"])){
-                                    curr_bpm = Convert.ToSingle(dataRows[dataRows.Length - 1]["value"]);
-                                    trackOffset += 60d / curr_bpm * 4d * (d - Convert.ToDouble(dataRows[dataRows.Length - 1]["index"])) *
-                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                if (ld > Convert.ToDecimal(dataRows[dataRows.Length - 1]["index"])){
+                                    curr_bpm = Convert.ToDecimal(dataRows[dataRows.Length - 1]["value"]);
+                                    trackOffset += 60m * 4m * (ld - Convert.ToDecimal(dataRows[dataRows.Length - 1]["index"])) *
+                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                     try{
-                                        if (total_time < time_before_track[track] + trackOffset){
-                                            total_time = time_before_track[track] + trackOffset;
-                                        }
-                                        note_dataTable.Rows.Add(channel, Math.Round(time_before_track[track] + trackOffset, 3, MidpointRounding.AwayFromZero), u, noteType);
+                                        CalcTotalTime();
+                                        note_dataTable.Rows.Add(channel, Math.Round(time_before_track[track] + (double)trackOffset, 3), u, noteType);
                                     }catch (Exception e){
                                         Debug.Log(e.Message);
                                     }
@@ -1195,7 +1189,6 @@ public class BMSReader : MonoBehaviour{
                     dataRows = bpm_index_table.Select($"track={track}");
                     if (dataRows == null || dataRows.Length == 0){
                         for (int i = 0; i < message.Length; i += 2){
-                            //trackOffset = double.Epsilon / 2;
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if (u > 0){
                                 if(Regex.IsMatch(channel, @"^(1|5|D)[6-9]$", StaticClass.regexOption)){
@@ -1213,15 +1206,13 @@ public class BMSReader : MonoBehaviour{
                                 else if(channelType == ChannelType.Default && !lnobj.Contains(u)){
                                     noteType = NoteType.Default;
                                 }
-                                d = (double)(i / 2) / (double)(message.Length / 2);
+                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : start_bpm;
-                                trackOffset = 60d / curr_bpm * 4d * d *
-                                    (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d) ;
+                                trackOffset = 60m * 4m * ld *
+                                    (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                 try{
-                                    if(total_time < time_before_track[track] + trackOffset){
-                                        total_time = time_before_track[track] + trackOffset;
-                                    }
-                                    note_dataTable.Rows.Add(channel, Math.Round(time_before_track[track] + trackOffset, 3, MidpointRounding.AwayFromZero), u, noteType);
+                                    CalcTotalTime();
+                                    note_dataTable.Rows.Add(channel, Math.Round(time_before_track[track] + (double)trackOffset, 3), u, noteType);
                                 }
                                 catch (Exception e){
                                     Debug.Log(e.Message);
@@ -1248,26 +1239,24 @@ public class BMSReader : MonoBehaviour{
                                 else if (channelType == ChannelType.Default && !lnobj.Contains(u)){
                                     noteType = NoteType.Default;
                                 }
-                                trackOffset = double.Epsilon / 2;
-                                d = (double)(i / 2) / (double)(message.Length / 2);
+                                trackOffset = decimal.Zero;
+                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : start_bpm;
-                                if(d <= Convert.ToDouble(dataRows[0]["index"])){
-                                    trackOffset += 60d / curr_bpm * 4d * d
-                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                if(ld <= Convert.ToDecimal(dataRows[0]["index"])){
+                                    trackOffset = 60m * 4m * ld
+                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                 }
-                                else if (d > Convert.ToDouble(dataRows[0]["index"])){
-                                    trackOffset += 60d / curr_bpm * 4d * Convert.ToDouble(dataRows[0]["index"])
-                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
-                                    curr_bpm = Convert.ToSingle(dataRows[0]["value"]);
-                                    trackOffset += 60d / curr_bpm * 4d * (d - Convert.ToDouble(dataRows[0]["index"]))
-                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                else if (ld > Convert.ToDecimal(dataRows[0]["index"])){
+                                    trackOffset = 60m * 4m * Convert.ToDecimal(dataRows[0]["index"])
+                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
+                                    curr_bpm = Convert.ToDecimal(dataRows[0]["value"]);
+                                    trackOffset += 60m * 4m * (ld - Convert.ToDecimal(dataRows[0]["index"]))
+                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                 }
-                                //curr_bpm = Convert.ToSingle(dataRows[0]["value"]);
+                                //curr_bpm = Convert.ToDecimal(dataRows[0]["value"]);
                                 try{
-                                    if (total_time < time_before_track[track] + trackOffset){
-                                        total_time = time_before_track[track] + trackOffset;
-                                    }
-                                    note_dataTable.Rows.Add(channel, Math.Round(time_before_track[track] + trackOffset, 3, MidpointRounding.AwayFromZero), u, noteType);
+                                    CalcTotalTime();
+                                    note_dataTable.Rows.Add(channel, Math.Round(time_before_track[track] + (double)trackOffset, 3), u, noteType);
                                 }catch (Exception e){
                                     Debug.Log(e.Message);
                                 }
@@ -1293,52 +1282,46 @@ public class BMSReader : MonoBehaviour{
                                 else if (channelType == ChannelType.Default && !lnobj.Contains(u)){
                                     noteType = NoteType.Default;
                                 }
-                                trackOffset = double.Epsilon / 2;
-                                d = (double)(i / 2) / (double)(message.Length / 2);
-                                if (d <= Convert.ToDouble(dataRows[0]["index"])){
+                                trackOffset = decimal.Zero;
+                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
+                                if (ld <= Convert.ToDecimal(dataRows[0]["index"])){
                                     curr_bpm = track > 0 ? track_end_bpms[track - 1] : start_bpm;
-                                    trackOffset += 60d / curr_bpm * 4d * d *
-                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                    trackOffset = 60m * 4m * ld *
+                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                     try{
-                                        if (total_time < time_before_track[track] + trackOffset){
-                                            total_time = time_before_track[track] + trackOffset;
-                                        }
-                                        note_dataTable.Rows.Add(channel, Math.Round(time_before_track[track] + trackOffset, 3, MidpointRounding.AwayFromZero), u, noteType);
+                                        CalcTotalTime();
+                                        note_dataTable.Rows.Add(channel, Math.Round(time_before_track[track] + (double)trackOffset, 3), u, noteType);
                                     }catch (Exception e){
                                         Debug.Log(e.Message);
                                     }
-                                    trackOffset += 60d / curr_bpm * 4d * (Convert.ToDouble(dataRows[0]["index"]) - d) *
-                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                    trackOffset += 60m * 4m * (Convert.ToDecimal(dataRows[0]["index"]) - ld) *
+                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                 }
                                 for (int a = 1; a < dataRows.Length; a++){
-                                    curr_bpm = Convert.ToSingle(dataRows[a - 1]["value"]);
-                                    if (d > Convert.ToDouble(dataRows[a - 1]["index"]) && d <= Convert.ToDouble(dataRows[a]["index"])){
-                                        trackOffset += 60d / curr_bpm * 4d * (d - Convert.ToDouble(dataRows[a - 1]["index"])) *
-                                            (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                    curr_bpm = Convert.ToDecimal(dataRows[a - 1]["value"]);
+                                    if (ld > Convert.ToDecimal(dataRows[a - 1]["index"]) && ld <= Convert.ToDecimal(dataRows[a]["index"])){
+                                        trackOffset += 60m * 4m * (ld - Convert.ToDecimal(dataRows[a - 1]["index"])) *
+                                            (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                         try{
-                                            if (total_time < time_before_track[track] + trackOffset){
-                                                total_time = time_before_track[track] + trackOffset;
-                                            }
-                                            note_dataTable.Rows.Add(channel, Math.Round(time_before_track[track] + trackOffset, 3, MidpointRounding.AwayFromZero), u, noteType);
+                                            CalcTotalTime();
+                                            note_dataTable.Rows.Add(channel, Math.Round(time_before_track[track] + (double)trackOffset, 3), u, noteType);
                                         }catch (Exception e){
                                             Debug.Log(e.Message);
                                         }
-                                        trackOffset += 60d / curr_bpm * 4d * (Convert.ToDouble(dataRows[a]["index"]) - d) *
-                                            (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                        trackOffset += 60m * 4m * (Convert.ToDecimal(dataRows[a]["index"]) - ld) *
+                                            (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                         break;
                                     }
-                                    trackOffset += 60d / curr_bpm * 4d * (Convert.ToDouble(dataRows[a]["index"]) - Convert.ToDouble(dataRows[a - 1]["index"]))
-                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                    trackOffset += 60m * 4m * (Convert.ToDecimal(dataRows[a]["index"]) - Convert.ToDecimal(dataRows[a - 1]["index"]))
+                                        * (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                 }
-                                if (d > Convert.ToDouble(dataRows[dataRows.Length - 1]["index"])){
-                                    curr_bpm = Convert.ToSingle(dataRows[dataRows.Length - 1]["value"]);
-                                    trackOffset += 60d / curr_bpm * 4d * (d - Convert.ToDouble(dataRows[dataRows.Length - 1]["index"])) *
-                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : 1d);
+                                if (ld > Convert.ToDecimal(dataRows[dataRows.Length - 1]["index"])){
+                                    curr_bpm = Convert.ToDecimal(dataRows[dataRows.Length - 1]["value"]);
+                                    trackOffset += 60m * 4m * (ld - Convert.ToDecimal(dataRows[dataRows.Length - 1]["index"])) *
+                                        (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One) / curr_bpm;
                                     try{
-                                        if (total_time < time_before_track[track] + trackOffset){
-                                            total_time = time_before_track[track] + trackOffset;
-                                        }
-                                        note_dataTable.Rows.Add(channel, Math.Round(time_before_track[track] + trackOffset, 3, MidpointRounding.AwayFromZero), u, noteType);
+                                        CalcTotalTime();
+                                        note_dataTable.Rows.Add(channel, Math.Round(time_before_track[track] + (double)trackOffset, 3), u, noteType);
                                     }catch (Exception e){
                                         Debug.Log(e.Message);
                                     }

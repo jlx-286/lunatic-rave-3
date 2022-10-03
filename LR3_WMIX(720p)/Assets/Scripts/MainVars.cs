@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 //using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Audio;
+using UnityEditor;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.Video;
@@ -69,7 +70,26 @@ public class MainVars : MonoBehaviour {
     }
 	
 	// Update is called once per frame
-	private void Update () {}
+	/*private void Update () {
+        if(Time.realtimeSinceStartup >= StaticClass.OverFlowTime
+            || Time.unscaledTime >= StaticClass.OverFlowTime
+            || Time.fixedUnscaledTime >= StaticClass.OverFlowTime
+            || Time.time >= StaticClass.OverFlowTime
+            || Time.fixedTime >= StaticClass.OverFlowTime
+        ){
+            switch (Application.platform){
+                case RuntimePlatform.WindowsEditor:
+                case RuntimePlatform.LinuxEditor:
+                case RuntimePlatform.OSXEditor:
+                    Debug.LogWarning("You played it for too long time");
+                    EditorApplication.isPlaying = false;
+                    break;
+                default:
+                    Application.Quit();
+                    break;
+            }
+        }
+    }*/
     private void OnApplicationQuit() {
         FluidManager.CleanUp();
         VLCPlayer.VLCRelease();

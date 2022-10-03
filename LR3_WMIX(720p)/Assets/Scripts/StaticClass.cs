@@ -1,4 +1,7 @@
-﻿using System;
+﻿using NAudio.Wave;
+using NLayer;
+using NVorbis;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
@@ -28,7 +31,25 @@ public static class StaticClass{
     public static RegexOptions regexOption = RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
     [DllImport("FFmpegPlugin", EntryPoint = "GetVideoSize")] private extern static bool __GetVideoSize(string path, out int width, out int height);
     [DllImport("FFmpegPlugin")] private extern static IntPtr GetAudioSamples(string path, out int channels, out int frequency, out int length);
-    public static TaskAwaiter GetAwaiter(this AsyncOperation operation){
+    private enum AudioFormat{
+        Unknown,
+        Vorbis,
+        Mpeg,
+        Others
+    };
+    [DllImport("FFmpegPlugin")] private extern static AudioFormat GetAudioFormat(string path);
+    /// <summary>
+    /// seconds
+    /// </summary>
+#if UNITY_2020_2_OR_NEWER
+    // public static readonly double OverFlowTime = ;4.398046511E12;
+    // public static readonly double OverFlowTime = 4398046511104d;
+    public static readonly double OverFlowTime = Math.Pow(2, 42) - Math.Pow(2, -52) - 1;
+#else
+    public static readonly double OverFlowTime = Mathf.Pow(2, 13) - Mathf.Pow(2, -23) - 1;
+    // public static readonly double OverFlowTime = 2 * 3600 + 20 * 60;
+#endif
+    /*public static TaskAwaiter GetAwaiter(this AsyncOperation operation){
         TaskCompletionSource<object> source = new TaskCompletionSource<object>();
         operation.completed += obj => { source.SetResult(null); };
         return (source.Task as Task).GetAwaiter();
@@ -50,36 +71,19 @@ public static class StaticClass{
             request = UnityWebRequestMultimedia.GetAudioClip("file://" + path, AudioType.UNKNOWN);
 #endif
             await request.SendWebRequest();
-            // if (request.isNetworkError || request.isHttpError){
-            //     // more errors in Linux?
-            //     Debug.LogWarning("request.error:" + request.error);
-            // }
-            // else {
+            if (request.isNetworkError || request.isHttpError){
+                // more errors in Linux?
+                Debug.LogWarning("request.error:" + request.error);
+            }
+            else {
                 clip = DownloadHandlerAudioClip.GetContent(request);
-            // }
+            }
             request.Dispose();
         } catch (Exception e){
             Debug.LogWarning(e.Message);
         }
         return clip;
-    }
-
-    public static AudioClip GetAudioClipByFilePath(string path){
-        AudioClip audioClip = null;
-        //if(audioClip == null){
-        //    audioClip = FluidMIDI.MidiToClip(path);
-        //}
-        if(audioClip == null){
-            audioClip = WAV.AudioToClip(path);
-        }
-        if(audioClip == null){
-            audioClip = WAV.OggToClip(path);
-        }
-        if(audioClip == null){
-            audioClip = WAV.Mp3ToClip(path);
-        }
-        return audioClip;
-    }
+    }*/
 
     /// <summary>
     /// using Ude;
@@ -94,15 +98,19 @@ public static class StaticClass{
             fileStream.Flush();
             fileStream.Close();
         }
+        Encoding Shift_JIS = Encoding.GetEncoding("shift_jis");
+        // Debug.Log(detector.Charset);
+        // Debug.Log(detector.Confidence);
         if (!string.IsNullOrEmpty(detector.Charset)){
-            if (detector.Confidence <= 0.6f){
-                return Encoding.GetEncoding("shift_jis");
+            Encoding encoding = Encoding.GetEncoding(detector.Charset);
+            if(encoding != Shift_JIS && detector.Confidence <= 0.7f && detector.Confidence > 0.6f){
+                return Encoding.GetEncoding("GB18030");
+            }else if(detector.Confidence <= 0.6f){
+                return Shift_JIS;
+            }else{
+                return encoding;
             }
-            else{
-                return Encoding.GetEncoding(detector.Charset);
-            }
-        }
-        else { return Encoding.GetEncoding("shift_jis"); }
+        }else{ return Shift_JIS; }
     }
 
     /// <summary>
@@ -137,41 +145,32 @@ public static class StaticClass{
         return result.ToString();
     }*/
 
-    public static Texture2D GetTexture2D(string path){
+    /*public static Texture2D GetTexture2D(string path){
         if (!File.Exists(path)) { return null; }
-        Texture2D texture2D = new Texture2D(255, 255, TextureFormat.RGBA32, false);
-        MemoryStream tempStream = new MemoryStream();
+        MemoryStream memoryStream = new MemoryStream();
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-        Image image = Image.FromFile(path);
-        if (image.RawFormat.Guid == ImageFormat.Bmp.Guid || image.RawFormat.Guid == ImageFormat.MemoryBmp.Guid
+        Bitmap bitmap = new Bitmap(path);
+        if (bitmap.RawFormat.Guid == ImageFormat.Bmp.Guid || bitmap.RawFormat.Guid == ImageFormat.MemoryBmp.Guid
             || Regex.IsMatch(path, @"\.bmp$", StaticClass.regexOption)
         ){
-            using (Bitmap bitmap = new Bitmap(image)){
-                bitmap.MakeTransparent(System.Drawing.Color.Black);
-                bitmap.Save(tempStream, ImageFormat.Png);
-            }
+            bitmap.MakeTransparent(System.Drawing.Color.Black);
+            bitmap.Save(memoryStream, ImageFormat.Png);
         }
         //else if (Regex.IsMatch(item.Value.ToString(), @"\.(jpg|jpeg)$", StaticClass.regexOptions)){
-        //    image.Save(tempStream, ImageFormat.Jpeg);
+        //    bitmap.Save(memoryStream, ImageFormat.Jpeg);
         //}
-        else{
-            //image.Save(tempStream, ImageFormat.Png);
-            image.Save(tempStream, image.RawFormat);
-        }
-        image.Dispose();
+        else bitmap.Save(memoryStream, bitmap.RawFormat);
 #else
         byte[] source = File.ReadAllBytes(path);
         SKBitmap bitmap = SKBitmap.Decode(source);
-        bitmap.Encode(tempStream, SKEncodedImageFormat.Png, 100);
-        bitmap.Dispose();
+        bitmap.Encode(memoryStream, SKEncodedImageFormat.Png, 100);
 #endif
-        byte[] dist = new byte[tempStream.Length];
-        tempStream.Seek(0, SeekOrigin.Begin);
-        tempStream.Read(dist, 0, dist.Length);
-        //tempStream.Flush();
-        //tempStream.Close();
-        tempStream.Dispose();
-        texture2D.LoadImage(dist);
+        Texture2D texture2D = new Texture2D(bitmap.Width, bitmap.Height, TextureFormat.RGBA32, false);
+        bitmap.Dispose();
+        texture2D.LoadImage(memoryStream.ToArray());
+        //memoryStream.Flush();
+        //memoryStream.Close();
+        memoryStream.Dispose();
 #if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
         IImageFormat format = Image.DetectFormat(source);
         if(Regex.IsMatch(path, @"\.bmp$", StaticClass.regexOption)
@@ -188,15 +187,155 @@ public static class StaticClass{
 #endif
         texture2D.Apply(false);
         return texture2D;
+    }*/
+
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+    /// <summary>
+    /// use Texture2D.LoadImage(byte[])
+    /// </summary>
+    /// <param name="path"></param>
+    /// <param name="width"></param>
+    /// <param name="height"></param>
+    /// <returns></returns>
+#else
+    /// <summary>
+    /// use Texture2D.SetPixels32(Color32[])
+    /// </summary>
+    /// <param name="path"></param>
+    /// <param name="width"></param>
+    /// <param name="height"></param>
+    /// <returns></returns>
+#endif
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+    public static byte[] GetTextureInfo(string path, out int width, out int height){
+#else
+    public static Color32[] GetTextureInfo(string path, out int width, out int height){
+#endif
+        width = height = 0;
+        if(!File.Exists(path)) return null;
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+        using(MemoryStream memoryStream = new MemoryStream())
+        using(Bitmap bitmap = new Bitmap(path)){
+            width = bitmap.Width; height = bitmap.Height;
+            if (bitmap.RawFormat.Guid == ImageFormat.Bmp.Guid || bitmap.RawFormat.Guid == ImageFormat.MemoryBmp.Guid
+                || Regex.IsMatch(path, @"\.bmp$", StaticClass.regexOption)
+            ){
+                bitmap.MakeTransparent(System.Drawing.Color.Black);
+                bitmap.Save(memoryStream, ImageFormat.Png);
+            }
+            //else if (Regex.IsMatch(item.Value.ToString(), @"\.(jpg|jpeg)$", StaticClass.regexOptions)){
+            //    image.Save(memoryStream, ImageFormat.Jpeg);
+            //}
+            else bitmap.Save(memoryStream, bitmap.RawFormat);
+            return memoryStream.ToArray();
+        }
+#else
+        byte[] source = File.ReadAllBytes(path);
+        SKBitmap bitmap = SKBitmap.Decode(source);
+        width = bitmap.Width;
+        height = bitmap.Height;
+        Color32[] color32s = new Color32[width * height];
+        byte[] dist = bitmap.Bytes;
+        bitmap.Dispose();
+        int index1, index2;
+        if(Regex.IsMatch(path, @"\.bmp$", StaticClass.regexOption)
+            || Regex.IsMatch(Image.DetectFormat(source).Name, @"bmp", StaticClass.regexOption)
+        ){
+            for(int h = 0; h < height; h++){
+                for(int w = 0; w < width; w++){
+                    index1 = width * h + w; index2 = (w + (height - h - 1) * width) * 4;
+                    color32s[index1].b = dist[index2];
+                    color32s[index1].g = dist[index2 + 1];
+                    color32s[index1].r = dist[index2 + 2];
+                    if(color32s[index1].b == 0 && color32s[index1].g == 0 && color32s[index1].r == 0){
+                        color32s[index1].a = 0;
+                    }else color32s[index1].a = dist[index2 + 3];
+                }
+            }
+        }else{
+            for(int h = 0; h < height; h++){
+                for(int w = 0; w < width; w++){
+                    index1 = width * h + w; index2 = (w + (height - h - 1) * width) * 4;
+                    color32s[index1].b = dist[index2];
+                    color32s[index1].g = dist[index2 + 1];
+                    color32s[index1].r = dist[index2 + 2];
+                    color32s[index1].a = dist[index2 + 3];
+                }
+            }
+        }
+        return color32s;
+#endif
     }
+
     public static float[] AudioToSamples(string path, out int channels, out int frequency){
         float[] result = null;
-        IntPtr ptr = IntPtr.Zero;
-        int length = 0;
-        ptr = GetAudioSamples(path, out channels, out frequency, out length);
-        if(ptr != IntPtr.Zero && frequency > 0 && channels > 0){
-            result = new float[length];
-            Marshal.Copy(ptr, result, 0, length);
+        channels = frequency = 0;
+        AudioFormat format = GetAudioFormat(path);
+        //Debug.Log(format);
+        // Debug.Break();
+        switch (format){
+            case AudioFormat.Vorbis:
+                try{    
+                    using(var reader = new VorbisReader(path)){
+                        channels = reader.Channels;
+                        frequency = reader.SampleRate;
+                        result = new float[reader.TotalSamples * channels];
+                        reader.ReadSamples(result, 0, result.Length);
+                    }
+                }catch(Exception e){
+                    Debug.LogWarning(e.GetBaseException());
+                }
+                break;
+            case AudioFormat.Mpeg:
+                try{
+                    using(var reader = new MpegFile(path)){
+                        channels = reader.Channels;
+                        frequency = reader.SampleRate;
+                        result = new float[reader.Length / sizeof(float)];
+                        reader.ReadSamples(result, 0, result.Length);
+                    }
+                }catch(Exception e){
+                    Debug.LogWarning(e.GetBaseException());
+                }
+                break;
+            case AudioFormat.Others:
+                try{
+                    using(var reader = new AudioFileReader(path)){
+                        channels = reader.WaveFormat.Channels;
+                        frequency = reader.WaveFormat.SampleRate;
+                        result = new float[reader.Length / sizeof(float)];
+                        reader.Read(result, 0, result.Length);
+                    }
+                }catch(Exception e){
+                    result = null;
+                    Debug.LogWarning(e.GetBaseException());
+                }
+                if(result == null){
+                    try{
+                        IntPtr ptr = IntPtr.Zero;
+                        int length = 0;
+                        ptr = GetAudioSamples(path, out channels, out frequency, out length);
+                        if(ptr != IntPtr.Zero && frequency > 0 && channels > 0){
+                            result = new float[length];
+                            Marshal.Copy(ptr, result, 0, length);
+                        }
+                    }catch(Exception e){
+                        result = null;
+                        Debug.LogWarning(e.GetBaseException());
+                    }
+                }
+                /*if(result == null){
+                    try{
+                        channels = FluidManager.channels;
+                        int lengthSamples = 0;
+                        result = FluidManager.MidiToSamples(path, out lengthSamples, out frequency);
+                    }catch(Exception e){
+                        result = null;
+                        Debug.LogWarning(e.GetBaseException());
+                    }
+                }*/
+                break;
+            default: break;
         }
         return result;
     }

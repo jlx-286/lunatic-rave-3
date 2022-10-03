@@ -44,15 +44,18 @@
     ```
 
 ### Unity Version
-+ Unity 2018.2.0f2 (64-bit)
++ current:2018.2.0f2 (64-bit)
++ considering 2020.2.0 or newer version(s)
+	1. <a href="https://gamedev.stackexchange.com/questions/141807/what-happens-when-time-time-gets-very-large-in-unity/141867#141867">What happens when Time.time gets very large in Unity?</a>
+	2. <https://docs.unity3d.com/2020.2/Documentation/ScriptReference/Time.html>
 
 ### Other Program(s) Required:
-1. Debian & other Debian-based Linux distributions
+- Debian & other Debian-based Linux distributions
 ```shell
-sudo apt install libvlc5 libvlccore9 libvlc-bin vlc-plugin-base vlc-plugin-video-output
-sudo apt install ffmpeg
-sudo apt install libfluidsynth
+sudo apt install libvlc5 libvlccore9 libvlc-bin vlc-plugin-base vlc-plugin-video-output # vlc # libvlc-dev 
+sudo apt install ffmpeg # libavcodec libavformat libavutil # libavfilter-dev 
+sudo apt install libfluidsynth # libfluidsynth-dev2
 #sudo apt install fluid-soundfont-gm
-#sudo apt install libavfilter-dev libvlc-dev libfluidsynth-dev2
-#sudo apt install pulseaudio-module-jack libsdl2-dev
 ```
+
+The soundfont in "<a href="https://docs.unity3d.com/2018.2/Documentation/ScriptReference/Application-streamingAssetsPath.html">Application.streamingAssetsPath</a>" is from timidity

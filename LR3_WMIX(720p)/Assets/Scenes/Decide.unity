@@ -415,7 +415,6 @@ MonoBehaviour:
   isVideo: 
   textures: []
   transparent: {fileID: 2800000, guid: b77eb661f9c201a43909ea4b53eeb41a, type: 3}
-  audioClips: []
   slider: {fileID: 1325556357}
   play_btn: {fileID: 1037174013}
   back_btn: {fileID: 1050829308}
@@ -428,6 +427,12 @@ MonoBehaviour:
   artist: {fileID: 1529596197}
   playing_scene_name: 
   scriptType: 0
+  note_channel_arr: []
+  note_time_arr: []
+  note_num_arr: 
+  note_type_arr: 
+  bgm_time_arr: []
+  bgm_num_arr: 
 --- !u!1 &247445317
 GameObject:
   m_ObjectHideFlags: 0
@@ -1730,7 +1735,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: 
+  m_Text: Detecting control flow(s)
 --- !u!222 &1001147332
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2274,7 +2279,7 @@ MonoBehaviour:
   m_Direction: 0
   m_MinValue: 0
   m_MaxValue: 1
-  m_WholeNumbers: 0
+  m_WholeNumbers: 1
   m_Value: 0
   m_OnValueChanged:
     m_PersistentCalls:

@@ -50,5 +50,6 @@ public static class FluidManager{
 	public static void CleanUp(){
 		InternalFluidCleanUp(settings, synth);
 		settings = synth = IntPtr.Zero;
+		ready = false;
 	}
 }
