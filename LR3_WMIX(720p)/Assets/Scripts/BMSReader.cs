@@ -3,8 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -164,8 +162,6 @@ public class BMSReader : MonoBehaviour{
     private void ReadScript(){
         MainVars.cur_scene_name = "Decide";
         back_btn.onClick.AddListener(() => {
-            NoteTableClear();
-            VLCPlayer.VLCRelease();
             SceneManager.UnloadSceneAsync(MainVars.cur_scene_name);
             SceneManager.LoadScene("Select", LoadSceneMode.Additive);
             thread.Abort();
@@ -261,7 +257,7 @@ public class BMSReader : MonoBehaviour{
         Random random = new Random();
         string[] args = { "--video-filter=transform", "--transform-type=vflip", "--no-osd", "--no-audio",
             "--no-repeat", "--no-loop", $"--rate={Mathf.Pow(2f, MainVars.freq / 12f)}" };
-        VLCPlayer.instance = VLCPlayer.libvlc_new(args.Length, args);
+        VLCPlayer.instance = VLCPlayer.InstNew(args);
         while (streamReader.Peek() >= 0){
             line = streamReader.ReadLine();
             if (string.IsNullOrEmpty(line) || string.IsNullOrWhiteSpace(line)) { continue; }
@@ -505,9 +501,8 @@ public class BMSReader : MonoBehaviour{
                     tmp_path = tmp_path.Replace('\\', '/');
 #endif
                     if (File.Exists(tmp_path) && VLCPlayer.instance != IntPtr.Zero){
-                        VLCPlayer.medias[u] = VLCPlayer.libvlc_media_new_path(VLCPlayer.instance, tmp_path);
+                        VLCPlayer.medias[u] = VLCPlayer.MediaNew(VLCPlayer.instance, tmp_path);
                         if (VLCPlayer.medias[u] != IntPtr.Zero && StaticClass.GetVideoSize(tmp_path, out width, out height)){
-                            VLCPlayer.libvlc_media_parse(VLCPlayer.medias[u]);
                             VLCPlayer.media_sizes[u] = $"{width} {height}";
                         }
                         else { VLCPlayer.medias.Remove(u); }
@@ -521,22 +516,6 @@ public class BMSReader : MonoBehaviour{
                     if (File.Exists(bms_directory + name)){
                         ushort a = u;
                         int width, height;
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-                        byte[] dist = StaticClass.GetTextureInfo(bms_directory + name, out width, out height);
-                        if (width > 0 && height > 0){
-                            unityActions.Enqueue(() => {
-                                Texture2D texture2D = new Texture2D(width, height, TextureFormat.RGBA32, false);
-                                texture2D.LoadImage(dist);
-                                texture2D.Apply(false);
-                                textures[a] = texture2D;
-                                doingAction = false;
-                            });
-                        }
-                        //unityActions.Enqueue(() => {
-                        //    textures[a] = StaticClass.GetTexture2D(bms_directory + name);
-                        //    doingAction = false;
-                        //});
-#else
                         Color32[] color32s = StaticClass.GetTextureInfo(bms_directory + name, out width, out height);
                         if (width > 0 && height > 0){
                             unityActions.Enqueue(() => {
@@ -547,7 +526,6 @@ public class BMSReader : MonoBehaviour{
                                 doingAction = false;
                             });
                         }
-#endif
                     }
                 }
                 unityActions.Enqueue(() => {
@@ -572,33 +550,16 @@ public class BMSReader : MonoBehaviour{
                     float[] samples = StaticClass.AudioToSamples(bms_directory + name, out channels, out frequency);
                     if (samples != null && samples.Length >= channels && channels > 0 && frequency > 0){
                         unityActions.Enqueue(() => {
-                            AudioClip clip = null;
-                            clip = AudioClip.Create("clip", samples.Length / channels,
+                            AudioClip clip = AudioClip.Create("clip", samples.Length / channels,
                                 channels, frequency, false);
-                            clip.SetData(samples, 0);
                             if (clip != null && !float.IsNaN(clip.length)){
+                                clip.SetData(samples, 0);
                                 MainMenu.audioSources[a].clip = clip;
-                                if (clip.length > 60f)
-                                    illegal = true;
-                            }
-                            else {
-                                Debug.Log(Time.time);
-                                Debug.Log(Time.unscaledTime);
+                                if (clip.length > 60f) illegal = true;
                             }
                             doingAction = false;
                         });
                     }
-                    /*else{
-                        unityActions.Enqueue(async () => {
-                            AudioClip clip = await StaticClass.LoadAudioClipAsync(bms_directory + name);
-                            if (clip != null && !float.IsNaN(clip.length)){
-                                MainMenu.audioSources[a].clip = clip;
-                                if (clip.length > 60f)
-                                    illegal = true;
-                            }
-                            doingAction = false;
-                        });
-                    }*/
                 }
                 unityActions.Enqueue(() => {
                     loaded_medias_count++;
@@ -713,7 +674,7 @@ public class BMSReader : MonoBehaviour{
                                         (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One)
                                         * Convert.ToDecimal(dataRows[0]["index"]) / curr_bpm;
                                     curr_bpm = Convert.ToDecimal(dataRows[0]["value"]);
-                                    trackOffset = 60m * 4m *
+                                    trackOffset += 60m * 4m *
                                         (beats_tracks.ContainsKey(track) ? beats_tracks[track] : decimal.One)
                                         * (ld - Convert.ToDecimal(dataRows[0]["index"])) / curr_bpm;
                                 }
@@ -946,10 +907,6 @@ public class BMSReader : MonoBehaviour{
             this.bga_table.Clear();
             this.bga_table = null;
         }
-        GC.Collect();
-        //GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true);
-        //yield return new WaitForFixedUpdate();
-        //GC.WaitForFullGCComplete();
     }
     private void CalcTotalTime(){
         if (total_time < time_before_track[track] + (double)trackOffset){

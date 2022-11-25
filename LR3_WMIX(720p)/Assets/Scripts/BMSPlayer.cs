@@ -44,10 +44,7 @@ public class BMSPlayer : MonoBehaviour {
     private void Update() {
         if (escaped) { return; }
         if (Input.GetKeyUp(KeyCode.Escape) && !escaped){
-            //StartCoroutine(BMS_Reader.NoteTableClear());
-            BMS_Reader.NoteTableClear();
             escaped = true;
-            VLCPlayer.VLCRelease();
             SceneManager.UnloadSceneAsync(MainVars.cur_scene_name);
             SceneManager.LoadScene("Select", LoadSceneMode.Additive);
             return;

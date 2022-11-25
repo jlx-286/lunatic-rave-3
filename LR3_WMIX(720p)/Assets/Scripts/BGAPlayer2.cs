@@ -19,7 +19,7 @@ public class BGAPlayer2 : MonoBehaviour {
 
     // Update is called once per frame
     private void Update () {
-        if (VLCPlayer.players[playerNum] != IntPtr.Zero && VLCPlayer.LibVLC_IsPlaying(VLCPlayer.players[playerNum])){
+        if (VLCPlayer.players[playerNum] != IntPtr.Zero && VLCPlayer.PlayerPlaying(VLCPlayer.players[playerNum])){
             VLCPlayer.media_textures[playerNum].SetPixels32(VLCPlayer.color32s[playerNum]);
             VLCPlayer.media_textures[playerNum].Apply(false);
             rawImage.texture = VLCPlayer.media_textures[playerNum];

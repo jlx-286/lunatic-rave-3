@@ -1,3 +1,46 @@
+### Unity Editor Version
++ current:2018.2.0f2 (64-bit)
++ considering 2019.3 or newer version(s)
+    - Fatal error in GC "GetThreadContext failed" (due to Unity GC with anti-virus program(s)?)
++ considering 2020.2.0 or newer version(s)
+    - <https://docs.unity3d.com/2020.2/Documentation/ScriptReference/Time.html>
+	- <a href="https://gamedev.stackexchange.com/questions/141807/what-happens-when-time-time-gets-very-large-in-unity/141867#141867">What happens when Time.time gets very large in Unity?</a>
+
+### Dependencies:
+- Windows (for development)
+    - VLC
+    - FFmpeg (libavcodec + libavutil + libavformat)
+- Linux (Debian or Ubuntu)
+    1. VLC
+        ``` shell
+        # sudo apt install libvlc-bin vlc-plugin-base vlc-plugin-video-output libvlc-dev
+        sudo apt install vlc-plugin-base vlc-plugin-video-output libvlc-dev
+        # sudo apt install vlc libvlc-dev
+        ```
+    2. FFmpeg
+        ```shell
+        # sudo apt install libavformat-dev
+        ```
+    3. FluidSynth
+        ```shell
+        sudo apt install libfluidsynth-dev
+        # sudo apt install libfluidsynth2
+        # apt download timgm6mb-soundfont fluid-soundfont-gm
+        ```
+    4. Others
+        ```shell
+        ## You can install the dependencies by Synaptic (in GUI):
+        # sudo apt install synaptic
+        ## considering plugins from snap store
+        # sudo apt install patchelf || sudo snap install patchelf
+        # snap download vlc ffmpeg minuet
+        ```
+- FluidSynth
+    + The plugins are from <a href="https://assetstore.unity.com/packages/tools/audio/fluid-midi-player-173680">Unity Asset Store</a>.
+        (alternative:<https://github.com/FluidSynth/fluidsynth/releases/>)
+    + The soundfont in "<a href="https://docs.unity3d.com/2018.2/Documentation/ScriptReference/Application-streamingAssetsPath.html">Application.streamingAssetsPath</a>" is from timgm6mb-soundfont.
+    + <https://github.com/FluidSynth/fluidsynth/wiki/Download#distributions>
+
 ### About .gitignore
 1. previous .gitignore (by owy787)
     + same as <a href="https://github.com/github/gitignore/blob/master/C.gitignore">C.gitignore</a>
@@ -42,20 +85,3 @@
         # keep the *.asset files from Library
         !/[Ll]ibrary/*.asset
     ```
-
-### Unity Version
-+ current:2018.2.0f2 (64-bit)
-+ considering 2020.2.0 or newer version(s)
-	1. <a href="https://gamedev.stackexchange.com/questions/141807/what-happens-when-time-time-gets-very-large-in-unity/141867#141867">What happens when Time.time gets very large in Unity?</a>
-	2. <https://docs.unity3d.com/2020.2/Documentation/ScriptReference/Time.html>
-
-### Other Program(s) Required:
-- Debian & other Debian-based Linux distributions
-```shell
-sudo apt install libvlc5 libvlccore9 libvlc-bin vlc-plugin-base vlc-plugin-video-output # vlc # libvlc-dev 
-sudo apt install ffmpeg # libavcodec libavformat libavutil # libavfilter-dev 
-sudo apt install libfluidsynth # libfluidsynth-dev2
-#sudo apt install fluid-soundfont-gm
-```
-
-The soundfont in "<a href="https://docs.unity3d.com/2018.2/Documentation/ScriptReference/Application-streamingAssetsPath.html">Application.streamingAssetsPath</a>" is from timidity

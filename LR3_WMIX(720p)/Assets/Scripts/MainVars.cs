@@ -60,10 +60,14 @@ public class MainVars : MonoBehaviour {
         highPassFilter = this.gameObject.GetComponent<AudioHighPassFilter>();
         lowPassFilter = this.gameObject.GetComponent<AudioLowPassFilter>();
         reverbFilter = this.gameObject.GetComponent<AudioReverbFilter>();
-        Application.quitting += () => {
+        /*Application.quitting += () => {
             FluidManager.CleanUp();
             VLCPlayer.VLCRelease();
-        };
+            Resources.UnloadUnusedAssets();
+            AssetBundle.UnloadAllAssetBundles(true);
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, false);
+        };*/
+        Application.quitting += OnApplicationQuit;
         // FluidManager.Init(Application.streamingAssetsPath + "/FluidR3_GM.sf2");
         // FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 1000d, 3d);
         FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 2.8d);
@@ -93,5 +97,8 @@ public class MainVars : MonoBehaviour {
     private void OnApplicationQuit() {
         FluidManager.CleanUp();
         VLCPlayer.VLCRelease();
+        Resources.UnloadUnusedAssets();
+        AssetBundle.UnloadAllAssetBundles(true);
+        GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, false);
     }
 }

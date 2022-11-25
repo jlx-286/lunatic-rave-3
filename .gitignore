@@ -80,7 +80,7 @@ crashlytics-build.properties
 # *.so.meta
 # *.dll.meta
 
-/test
+/test/
 .vscode
 /*/[Aa]ssets/**/.*
 /*/[Aa]ssets/**/~*~

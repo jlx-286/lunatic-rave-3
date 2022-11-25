@@ -3,15 +3,16 @@
 #include <stdint.h>
 // #include <stdio.h>
 #include <stdlib.h>
-#include <cmath>
-// #include <math.h>
 // #include <climits>
 // #include <limits.h>
 #include <float.h>
 // #include <cfloat>
 #ifdef __cplusplus
 using namespace std;
+#include <cmath>
 extern "C" {
+#else
+#include <math.h>
 #endif
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -24,17 +25,18 @@ extern "C" {
 #endif
 // g++ -O3 -fPIC -shared -Wall -o FFmpegPlugin.so FFmpegPlugin.cpp -lavcodec -lavformat -lavutil
 // g++ -O3 -shared -Wall -I"./include" -L"./lib" -o FFmpegPlugin.dll FFmpegPlugin.cpp -lavcodec -lavformat -lavutil rem -fPIC
-bool openCodecContext(AVFormatContext* fc, int32_t* pStreamIndex, enum AVMediaType type, AVCodecContext** cc){
-    if(avformat_find_stream_info(fc, NULL) < 0){ return false; }
-    if(fc == NULL){ return false; }
+AVCodecContext* openCodecContext(AVFormatContext* fc, int32_t* pStreamIndex, enum AVMediaType type){
+    if(fc == NULL) return NULL;
+    if(avformat_find_stream_info(fc, NULL) < 0 || fc == NULL)
+        return NULL;
     *pStreamIndex = av_find_best_stream(fc, type, -1, -1, NULL, 0);
-    if (*pStreamIndex < 0) { return false; }
-    *cc = fc->streams[*pStreamIndex]->codec;
-    if(*cc == NULL){ return false; }
-    AVCodec* codec = avcodec_find_decoder((*cc)->codec_id);
-    if (codec == NULL) { return false; }
-    if (avcodec_open2(*cc, codec, NULL) < 0) { return false; }
-    return true;
+    if (*pStreamIndex < 0) return NULL;
+    AVCodecContext* cc = fc->streams[*pStreamIndex]->codec;
+    if(cc == NULL) return NULL;
+    AVCodec* codec = avcodec_find_decoder(cc->codec_id);
+    if (codec == NULL) return NULL;
+    if (avcodec_open2(cc, codec, NULL) < 0) return NULL;
+    return cc;
 }
 enum AudioFormat{
     Unknown,
@@ -49,16 +51,11 @@ extern "C" AudioFormat GetAudioFormat(const char* path){
     AudioFormat result = AudioFormat::Unknown;
 #endif
     AVFormatContext* fc = NULL;
-    AVCodecContext* cc = NULL;
+    if(avformat_open_input(&fc, path, NULL, NULL) != 0 || fc == NULL)
+        return result;
     int32_t audioStreamIdx = -1;
-    if(avformat_open_input(&fc, path, NULL, NULL) != 0){
-        // puts("avformat_open_input");
-        goto cleanup;
-    }
-    if(!openCodecContext(fc, &audioStreamIdx, AVMEDIA_TYPE_AUDIO, &cc) || audioStreamIdx < 0){
-        // puts("openCodecContext");
-        goto cleanup;
-    }
+    AVCodecContext* cc = openCodecContext(fc, &audioStreamIdx, AVMEDIA_TYPE_AUDIO);
+    if(cc == NULL || audioStreamIdx < 0) goto cleanup;
     // switch(fc->audio_codec_id){
     // printf("%d\n", cc->codec_id);
     switch(cc->codec_id){
@@ -117,52 +114,49 @@ extern "C" AudioFormat GetAudioFormat(const char* path){
             break;
     }
     cleanup:
-    // avformat_close_input(&fc);
-    // avcodec_close(cc);
-    avcodec_free_context(&cc);
+    avformat_close_input(&fc);
+    // avformat_free_context(fc);
     return result;
 }
 extern "C" bool GetVideoSize(const char* path, int32_t* width, int32_t* height){
     *width = *height = 0;
-    AVFormatContext* fmtCtx = avformat_alloc_context();
-    if(avformat_open_input(&fmtCtx, path, NULL, NULL) != 0){
+    AVFormatContext* fmtCtx = NULL;//avformat_alloc_context();
+    if(avformat_open_input(&fmtCtx, path, NULL, NULL) != 0 || fmtCtx == NULL)
         return false;
-    }
-    AVCodecContext* cc = NULL;
     int32_t videoStreamIdx = -1;
-    if(openCodecContext(fmtCtx, &videoStreamIdx, AVMEDIA_TYPE_VIDEO, &cc)){
-        *width = cc->width;
-        *height = cc->height;
-        avcodec_free_context(&cc);
-    }else{
+    AVCodecContext* cc = openCodecContext(fmtCtx, &videoStreamIdx, AVMEDIA_TYPE_VIDEO);
+    if(cc == NULL || videoStreamIdx < 0){
+        avformat_close_input(&fmtCtx);
         return false;
     }
-    // avformat_close_input(&fmtCtx);
+    *width = cc->width;
+    *height = cc->height;
+    avformat_close_input(&fmtCtx);
     // avformat_free_context(fmtCtx);
     return true;
 }
 extern "C" float* GetAudioSamples(const char* path, int32_t* channels, int32_t* frequency, int32_t* length){
-    float* total_samples = NULL;
     *channels = *frequency = *length = 0;
     AVFormatContext* fc = NULL;
-    AVPacket* pkt = av_packet_alloc();
-    AVCodecContext* cc = NULL;
-    AVFrame* frame = av_frame_alloc();
+    if(avformat_open_input(&fc, path, NULL, NULL) != 0 || fc == NULL)
+        return NULL;
+    int32_t audioStreamIdx = -1;
+    AVCodecContext* cc = openCodecContext(fc, &audioStreamIdx, AVMEDIA_TYPE_AUDIO);
+    if(cc == NULL || audioStreamIdx < 0){
+        avformat_close_input(&fc);
+        return NULL;
+    }
     // int32_t ret = 0;
     // AVCodec* codec = NULL;
-    int32_t audioStreamIdx = -1;
+    float* total_samples = NULL;
     int32_t offset = 0;
     int32_t plane_index, flt_sml_size = 0;
     uint8_t sml_u8 = 0; int16_t sml_s16 = 0; int32_t sml_s32 = 0; int64_t sml_s64 = 0;
     // const float FLT_1 = exp(FLT_MIN / 2); const double DBL_1 = exp(DBL_MIN / 2);
     float sml_flt = FLT_MIN / 2; double sml_dbl = DBL_MIN / 2;
     float* sample = NULL;
-    if(avformat_open_input(&fc, path, NULL, NULL) != 0){
-        goto cleanup;
-    }
-    if(!openCodecContext(fc, &audioStreamIdx, AVMEDIA_TYPE_AUDIO, &cc) || audioStreamIdx < 0){
-        goto cleanup;
-    }
+    AVPacket* pkt = av_packet_alloc();
+    AVFrame* frame = av_frame_alloc();
     *channels = cc->channels;
     *frequency = cc->sample_rate;
     while(av_read_frame(fc, pkt) >= 0){
@@ -373,17 +367,15 @@ extern "C" float* GetAudioSamples(const char* path, int32_t* channels, int32_t* 
             }
             free(sample);
             av_frame_unref(frame);
-            }
+        }
         // pkt->data = NULL;
         // pkt->size = 0;
         av_packet_unref(pkt);
     }
     *length = offset;
-    // avformat_close_input(&fc);
     cleanup:
-    av_packet_free(&pkt);
     av_frame_free(&frame);
-    // avcodec_close(cc);
-    avcodec_free_context(&cc);
+    av_packet_free(&pkt);
+    avformat_close_input(&fc);
     return total_samples;
 }

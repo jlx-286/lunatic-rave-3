@@ -404,9 +404,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 903ecb546c480134db8c37d1e4751e74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  start_bpm: 0
-  min_bpm: 0
-  max_bpm: 0
   total_time: 0
   bms_directory: 
   bms_file_name: 
@@ -2344,7 +2341,7 @@ MonoBehaviour:
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
     m_FontSize: 27
-    m_FontStyle: 1
+    m_FontStyle: 0
     m_BestFit: 1
     m_MinSize: 1
     m_MaxSize: 27
@@ -2670,7 +2667,7 @@ MonoBehaviour:
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
     m_FontSize: 64
-    m_FontStyle: 1
+    m_FontStyle: 0
     m_BestFit: 1
     m_MinSize: 1
     m_MaxSize: 64
