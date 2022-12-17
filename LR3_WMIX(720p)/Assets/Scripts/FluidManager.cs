@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using UnityEngine;
 // using UnityEngine.Internal;
-
 public static class FluidManager{
 	private static IntPtr settings = IntPtr.Zero;
 	private static IntPtr synth = IntPtr.Zero;
@@ -46,6 +44,8 @@ public static class FluidManager{
     [DllImport(PluginName, CallingConvention = CallingConvention.StdCall)]
     private extern static int fluid_player_set_playback_callback(IntPtr player, handle_midi_event_func_t handler, IntPtr data);*/
     [DllImport(PluginName)] private extern static int fluid_player_join(IntPtr player);
+    [DllImport(PluginName)] private extern static int fluid_player_stop(IntPtr player);
+    [DllImport(PluginName)] private extern static int fluid_player_seek(IntPtr player, int ticks);
     public static void Init(string sfpath, double gain = double.NaN, double overflow_vol = double.NaN){
 		if(!File.Exists(sfpath)){ ready = false; return; }
 		CleanUp();

@@ -1,8 +1,7 @@
-﻿using NAudio.Wave;
-using NLayer;
-using NVorbis;
+﻿// using NAudio.Wave;
+// using NLayer;
+// using NVorbis;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using SkiaSharp;
 using SixLabors.ImageSharp;
@@ -17,19 +16,12 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Ude;
 using UnityEngine;
-using Image = SixLabors.ImageSharp.Image;
-
 public static class StaticClass{
-    public static RegexOptions regexOption = RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
+    public const RegexOptions regexOption = RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
     [DllImport("FFmpegPlugin", EntryPoint = "GetVideoSize")] private extern static bool __GetVideoSize(string path, out int width, out int height);
-    [DllImport("FFmpegPlugin")] private extern static IntPtr GetAudioSamples(string path, out int channels, out int frequency, out int length);
-    private enum AudioFormat{
-        Unknown,
-        Vorbis,
-        Mpeg,
-        Others
-    };
-    [DllImport("FFmpegPlugin")] private extern static AudioFormat GetAudioFormat(string path);
+    [DllImport("FFmpegPlugin")] private extern static IntPtr GetAudioSamples(string path, out int channels, out int frequency, out ulong length);
+    [DllImport("FFmpegPlugin")] private extern static void FreeAudioSamples(IntPtr ptr);
+/*
     /// <summary>
     /// seconds
     /// </summary>
@@ -41,7 +33,7 @@ public static class StaticClass{
     public static readonly double OverFlowTime = Mathf.Pow(2, 13) - Mathf.Pow(2, -23) - 1;
     // public static readonly double OverFlowTime = 2 * 3600 + 20 * 60;
 #endif
-
+*/
     /// <summary>
     /// using Ude;
     /// </summary>
@@ -145,7 +137,21 @@ public static class StaticClass{
     public static float[] AudioToSamples(string path, out int channels, out int frequency){
         float[] result = null;
         channels = frequency = 0;
-        AudioFormat format = GetAudioFormat(path);
+        IntPtr ptr = IntPtr.Zero;
+        try{
+            ulong length = 0;
+            ptr = GetAudioSamples(path, out channels, out frequency, out length);
+            if(ptr != IntPtr.Zero && frequency > 0 && channels > 0 && length > 0 && length <= int.MaxValue){
+                result = new float[length];
+                Marshal.Copy(ptr, result, 0, (int)length);
+            }
+        }catch(Exception e){
+            channels = frequency = 0;
+            result = null;
+            Debug.LogWarning(e.GetBaseException());
+        }
+        FreeAudioSamples(ptr);
+        /*AudioFormat format = GetAudioFormat(path);
         //Debug.Log(format);
         // Debug.Break();
         switch (format){
@@ -206,20 +212,20 @@ public static class StaticClass{
                         Debug.LogWarning(e.GetBaseException());
                     }
                 }
-                /*if(result == null){
-                    try{
-                        channels = FluidManager.channels;
-                        int lengthSamples = 0;
-                        result = FluidManager.MidiToSamples(path, out lengthSamples, out frequency);
-                    }catch(Exception e){
-                        channels = frequency = 0;
-                        result = null;
-                        Debug.LogWarning(e.GetBaseException());
-                    }
-                }*/
                 break;
             default: break;
-        }
+        }*/
+        /*if(result == null){
+            try{
+                channels = FluidManager.channels;
+                int lengthSamples = 0;
+                result = FluidManager.MidiToSamples(path, out lengthSamples, out frequency);
+            }catch(Exception e){
+                channels = frequency = 0;
+                result = null;
+                Debug.LogWarning(e.GetBaseException());
+            }
+        }*/
         return result;
     }
     public static bool GetVideoSize(string path, out int width, out int height){
@@ -227,9 +233,8 @@ public static class StaticClass{
             width = height = 0;
             return false;
         }
-        if(!__GetVideoSize(path, out width, out height) || width < 1 || height < 1){
+        if(!__GetVideoSize(path, out width, out height) || width < 1 || height < 1)
             return false;
-        }
         return true;
     }
     public static bool TryParseDecimal(string s, out decimal m){
@@ -273,10 +278,12 @@ public static class StaticClass{
         }
         return res;
     }
-    private static int c;
-    private static ulong gcd(ulong a, ulong b){
+    /*private static int c;
+    private static int gcd(BigInteger a, int b){
+        a = BigInteger.Abs(a);
+        b = Math.Abs(b);
         if (a == b || a == 0) return b;
-        if (b == 0) return a;
+        if (b == 0) return (int)a;
         c = 0;
         while (((a & 0x1) == 0) && ((b & 0x1) == 0)){
             a = a >> 1; b = b >> 1; c++;
@@ -285,9 +292,9 @@ public static class StaticClass{
         while ((b & 0x1) == 0) b = b >> 1;
         while(true){
             if (a == 0) return b << c;
-            if (b == 0) return a << c;
+            if (b == 0) return (int)a << c;
             if (a < b){
-                b = (b - a) >> 1;
+                b = (b - (int)a) >> 1;
                 //b -= a;
                 while ((b & 0x1) == 0) b = b >> 1;
             }
@@ -297,31 +304,23 @@ public static class StaticClass{
                 while ((a & 0x1) == 0) a = a >> 1;
             }
             else if(a == b) return b << c;
-            /*else{
-                a = (a - b) >> 1;
-            }*/
+            //else{
+            //    a = (a - b) >> 1;
+            //}
         }
     }
-    public static ulong Lcm(SortedSet<ulong> _set_){
-        if (_set_ == null || _set_.Count < 1)
-            return 0;//error
-        if (_set_.Min < 1){
-            //_set_.Clear();
-            return 0;//error
-        }
-        if (_set_.Max == 1){
-            return 1;
-        }
-        _set_.Remove(1);
-        if (_set_.Count == 1){
-            return _set_.Max;
-        }
-        ulong[] integers = new ulong[_set_.Count];
-        _set_.CopyTo(integers);
-        ulong result = integers[0];
+    */
+    public static BigInteger Lcm(SortedSet<int> s){
+        if(s == null || s.Count < 1 || s.Min < 1) return 0;
+        s.Remove(1);
+        if(s.Count < 1) return 1;
+        if(s.Count == 1) return s.Min;
+        int[] integers = new int[s.Count];
+        s.CopyTo(integers);
+        BigInteger result = integers[0];
         for(int i = 1; i < integers.Length; i++){
-            result = result / (ulong)BigInteger.GreatestCommonDivisor(result, integers[i]) * integers[i];
-            // result = result / gcd(result, integers[i]) * integers[i];
+            //result *= integers[i] / (int)BigInteger.GreatestCommonDivisor(result, integers[i]);
+            result *= integers[i] / BigInteger.GreatestCommonDivisor(result, integers[i]);
         }
         return result;
     }

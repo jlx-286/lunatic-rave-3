@@ -1,22 +1,19 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-
 public class SongList : MonoBehaviour ,IPointerClickHandler {
     public GameObject activeContent;
     public GameObject initialContent;
     public GameObject emptyContent;
     public Button buttonForm;
-    [HideInInspector] public static bool isInCus;
-    [HideInInspector] public static bool loaded;
+    public static bool isInCus;
+    public static bool loaded;
     public Button bmsItemForm;
     private string bmsFilename;
-    // Use this for initialization
     private void Start () {
         loaded = false;
         if (MainVars.cur_scene_name == "Start"){
@@ -27,40 +24,32 @@ public class SongList : MonoBehaviour ,IPointerClickHandler {
             bmsFilename = Path.GetFileName(MainVars.bms_file_path);
             MainVars.bms_file_path = Path.GetDirectoryName(MainVars.bms_file_path).Replace('\\', '/') + '/';
             isInCus = true;
-            if(MainVars.BMSReader != null){
-                MainVars.BMSReader.NoteTableClear();
-                MainVars.BMSReader = null;
-            }
-            //MainVars.BMSPlayer = null;
+            BMSInfo.CleanUp();
             VLCPlayer.VLCRelease();
-            for(int i = 0; i < 36 * 36; i++){
-                MainMenu.audioSources[i].clip = null;
-            }
+            for(int i = 0; i < 36 * 36; i++) MainMenu.audioSources[i].clip = null;
             AssetBundle.UnloadAllAssetBundles(true);
         }
         MainVars.cur_scene_name = "Select";
         Resources.UnloadUnusedAssets();
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, false);
     }
-
-    // Update is called once per frame
     private void Update(){
         if (!isInCus && !loaded){
-            for (int i = 0; i < activeContent.transform.childCount; i++){
+            for (int i = 0; i < activeContent.transform.childCount; i++)
                 Destroy(activeContent.transform.GetChild(i).gameObject);
-            }
             Button[] initBtns = initialContent.gameObject.GetComponentsInChildren<Button>();
             for(int i = 0; i < initBtns.Length; i++){
                 Button b = Instantiate(initBtns[i], activeContent.transform);
-                if (b.gameObject.name.StartsWith("custom")){
-                    InitSongBtn(b);
-                }
+                if (b.gameObject.name.StartsWith("custom"))
+                    b.onClick.AddListener(() => {
+                        isInCus = true;
+                        loaded = false;
+                    });
             }
             loaded = true;
         }else if(isInCus && !loaded){
-            for (int i = 0; i < activeContent.transform.childCount; i++){
+            for (int i = 0; i < activeContent.transform.childCount; i++)
                 Destroy(activeContent.transform.GetChild(i).gameObject);
-            }
             foreach (string s in Directory.GetDirectories(MainVars.bms_file_path)){
                 Button b = Instantiate(buttonForm, activeContent.transform);
                 b.GetComponentInChildren<Text>().text = Path.GetFileName(s);
@@ -82,7 +71,6 @@ public class SongList : MonoBehaviour ,IPointerClickHandler {
             loaded = true;
         }
     }
-
     public virtual void OnPointerClick(PointerEventData pointerEventData){
         if (pointerEventData.button == PointerEventData.InputButton.Right && isInCus){
             MainVars.bms_file_path = MainVars.bms_file_path.Replace('\\', '/');
@@ -106,12 +94,5 @@ public class SongList : MonoBehaviour ,IPointerClickHandler {
                 loaded = false;
             }
         }
-    }
-
-    private void InitSongBtn(Button button){
-        button.onClick.AddListener(() => {
-            isInCus = true;
-            loaded = false;
-        });
     }
 }

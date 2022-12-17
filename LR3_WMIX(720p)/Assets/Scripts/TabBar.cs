@@ -1,23 +1,18 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-
 public class TabBar : MonoBehaviour{
     public GameObject[] panels;
     public Toggle[] toggles;
     public Material high_lighted;
-    // Use this for initialization
     void Start(){
         for (int i = 0; i < toggles.Length; i++){
             int j = i;
             toggles[j].onValueChanged.AddListener(
-                (value) => {
-                    panels[j].SetActive(value);
-                }
+                value => panels[j].SetActive(value)
             );
         }
         if (high_lighted != null){
@@ -28,9 +23,8 @@ public class TabBar : MonoBehaviour{
             for(int i = 0; i < toggles.Length; i++){
                 int j = i;
                 images[j] = toggles[j].GetComponentInChildren<Image>();
-                if(toggles[j].GetComponent<EventTrigger>() == null){
+                if(toggles[j].GetComponent<EventTrigger>() == null)
                     toggles[j].gameObject.AddComponent<EventTrigger>();
-                }
                 eventTriggers[j] = toggles[j].GetComponent<EventTrigger>();
                 EventTrigger.Entry entry = new EventTrigger.Entry();
                 entry.eventID = EventTriggerType.PointerEnter;
@@ -48,8 +42,5 @@ public class TabBar : MonoBehaviour{
             }
         }
     }
-
-    // Update is called once per frame
     //void Update () {}
-    
 }

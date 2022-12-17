@@ -1,48 +1,33 @@
-﻿//using RenderHeads.Media.AVProVideo;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Text.RegularExpressions;
+﻿using System;
 using UnityEngine;
-using UnityEngine.Audio;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using UnityEngine.Video;
-
 public class BMSPlayer : MonoBehaviour {
-    private BMSReader BMS_Reader;
     public Text title_text;
     [HideInInspector] public bool no_key_notes;
     [HideInInspector] public bool no_bgm_notes;
     [HideInInspector] public bool no_bgi;
     //private sbyte channel;
-    [HideInInspector] public ushort currClipNum;
-    [HideInInspector] public double playing_time;
+    [HideInInspector] public uint playingTimeAsMilliseconds{ get; internal set; }
+    [HideInInspector] public uint fixedDeltaTimeAsMilliseconds{ get; internal set; }
     public Slider[] sliders;
     [HideInInspector] public bool escaped;
     [HideInInspector] public int bgm_table_row;
     [HideInInspector] public int bga_table_row;
     [HideInInspector] public int row_key;
-    // [HideInInspector] public double playing_time_frame;
-    // Use this for initialization
     private void Start () {
-        BMS_Reader = MainVars.BMSReader;
-        //MainVars.BMSPlayer = this.GetComponent<BMSPlayer>();
-        MainVars.cur_scene_name = BMS_Reader.playing_scene_name;
+        MainVars.cur_scene_name = BMSInfo.playing_scene_name;
         no_key_notes = no_bgm_notes = no_bgi = false;
-        title_text.text = MainVars.BMSReader.title.text;
-        currClipNum = 0;
+        title_text.text = BMSInfo.title;
         escaped = false;
-        for(int a = 0; a < sliders.Length; a++){
-            sliders[a].value = float.Epsilon;
-        }
+        for(int a = 0; a < sliders.Length; a++)
+            sliders[a].value = float.Epsilon / 2;
         bgm_table_row = bga_table_row = row_key = 0;
-        playing_time = double.Epsilon / 2;
-        // playing_time_frame = double.Epsilon / 2;
+        playingTimeAsMilliseconds = 0;
+        fixedDeltaTimeAsMilliseconds = (uint)(Time.fixedDeltaTime * 1000);
     }
     private void Update() {
-        if (escaped) { return; }
+        if (escaped) return;
         if (Input.GetKeyUp(KeyCode.Escape) && !escaped){
             escaped = true;
             SceneManager.UnloadSceneAsync(MainVars.cur_scene_name);
@@ -50,25 +35,22 @@ public class BMSPlayer : MonoBehaviour {
             return;
         }
         if (!no_bgm_notes && !no_key_notes && !no_bgi){
-            // playing_time_frame += Time.deltaTime;
-            for (int a = 0; a < sliders.Length; a++){
-                sliders[a].value = Convert.ToSingle(playing_time / BMS_Reader.total_time);
-                // sliders[a].value = Convert.ToSingle(playing_time_frame / BMS_Reader.total_time);
-            }
+            for (int a = 0; a < sliders.Length; a++)
+                sliders[a].value = Convert.ToSingle(playingTimeAsMilliseconds) / BMSInfo.totalTimeAsMilliseconds;
             //return;
         }
     }
     private void FixedUpdate(){
-        if (escaped) { return; }
+        if (escaped) return;
         if(!no_bgm_notes && !no_key_notes && !no_bgi){
-            if (row_key >= BMS_Reader.note_dataTable.Rows.Count
-                && bgm_table_row >= BMS_Reader.bgm_note_table.Rows.Count
-                && bga_table_row >= BMS_Reader.bga_table.Rows.Count
+            if (row_key >= BMSInfo.note_num_arr.Length
+                && bgm_table_row >= BMSInfo.bgm_num_arr.Length
+                && bga_table_row >= BMSInfo.bga_num_arr.Length
             ){
                 no_bgm_notes = no_key_notes = no_bgi = true;
                 Debug.Log("last note");
             }
-            playing_time += Time.fixedDeltaTime;
+            playingTimeAsMilliseconds += fixedDeltaTimeAsMilliseconds;
         }
     }
 

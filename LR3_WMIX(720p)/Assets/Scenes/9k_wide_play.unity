@@ -10505,7 +10505,6 @@ MonoBehaviour:
   no_bgm_notes: 0
   no_bgi: 0
   currClipNum: 0
-  playing_time: 0
   sliders:
   - {fileID: 1025192961}
   - {fileID: 642909006}
@@ -10945,7 +10944,6 @@ MonoBehaviour:
   - {fileID: 1781402087}
   - {fileID: 968453593}
   - {fileID: 497017719}
-  bgi_num: 0
 --- !u!1 &1536646080
 GameObject:
   m_ObjectHideFlags: 0

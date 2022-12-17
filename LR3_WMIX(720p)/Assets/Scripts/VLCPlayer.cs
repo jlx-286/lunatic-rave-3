@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
-
 public static class VLCPlayer{
 #if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX
     private const string PluginName = "libvlc";
@@ -122,8 +120,13 @@ public static class VLCPlayer{
     }
     public static IntPtr instance;
     public static Dictionary<ushort, IntPtr> medias = new Dictionary<ushort, IntPtr>();
-    public static Dictionary<ushort, string> media_sizes = new Dictionary<ushort, string>();
+    public struct VideoSize{
+        public int width;
+        public int height;
+    }
+    public static Dictionary<ushort, VideoSize> media_sizes = new Dictionary<ushort, VideoSize>();
     public static Texture2D[] media_textures = new Texture2D[4];
+    // public static Dictionary<ushort, Texture2D> media_textures = new Dictionary<ushort, Texture2D>();
     public static Color32[][] color32s = new Color32[4][];
     public static IntPtr[] players = new IntPtr[4];
     public static void VLCRelease(){
@@ -138,5 +141,6 @@ public static class VLCPlayer{
         medias.Clear();
         InstFree(ref instance);
         media_sizes.Clear();
+        // media_textures.Clear();
     }
 }

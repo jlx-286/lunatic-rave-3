@@ -1,29 +1,24 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
 public class NotePlayer : MonoBehaviour {
-    private BMSReader BMS_Reader;
     public BMSPlayer BMS_Player;
     // private string str_note = string.Empty;
     public GameObject[] lanes;
     private Dictionary<string, sbyte> laneDict;
-    private enum KeyState{
+    private enum KeyState : byte{
         Free = 0,
         Down = 1,
         Up = 2,
         Hold = 3
     }
     private KeyState[] laneKeyStates;
-    // Use this for initialization
-    void Start () {
-        BMS_Reader = MainVars.BMSReader;
-        //BMS_Player = MainVars.BMSPlayer;
+    private void Start () {
         laneKeyStates = new KeyState[lanes.Length];
         ArrayList.Repeat(KeyState.Free, laneKeyStates.Length).CopyTo(laneKeyStates);
         laneDict = new Dictionary<string, sbyte>();
-        switch (BMS_Reader.scriptType){
-            case BMSReader.ScriptType.BMS:
+        switch (BMSInfo.scriptType){
+            case BMSInfo.ScriptType.BMS:
                 laneDict["11"] = laneDict["51"] = 1;// laneDict["D1"] = 1;
                 laneDict["12"] = laneDict["52"] = 2;// laneDict["D2"] = 2;
                 laneDict["13"] = laneDict["53"] = 3;// laneDict["D3"] = 3;
@@ -41,7 +36,7 @@ public class NotePlayer : MonoBehaviour {
                 laneDict["28"] = laneDict["68"] = 14;// laneDict["E8"] = 14;
                 laneDict["29"] = laneDict["69"] = 15;// laneDict["E9"] = 15;
                 break;
-            case BMSReader.ScriptType.PMS:
+            case BMSInfo.ScriptType.PMS:
                 laneDict["11"] = laneDict["51"] = 0;// laneDict["D1"] = 0;
                 laneDict["12"] = laneDict["52"] = 1;// laneDict["D2"] = 1;
                 laneDict["13"] = laneDict["53"] = 2;// laneDict["D3"] = 2;
@@ -58,34 +53,25 @@ public class NotePlayer : MonoBehaviour {
                 break;
         }
     }
-	
-	// Update is called once per frame
-	//void Update () {}
+	//private void Update () {}
     private void FixedUpdate(){
-        if (BMS_Player.escaped) { return; }
+        if (BMS_Player.escaped) return;
         if (!BMS_Player.no_key_notes){
-            while(BMS_Player.row_key < BMS_Reader.note_dataTable.Rows.Count){
-                if(BMS_Reader.note_time_arr[BMS_Player.row_key] - BMS_Player.playing_time < Time.fixedDeltaTime){
-                // if ((double)BMS_Reader.note_dataTable.Rows[BMS_Player.row_key][1] - BMS_Player.playing_time < Time.fixedDeltaTime){
-                    //Debug.Log("while?");
-                    // BMS_Player.currClipNum = (ushort)BMS_Reader.note_dataTable.Rows[BMS_Player.row_key][2];
-                    BMS_Player.currClipNum = BMS_Reader.note_num_arr[BMS_Player.row_key];
-                    //Debug.Log(Time.realtimeSinceStartup - BMS_Player.playing_time);
-                    MainMenu.audioSources[BMS_Player.currClipNum].Play();
+            while(BMS_Player.row_key < BMSInfo.note_num_arr.Length){
+                if(BMSInfo.note_time_arr[BMS_Player.row_key] <= BMS_Player.playingTimeAsMilliseconds){
+                    MainMenu.audioSources[BMSInfo.note_num_arr[BMS_Player.row_key]].Play();
                     // str_note = BMS_Reader.note_dataTable.Rows[BMS_Player.row_key][0].ToString();
                     // if (laneDict.ContainsKey(str_note)){
                     //     //channel = laneDict[str_note];
                     //     //if (channel >= 0 && channel < 16){
                     //     //}
                     // }//else { channel = -1; }
-                    if (BMS_Player.row_key >= BMS_Reader.note_dataTable.Rows.Count - 10){
+                    if (BMS_Player.row_key >= BMSInfo.note_num_arr.Length - 10){
                         Debug.Log("near note end");
                     }
                     BMS_Player.row_key++;
                 }
-                else{
-                    break;
-                }
+                else break;
             }
         }
     }

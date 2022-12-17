@@ -1,11 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-
 public class GrooveGauge : MonoBehaviour {
     public Sprite[] digits;
-    List<Transform> gauge_bars;
-    enum GaugeType{
+    Transform[] gauge_bars = new Transform[50];
+    enum GaugeType : byte{
+        Assisted = 10,
         AssistedEasy = 10,
         Easy = 11,
         Normal = 12,
@@ -20,7 +19,7 @@ public class GrooveGauge : MonoBehaviour {
         EX_Grade = 21,
         EXHARD_Grade = 22
     }
-    enum NoteJudge{
+    enum NoteJudge : byte{
         HCN = 8,
         Landmine = 7,
         ExcessivePoor = 6,
@@ -39,9 +38,7 @@ public class GrooveGauge : MonoBehaviour {
         Poor = 1,
     }
     GaugeType gaugeType;
-	// Use this for initialization
-	void Start () {
-        gauge_bars  =  new List<Transform>(50);
+	private void Start () {
         switch (gaugeType){
             case GaugeType.AssistedEasy:
                 break;
@@ -63,8 +60,5 @@ public class GrooveGauge : MonoBehaviour {
                 break;
         }
 	}
-	
-	// Update is called once per frame
-	void Update () {
-	}
+	//private void Update () {}
 }

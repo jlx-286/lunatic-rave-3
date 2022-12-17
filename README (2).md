@@ -1,6 +1,6 @@
 ### Unity Editor Version
 + current:2018.2.0f2 (64-bit)
-+ considering 2019.3 or newer version(s)
++ considering 2019.3 or newer version(s) on Windows
     - Fatal error in GC "GetThreadContext failed" (due to Unity GC with anti-virus program(s)?)
 + considering 2020.2.0 or newer version(s)
     - <https://docs.unity3d.com/2020.2/Documentation/ScriptReference/Time.html>
@@ -9,17 +9,17 @@
 ### Dependencies:
 - Windows (for development)
     - VLC
-    - FFmpeg (libavcodec + libavutil + libavformat)
+    - FFmpeg (libavcodec + libavutil + libavformat + libswresample)
 - Linux (Debian or Ubuntu)
     1. VLC
         ``` shell
-        # sudo apt install libvlc-bin vlc-plugin-base vlc-plugin-video-output libvlc-dev
+        # sudo apt install vlc-plugin-base vlc-plugin-video-output libvlc5
         sudo apt install vlc-plugin-base vlc-plugin-video-output libvlc-dev
         # sudo apt install vlc libvlc-dev
         ```
-    2. FFmpeg
+    2. FFmpeg (libavcodec + libavutil + libavformat + libswresample)
         ```shell
-        # sudo apt install libavformat-dev
+        sudo apt install libavformat-dev
         ```
     3. FluidSynth
         ```shell

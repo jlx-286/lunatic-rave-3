@@ -4143,7 +4143,6 @@ MonoBehaviour:
   - {fileID: 2124302113}
   - {fileID: 2018623868}
   - {fileID: 996121063}
-  bgi_num: 0
 --- !u!1 &685727589
 GameObject:
   m_ObjectHideFlags: 0
@@ -5704,10 +5703,7 @@ MonoBehaviour:
   no_key_notes: 0
   no_bgm_notes: 0
   no_bgi: 0
-  audioSourceForm: {fileID: 0}
-  currSrc: {fileID: 0}
   currClipNum: 0
-  playing_time: 0
   sliders:
   - {fileID: 74620166}
   escaped: 0

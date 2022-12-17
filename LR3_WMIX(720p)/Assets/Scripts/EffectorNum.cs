@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.UI;
-
 public class EffectorNum : MonoBehaviour {
     public Sprite plusImg;
     public Sprite minusImg;
@@ -14,9 +12,9 @@ public class EffectorNum : MonoBehaviour {
     public GameObject target;
     private Image[] digits;
     private bool isPercent;
-    private List<Image> tmp_images;
+    private List<Image> tmp_images = new List<Image>();
     public AudioMixer mixer;
-    [HideInInspector] public enum FXname{
+    [HideInInspector] public enum FXname : byte{
         MasterVolume = 1,
         KeyVolume = 2,
         BGMVolume = 3,
@@ -44,11 +42,9 @@ public class EffectorNum : MonoBehaviour {
         Flanger = 25,
     };
     public FXname fx_name;
-	// Use this for initialization
 	private void Start () {
         isPercent = true;
         slider = this.GetComponent<Slider>();
-        tmp_images = new List<Image>();
         tmp_images.AddRange(target.GetComponentsInChildren<Image>());
         tmp_images.RemoveAt(0);
         digits = tmp_images.ToArray();
@@ -208,7 +204,5 @@ public class EffectorNum : MonoBehaviour {
             case FXname.ReverbLevel:slider.value = MainVars.reverb_level; break;
         }
 	}
-	
-	// Update is called once per frame
 	//private void Update () {}
 }

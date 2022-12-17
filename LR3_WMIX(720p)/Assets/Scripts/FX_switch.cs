@@ -1,17 +1,14 @@
-﻿//using FMOD;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 //using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.UI;
-
 public class FX_switch : MonoBehaviour {
     private Toggle toggle;
     public Sprite[] sprites;
     private Image image;
-    [HideInInspector] public enum ToggleName{
+    [HideInInspector] public enum ToggleName : byte{
         Echo = 1,
         Delay = 1,
         LowPass = 2,
@@ -22,7 +19,6 @@ public class FX_switch : MonoBehaviour {
         Flanger = 7,
     }
     public ToggleName toggleName;
-    // Use this for initialization
     private void Start () {
         toggle = this.gameObject.GetComponent<Toggle>();
         image = this.gameObject.GetComponentInChildren<Image>();
@@ -72,7 +68,5 @@ public class FX_switch : MonoBehaviour {
             }
         });
 	}
-	
-	// Update is called once per frame
 	//private void Update () {}
 }
