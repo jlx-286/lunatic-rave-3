@@ -76,6 +76,7 @@ public static class BMSInfo {
 		bpm = string.Empty;
 		title = string.Empty;
 		artist = string.Empty;
+		playing_scene_name = string.Empty;
 		sub_title.Clear();
 		sub_artist.Clear();
 		comment.Clear();
@@ -103,6 +104,7 @@ public static class BMSInfo {
 		scriptType = ScriptType.Unknown;
 		difficulty = Difficulty.Unknown;
 		totalTimeAsMilliseconds = 0;
+		playing_scene_name = string.Empty;
 		time_as_ms_before_track[0] = 0;
 	}
 }

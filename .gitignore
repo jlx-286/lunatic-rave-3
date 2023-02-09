@@ -85,5 +85,5 @@ crashlytics-build.properties
 /*/[Aa]ssets/**/.*
 /*/[Aa]ssets/**/~*~
 /*/[Aa]ssets/**/cvs
-/*/[Aa]ssets/**/[Pp]lugins/**/*.meta
-/*/[Aa]ssets/**/[Ss]cripts/**/*.meta
+# /*/[Aa]ssets/**/[Pp]lugins/**/*.meta
+# /*/[Aa]ssets/**/[Ss]cripts/**/*.meta

@@ -318,7 +318,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 298141814}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 22b466bedef314591b8e47e589a7fdec, type: 3}
   m_Name: 
@@ -730,6 +730,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   play_b: {fileID: 1623079330}
+  audioSource: {fileID: 104094583}
   rawImage: {fileID: 594292857}
   gm: {fileID: 298141814}
 --- !u!1 &2097204926

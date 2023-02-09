@@ -9,7 +9,7 @@
 ### Dependencies:
 - Windows (for development)
     - VLC
-    - FFmpeg (libavcodec + libavutil + libavformat + libswresample)
+    - FFmpeg (libavcodec + libavutil + libavformat + libswresample + libswscale)
 - Linux (Debian or Ubuntu)
     1. VLC
         ``` shell
@@ -17,9 +17,9 @@
         sudo apt install vlc-plugin-base vlc-plugin-video-output libvlc-dev
         # sudo apt install vlc libvlc-dev
         ```
-    2. FFmpeg (libavcodec + libavutil + libavformat + libswresample)
+    2. FFmpeg (libavcodec + libavutil + libavformat + libswresample + libswscale)
         ```shell
-        sudo apt install libavformat-dev
+        sudo apt install libavformat-dev libswscale-dev
         ```
     3. FluidSynth
         ```shell

@@ -1,26 +1,30 @@
-﻿// using NAudio.Wave;
-// using NLayer;
-// using NVorbis;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using SkiaSharp;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
 using System.Globalization;
 using System.IO;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+// using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+// using System.Threading.Tasks;
 using Ude;
 using UnityEngine;
 public static class StaticClass{
     public const RegexOptions regexOption = RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
-    [DllImport("FFmpegPlugin", EntryPoint = "GetVideoSize")] private extern static bool __GetVideoSize(string path, out int width, out int height);
-    [DllImport("FFmpegPlugin")] private extern static IntPtr GetAudioSamples(string path, out int channels, out int frequency, out ulong length);
-    [DllImport("FFmpegPlugin")] private extern static void FreeAudioSamples(IntPtr ptr);
+    public const ushort Base36ArrLen = (ushort)36*36-1;
+    private const string PluginName = "FFmpegPlugin";
+    [DllImport(PluginName, EntryPoint = "GetVideoSize")] private extern static bool __GetVideoSize(
+        string url, out int width, out int height);
+    [DllImport(PluginName)] private extern static bool GetAudioInfo(
+        string url, out int channels, out int frequency, out ulong length);
+    [DllImport(PluginName)] private extern static unsafe void CopyAudioSamples(
+        float* addr);
+    [DllImport(PluginName)] private extern static bool GetPixelsInfo(
+        string url, out int width, out int height, out bool isBitmap);
+    [DllImport(PluginName)] private extern static unsafe void CopyPixels(
+        void* addr, int width, int height, bool isBitmap);
 /*
     /// <summary>
     /// seconds
@@ -72,7 +76,7 @@ public static class StaticClass{
             return 0;
         }
         s = s.ToLower();
-        string digits = "0123456789abcdefghijklmnopqrstuvwxyz";
+        const string digits = "0123456789abcdefghijklmnopqrstuvwxyz";
         ushort result = 0;
         for(int i = 0; i < s.Length; i++){
             result *= 36;
@@ -82,7 +86,7 @@ public static class StaticClass{
     }
 
     /// <summary>
-    /// Depends on SkiaSharp & SixLabors.ImageSharp
+    /// Depends on FFmpeg libraries
     /// </summary>
     /// <param name="path"></param>
     /// <param name="width"></param>
@@ -91,130 +95,38 @@ public static class StaticClass{
     public static Color32[] GetTextureInfo(string path, out int width, out int height){
         width = height = 0;
         if(!File.Exists(path)) return null;
-        byte[] source = File.ReadAllBytes(path);
-        SKBitmap bitmap = SKBitmap.Decode(source);//.Copy(SKColorType.Rgba8888);
-        width = bitmap.Width;
-        height = bitmap.Height;
-        byte[] dist = bitmap.Bytes;
-        bitmap.Dispose();
-        int index1, index2;
-        int maxSize = Math.Max(width, height);
         Color32[] color32s = null;
-        if (Regex.IsMatch(path, @"\.bmp$", StaticClass.regexOption)
-            || Regex.IsMatch(Image.DetectFormat(source).Name, @"bmp", StaticClass.regexOption)
-        ){
-            color32s = new Color32[maxSize * maxSize];
-            for (int h = 0; h < height; h++){
-                for(int w = 0; w < width; w++){
-                    index1 = width * (h + maxSize - height) + (w + maxSize - width);
-                    index2 = (w + (height - h - 1) * width) * 4;
-                    color32s[index1].b = dist[index2];
-                    color32s[index1].g = dist[index2 + 1];
-                    color32s[index1].r = dist[index2 + 2];
-                    if(color32s[index1].b < 5 && color32s[index1].g < 5 && color32s[index1].r < 5){
-                        color32s[index1].a = 0;
-                    }else color32s[index1].a = dist[index2 + 3];
-                }
-            }
-            width = height = maxSize;
-        }else{
-            color32s = new Color32[width * height];
-            //color32s = new Color32[maxSize * maxSize];
-            for (int h = 0; h < height; h++){
-                for(int w = 0; w < width; w++){
-                    //index1 = width * (h + maxSize - height) + (w + maxSize - width);
-                    index1 = width * h + w; index2 = (w + (height - h - 1) * width) * 4;
-                    color32s[index1].b = dist[index2];
-                    color32s[index1].g = dist[index2 + 1];
-                    color32s[index1].r = dist[index2 + 2];
-                    color32s[index1].a = dist[index2 + 3];
-                }
+        bool isBitmap;
+        if(GetPixelsInfo(path, out width, out height, out isBitmap)){
+            int max = Math.Max(width, height);
+            ulong length = (ulong)max;
+            length *= length;
+            if(length <= int.MaxValue){
+                if(!isBitmap && Regex.IsMatch(path, @"\.bmp$", regexOption))
+                    isBitmap = true;
+                color32s = new Color32[length];
+                unsafe{fixed(void* p = color32s){
+                    CopyPixels(p, width, height, isBitmap);
+                }}
+                width = height = max;
             }
         }
         return color32s;
     }
 
     public static float[] AudioToSamples(string path, out int channels, out int frequency){
-        float[] result = null;
-        channels = frequency = 0;
-        IntPtr ptr = IntPtr.Zero;
-        try{
-            ulong length = 0;
-            ptr = GetAudioSamples(path, out channels, out frequency, out length);
-            if(ptr != IntPtr.Zero && frequency > 0 && channels > 0 && length > 0 && length <= int.MaxValue){
-                result = new float[length];
-                Marshal.Copy(ptr, result, 0, (int)length);
-            }
-        }catch(Exception e){
+        if(!File.Exists(path)){
             channels = frequency = 0;
-            result = null;
-            Debug.LogWarning(e.GetBaseException());
+            // Debug.Log(path);
+            return null;
         }
-        FreeAudioSamples(ptr);
-        /*AudioFormat format = GetAudioFormat(path);
-        //Debug.Log(format);
-        // Debug.Break();
-        switch (format){
-            case AudioFormat.Vorbis:
-                try{
-                    VorbisReader vorbisReader = new VorbisReader(path);
-                    channels = vorbisReader.Channels;
-                    frequency = vorbisReader.SampleRate;
-                    result = new float[vorbisReader.TotalSamples * channels];
-                    vorbisReader.ReadSamples(result, 0, result.Length);
-                    vorbisReader.Dispose();
-                    // vorbisReader = null;
-                }catch(Exception e){
-                    Debug.LogWarning(e.GetBaseException());
-                }
-                break;
-            case AudioFormat.Mpeg:
-                try{
-                    MpegFile mpegFile = new MpegFile(path);
-                    channels = mpegFile.Channels;
-                    frequency = mpegFile.SampleRate;
-                    result = new float[mpegFile.Length / sizeof(float)];
-                    mpegFile.ReadSamples(result, 0, result.Length);
-                    mpegFile.Dispose();
-                    // mpegFile = null;
-                }catch(Exception e){
-                    Debug.LogWarning(e.GetBaseException());
-                }
-                break;
-            case AudioFormat.Others:
-                try{
-                    AudioFileReader audioFileReader = new AudioFileReader(path);
-                    channels = audioFileReader.WaveFormat.Channels;
-                    frequency = audioFileReader.WaveFormat.SampleRate;
-                    result = new float[audioFileReader.Length / sizeof(float)];
-                    audioFileReader.Read(result, 0, result.Length);
-                    // audioFileReader.Flush();
-                    audioFileReader.Dispose();
-                    // audioFileReader = null;
-                }
-                catch(Exception e){
-                    channels = frequency = 0;
-                    result = null;
-                    Debug.LogWarning(e.GetBaseException());
-                }
-                if(result == null){
-                    try{
-                        IntPtr ptr = IntPtr.Zero;
-                        int length = 0;
-                        ptr = GetAudioSamples(path, out channels, out frequency, out length);
-                        if(ptr != IntPtr.Zero && frequency > 0 && channels > 0){
-                            result = new float[length];
-                            Marshal.Copy(ptr, result, 0, length);
-                        }
-                    }catch(Exception e){
-                        channels = frequency = 0;
-                        result = null;
-                        Debug.LogWarning(e.GetBaseException());
-                    }
-                }
-                break;
-            default: break;
-        }*/
+        float[] result = null;
+        ulong length;
+        if(GetAudioInfo(path, out channels, out frequency, out length) && length <= int.MaxValue){
+            result = new float[length];
+            unsafe{fixed(float* p = result) CopyAudioSamples(p); }
+        }
+        else Debug.LogWarning(path + ":Invalid data or too long data");
         /*if(result == null){
             try{
                 channels = FluidManager.channels;
@@ -245,18 +157,17 @@ public static class StaticClass{
         BigInteger bigInteger;
         if(Regex.IsMatch(s, @"^(\+|\-)?0x[0-9a-f]{1,}", StaticClass.regexOption)){
             s = Regex.Match(s, @"^(\+|\-)?0x[0-9a-f]{1,}", StaticClass.regexOption).Value;
-            //s = Regex.Match(s, @"^(+|-)?0x[0-9a-f]{1,}", StaticClass.regexOption).Groups[0].Value;
-            //s = Regex.Match(s, @"^(+|-)?0x[0-9a-f]{1,}", StaticClass.regexOption).Captures[0].Value;
-            //s = Regex.Match(s, @"^(+|-)?0x[0-9a-f]{1,}", StaticClass.regexOption).Groups[0].Captures[0].Value;
+            //s = Regex.Match(s, @"^(\+|\-)?0x[0-9a-f]{1,}", StaticClass.regexOption).Groups[0].Value;
+            //s = Regex.Match(s, @"^(\+|\-)?0x[0-9a-f]{1,}", StaticClass.regexOption).Captures[0].Value;
+            //s = Regex.Match(s, @"^(\+|\-)?0x[0-9a-f]{1,}", StaticClass.regexOption).Groups[0].Captures[0].Value;
             bool minus = false;
             switch (s[0]) {
                 case '0': case '+': minus = false; break;
                 case '-': minus = true; break;
                 default: break;
             }
-            s = s.Substring(s.IndexOf('0'));
-            s = new StringBuilder(s).Remove(s.IndexOf('0') + 1, 1).ToString();
-            //s = s.Remove(s.IndexOf('0') + 1, 1);
+            // s = s.Substring(s.IndexOf('0') + 1);
+            s = s.TrimStart('+').TrimStart('-').Substring(2);
             res = BigInteger.TryParse(s, NumberStyles.AllowHexSpecifier, NumberFormatInfo.InvariantInfo, out bigInteger);
             if (minus && res) bigInteger *= -1;
             if (bigInteger > (BigInteger)decimal.MaxValue)
@@ -278,39 +189,64 @@ public static class StaticClass{
         }
         return res;
     }
-    /*private static int c;
-    private static int gcd(BigInteger a, int b){
-        a = BigInteger.Abs(a);
-        b = Math.Abs(b);
-        if (a == b || a == 0) return b;
-        if (b == 0) return (int)a;
-        c = 0;
-        while (((a & 0x1) == 0) && ((b & 0x1) == 0)){
-            a = a >> 1; b = b >> 1; c++;
-        }
-        while ((a & 0x1) == 0) a = a >> 1;
-        while ((b & 0x1) == 0) b = b >> 1;
-        while(true){
-            if (a == 0) return b << c;
-            if (b == 0) return (int)a << c;
-            if (a < b){
-                b = (b - (int)a) >> 1;
-                //b -= a;
-                while ((b & 0x1) == 0) b = b >> 1;
-            }
-            else if(a > b){
-                a = (a - b) >> 1;
-                //a -= b;
-                while ((a & 0x1) == 0) a = a >> 1;
-            }
-            else if(a == b) return b << c;
-            //else{
-            //    a = (a - b) >> 1;
-            //}
-        }
+    // private static RandomNumberGenerator randomNumberGenerator = RandomNumberGenerator.Create();
+    // private static RNGCryptoServiceProvider rNGCryptoServiceProvider = new RNGCryptoServiceProvider();
+    public static BigInteger RanBigInt(System.Random random, string s){
+        string match = Regex.Match(s, @"^\s{0,}\+?0{0,}\d{1,}").Value;
+        if(string.IsNullOrEmpty(match)) return 0;
+        BigInteger max = BigInteger.Parse(match, NumberStyles.AllowLeadingSign
+            | NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite
+            | NumberStyles.Integer | NumberStyles.Number
+            ,NumberFormatInfo.InvariantInfo);
+        if(max < 1) return 0;
+        if(max == 1) return 1;
+        byte[] src = max.ToByteArray();
+        // byte[] src = new byte[max.ToByteArray().Length];
+        BigInteger result;
+        do{
+            random.NextBytes(src);
+            // randomNumberGenerator.GetBytes(src);
+            result = new BigInteger(src);
+        }while(result < 1 || result > max);
+        return result;
     }
-    */
-    public static BigInteger Lcm(SortedSet<int> s){
+    /*public struct Rational// : IComparable, IComparable<Rational>, IEquatable<Rational>, IFormattable
+    {
+        public BigInteger num;
+        public BigInteger den;
+        private static Rational Trim(Rational value){
+            if(value.den == 0) throw new Exception("Zero Divisor");
+            else if(value.num == 0) value.den = 1;
+            else{
+                BigInteger gcd = BigInteger.GreatestCommonDivisor(
+                    BigInteger.Abs(value.num),
+                    BigInteger.Abs(value.den));
+                value.num /= gcd;
+                value.den /= gcd;
+            }
+            return value;
+        }
+        public static Rational operator ++(Rational value){
+            value.num += value.den;
+            return Rational.Trim(value);
+        }
+        public static Rational operator --(Rational value){
+            value.num -= value.den;
+            return Rational.Trim(value);
+        }
+        public static Rational operator +(Rational left, Rational right){
+            left = Rational.Trim(left);
+            right = Rational.Trim(right);
+            BigInteger lcm = left.den / BigInteger.GreatestCommonDivisor(
+                left.den, right.den) * right.den;
+            left.num *= lcm / left.den;
+            right.num *= lcm / right.den;
+            left.den = lcm;
+            left.num += right.num;
+            return Rational.Trim(left);
+        }
+    }*/
+    public static BigInteger LCM(SortedSet<int> s){
         if(s == null || s.Count < 1 || s.Min < 1) return 0;
         s.Remove(1);
         if(s.Count < 1) return 1;

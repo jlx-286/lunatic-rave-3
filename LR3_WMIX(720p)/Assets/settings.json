@@ -1,6 +1,6 @@
 {
     "Jukebox1":{
-        "BMS root directory":""
+        "BMS directories":[""]
     },
     "Jukebox2":{
         "random select":false,
@@ -42,7 +42,8 @@
             "font size":24,
             "font size list":[],
             "font name list":[]
-        }
+        },
+        "ignore zero and minus BPM":true
     },
     "select":{
         "preview":false,

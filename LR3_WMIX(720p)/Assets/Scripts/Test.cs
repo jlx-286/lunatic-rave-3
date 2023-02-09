@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -13,7 +14,7 @@ using ThreadState = System.Threading.ThreadState;
 using Debug = UnityEngine.Debug;
 public class Test : MonoBehaviour {
     public Button play_b;
-    // public AudioSource audioSource;
+    public AudioSource audioSource;
     public RawImage rawImage;
     public GameObject gm;
     // private IntPtr player;
@@ -52,30 +53,29 @@ public class Test : MonoBehaviour {
             FluidManager.fluid_player_join(player);
             FluidManager.delete_fluid_player(player);
         }*/
+        Debug.Log((int)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond) & int.MaxValue);
         /*AudioClip clip = null;
         int channels, frequency, length, lengthSamples;
-        float[] samples = null;
-        FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 1d);
-        samples = FluidManager.MidiToSamples(Application.dataPath + "/~Media~/onestop.mid", out lengthSamples, out frequency);
-        // FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 3d, 1000d);
-        // samples = StaticClass.AudioToSamples(Application.dataPath + "/~Media~/vo2.ogg", out channels, out frequency);
+        float[] samples = StaticClass.AudioToSamples(Application.dataPath + "/~Media~/Angel Dust.mp3", out channels, out frequency);
+        // FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 1d);
+        // samples = FluidManager.MidiToSamples(Application.dataPath + "/~Media~/onestop.mid", out lengthSamples, out frequency);
         if (samples != null){
-            clip = AudioClip.Create("midiclip", samples.Length / FluidManager.channels, FluidManager.channels, frequency, false);
-            //clip = AudioClip.Create("ffmpeg", samples.Length / channels, channels, frequency, false);
+            // clip = AudioClip.Create("midiclip", samples.Length / FluidManager.channels, FluidManager.channels, frequency, false);
+            clip = AudioClip.Create("ffmpeg", samples.Length / channels, channels, frequency, false);
             clip.SetData(samples, 0);
             Debug.Log(clip.samples);
             Debug.Log(clip.length);
             //Debug.Log(samples.Length);
         }
-        audioSource.clip = clip;*/
+        audioSource.clip = clip;
         Debug.Log(DateTime.Now.TimeOfDay.TotalSeconds);
         Debug.Log(DateTime.Now.Date.Second);
         rawImage.texture = Texture2D.blackTexture;
         play_b.onClick.AddListener(() => {
-            // audioSource.Play();
-            // Debug.Log(audioSource.isPlaying);
-            DestroyImmediate(gm);
-        });
+            audioSource.Play();
+            Debug.Log(audioSource.isPlaying);
+            // DestroyImmediate(gm);
+        });*/
     }
     
     // Update is called once per frame
