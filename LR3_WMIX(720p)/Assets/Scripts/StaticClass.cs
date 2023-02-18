@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -161,7 +163,7 @@ public static class StaticClass{
             //s = Regex.Match(s, @"^(\+|\-)?0x[0-9a-f]{1,}", StaticClass.regexOption).Captures[0].Value;
             //s = Regex.Match(s, @"^(\+|\-)?0x[0-9a-f]{1,}", StaticClass.regexOption).Groups[0].Captures[0].Value;
             bool minus = false;
-            switch (s[0]) {
+            switch (s[0]){
                 case '0': case '+': minus = false; break;
                 case '-': minus = true; break;
                 default: break;
@@ -191,13 +193,13 @@ public static class StaticClass{
     }
     // private static RandomNumberGenerator randomNumberGenerator = RandomNumberGenerator.Create();
     // private static RNGCryptoServiceProvider rNGCryptoServiceProvider = new RNGCryptoServiceProvider();
-    public static BigInteger RanBigInt(System.Random random, string s){
-        string match = Regex.Match(s, @"^\s{0,}\+?0{0,}\d{1,}").Value;
-        if(string.IsNullOrEmpty(match)) return 0;
-        BigInteger max = BigInteger.Parse(match, NumberStyles.AllowLeadingSign
-            | NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite
-            | NumberStyles.Integer | NumberStyles.Number
-            ,NumberFormatInfo.InvariantInfo);
+    public static BigInteger NextBigInteger(this System.Random random, BigInteger max){
+        // string match = Regex.Match(s, @"^\s{0,}\+?0{0,}\d{1,}").Value;
+        // if(string.IsNullOrEmpty(match)) return 0;
+        // BigInteger max = BigInteger.Parse(match, NumberStyles.AllowLeadingSign
+        //     | NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite
+        //     | NumberStyles.Integer | NumberStyles.Number
+        //     , NumberFormatInfo.InvariantInfo);
         if(max < 1) return 0;
         if(max == 1) return 1;
         byte[] src = max.ToByteArray();
@@ -210,42 +212,50 @@ public static class StaticClass{
         }while(result < 1 || result > max);
         return result;
     }
-    /*public struct Rational// : IComparable, IComparable<Rational>, IEquatable<Rational>, IFormattable
-    {
-        public BigInteger num;
-        public BigInteger den;
-        private static Rational Trim(Rational value){
-            if(value.den == 0) throw new Exception("Zero Divisor");
-            else if(value.num == 0) value.den = 1;
-            else{
-                BigInteger gcd = BigInteger.GreatestCommonDivisor(
-                    BigInteger.Abs(value.num),
-                    BigInteger.Abs(value.den));
-                value.num /= gcd;
-                value.den /= gcd;
-            }
-            return value;
-        }
-        public static Rational operator ++(Rational value){
-            value.num += value.den;
-            return Rational.Trim(value);
-        }
-        public static Rational operator --(Rational value){
-            value.num -= value.den;
-            return Rational.Trim(value);
-        }
-        public static Rational operator +(Rational left, Rational right){
-            left = Rational.Trim(left);
-            right = Rational.Trim(right);
-            BigInteger lcm = left.den / BigInteger.GreatestCommonDivisor(
-                left.den, right.den) * right.den;
-            left.num *= lcm / left.den;
-            right.num *= lcm / right.den;
-            left.den = lcm;
-            left.num += right.num;
-            return Rational.Trim(left);
-        }
-    }*/
+    public static uint gcd(uint a, uint b){
+        if(a == 0 || a == b) return b;
+		if(b == 0) return a;
+		byte c = 0;
+		while(((a & 1) == 0) && ((b & 1) == 0)){
+			a >>= 1; b >>= 1; c++;
+		}
+		while(((a & 1) == 0)) a >>= 1;
+		while(((b & 1) == 0)) b >>= 1;
+		while(true){
+			if(a == 0 || a == b) return b << c;
+			if(b == 0) return a << c;
+			if(a < b){
+				b = (b - a) >> 1;
+				// b -= a;
+				while(((b & 1) == 0)) b >>= 1;
+			}
+			else if(a > b){
+				a = (a - b) >> 1;
+				// a -= b;
+				while(((a & 1) == 0)) a >>= 1;
+			}
+		}
+    }
+    private sealed class EqualityComparer<T> : IEqualityComparer<T> where T : class{
+        private readonly Func<T, T, bool> _func;
+        public EqualityComparer(Func<T, T, bool> func){ _func = func; }
+        public bool Equals(T x, T y) => _func(x, y);
+        public int GetHashCode(T obj) => 0;
+    }
+    public static IEnumerable<T> Distinct<T>(
+        this IEnumerable<T> source, Func<T, T, bool> comparer)
+        where T : class => source.Distinct(new EqualityComparer<T>(comparer));
+    /*public unsafe static uint TryGetGCD(int a, int b){
+        uint aa,bb;
+        if(a == int.MinValue) aa = *(uint*)&a;
+        else if(a < 0) aa = (uint)Math.Abs(a);
+        else aa = (uint)a;
+        if(b == int.MinValue) bb = *(uint*)&b;
+        else if(b < 0) bb = (uint)Math.Abs(b);
+        else bb = (uint)b;
+		return gcd(aa, bb);
+	}
+    
     public static BigInteger LCM(SortedSet<int> s){
         if(s == null || s.Count < 1 || s.Min < 1) return 0;
         s.Remove(1);
@@ -259,5 +269,5 @@ public static class StaticClass{
             result *= integers[i] / BigInteger.GreatestCommonDivisor(result, integers[i]);
         }
         return result;
-    }
+    }*/
 }

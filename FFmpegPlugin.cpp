@@ -1,6 +1,3 @@
-#ifndef __cplusplus
-#error "not __cplusplus"
-#endif
 #define __STDC_CONSTANT_MACROS
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
@@ -8,7 +5,7 @@
 #include <string.h>
 // #include <float.h>
 #include <deque>
-#include <cmath>
+// #include <cmath>
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>

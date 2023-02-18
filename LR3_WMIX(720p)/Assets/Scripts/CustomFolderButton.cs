@@ -13,7 +13,7 @@ public class CustomFolderButton : SongList{
         that = this.gameObject;
         button = that.GetComponent<Button>();
         button.onClick.AddListener(()=>{
-            if (isFolder){
+            if(isFolder){
                 MainVars.bms_file_path += that.GetComponentInChildren<Text>().text + '/';
                 loaded = false;
             }else{

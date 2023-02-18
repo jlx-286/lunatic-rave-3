@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 public class GrooveGauge : MonoBehaviour {
-    public Sprite[] digits;
+    public RawImage[] digits;
     Transform[] gauge_bars = new Transform[50];
     enum GaugeType : byte{
         Assisted = 10,
@@ -38,8 +39,8 @@ public class GrooveGauge : MonoBehaviour {
         Poor = 1,
     }
     GaugeType gaugeType;
-	private void Start () {
-        switch (gaugeType){
+	private void Start(){
+        switch(gaugeType){
             case GaugeType.AssistedEasy:
                 break;
             case GaugeType.Easy:
@@ -60,5 +61,5 @@ public class GrooveGauge : MonoBehaviour {
                 break;
         }
 	}
-	//private void Update () {}
+	//private void Update(){}
 }

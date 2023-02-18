@@ -6,47 +6,47 @@ public static class VLCPlayer{
 #if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX
     private const string PluginName = "libvlc";
     // private const string PluginName = "libvlc5";
-    [DllImport(PluginName)] private extern static IntPtr libvlc_new(
+    [DllImport(PluginName)] private extern static UIntPtr libvlc_new(
         int argc, string[] args);// return instance
-    [DllImport(PluginName)] private extern static IntPtr libvlc_media_new_path(
-        IntPtr instance, string path);// return media
-    // [DllImport(PluginName)] private extern static IntPtr libvlc_media_new_location(
-    //     IntPtr instance, string path);// return media
+    [DllImport(PluginName)] private extern static UIntPtr libvlc_media_new_path(
+        UIntPtr instance, string path);// return media
+    // [DllImport(PluginName)] private extern static UIntPtr libvlc_media_new_location(
+    //     UIntPtr instance, string path);// return media
     [DllImport(PluginName)] private extern static void libvlc_media_parse(
-        IntPtr media);// parse media
-    public static IntPtr MediaNew(IntPtr instance, string path){
-        IntPtr media = IntPtr.Zero;
+        UIntPtr media);// parse media
+    public static UIntPtr MediaNew(UIntPtr instance, string path){
+        UIntPtr media = UIntPtr.Zero;
         media = libvlc_media_new_path(instance, path);
         // media = libvlc_media_new_location(instance, path);
-        if(media != IntPtr.Zero) libvlc_media_parse(media);
+        if(media != UIntPtr.Zero) libvlc_media_parse(media);
         return media;
     }
-    [DllImport(PluginName)] private extern static IntPtr libvlc_media_player_new_from_media(
-        IntPtr media);// return player
+    [DllImport(PluginName)] private extern static UIntPtr libvlc_media_player_new_from_media(
+        UIntPtr media);// return player
     // [DllImport(PluginName)] public extern static int libvlc_video_get_size(
-    //     IntPtr player, uint offset, out uint width, out uint height);
+    //     UIntPtr player, uint offset, out uint width, out uint height);
     [DllImport(PluginName)] private extern static void libvlc_video_set_format(
-        IntPtr player, string chroma, uint width, uint height, uint pitch);
+        UIntPtr player, string chroma, uint width, uint height, uint pitch);
     [DllImport(PluginName)] private extern static void libvlc_media_player_set_time(
-        IntPtr player, long ms);
+        UIntPtr player, long ms);
     [DllImport(PluginName)] private extern static int libvlc_media_player_play(
-        IntPtr player);
+        UIntPtr player);
     #region libvlc_video_set_callbacks
-    private unsafe delegate IntPtr Lock_cb(void* opaque, void** planes);
+    private unsafe delegate UIntPtr Lock_cb(void* opaque, void** planes);
     private unsafe delegate void Unlock_cb(void* opaque, void* picture, void** planes);
     private unsafe delegate void Display_cb(void* opaque, void* picture);
     [DllImport(PluginName, CallingConvention = CallingConvention.StdCall)]
-    private extern static void libvlc_video_set_callbacks(
-        IntPtr player, Lock_cb lock_cb, Unlock_cb unlock_cb, Display_cb display_cb, IntPtr data);
-    public static unsafe IntPtr PlayerNew(IntPtr media, string chroma, uint width,
-    uint height, uint pitch, IntPtr data, long ms = 0){
-        if(media == IntPtr.Zero || width < 1 || height < 1 || pitch < 1) return IntPtr.Zero;
-        IntPtr player = libvlc_media_player_new_from_media(media);
-        if(player != IntPtr.Zero){
+    private extern static unsafe void libvlc_video_set_callbacks(
+        UIntPtr player, Lock_cb lock_cb, Unlock_cb unlock_cb, Display_cb display_cb, void* data);
+    public static unsafe UIntPtr PlayerNew(UIntPtr media, string chroma, uint width,
+    uint height, uint pitch, void* data, long ms = 0){
+        if(media == UIntPtr.Zero || width < 1 || height < 1 || pitch < 1) return UIntPtr.Zero;
+        UIntPtr player = libvlc_media_player_new_from_media(media);
+        if(player != UIntPtr.Zero){
             libvlc_video_set_format(player, chroma, width, height, pitch);
             libvlc_video_set_callbacks(player, (opaque, planes)=>{
                 *planes = opaque;
-                return IntPtr.Zero;
+                return UIntPtr.Zero;
             },(opaque, picture, planes)=>{
                 opaque = *planes;
             },null,data);
@@ -69,8 +69,8 @@ public static class VLCPlayer{
         libvlc_Ended,
         libvlc_Error
     };
-    [DllImport(PluginName)] private extern static libvlc_state_t libvlc_media_player_get_state(IntPtr player);
-    public static bool PlayerPlaying(IntPtr player){
+    [DllImport(PluginName)] private extern static libvlc_state_t libvlc_media_player_get_state(UIntPtr player);
+    public static bool PlayerPlaying(UIntPtr player){
         libvlc_state_t t = libvlc_media_player_get_state(player);
         // Debug.Log(t);
         // return t < libvlc_state_t.libvlc_Paused;
@@ -78,57 +78,58 @@ public static class VLCPlayer{
     }
     #endregion
     [DllImport(PluginName)] private extern static void libvlc_media_release(
-        IntPtr media);
-    private static void MediaFree(IntPtr media){
-        if(media != IntPtr.Zero){
+        UIntPtr media);
+    private static void MediaFree(UIntPtr media){
+        if(media != UIntPtr.Zero){
             libvlc_media_release(media);
         }
     }
     [DllImport(PluginName)] private extern static void libvlc_media_player_release(
-        IntPtr player);
+        UIntPtr player);
     [DllImport(PluginName)] private extern static void libvlc_media_player_stop(
-        IntPtr player);
-    public static void PlayerFree(ref IntPtr player){
-        if(player != IntPtr.Zero){
+        UIntPtr player);
+    public static void PlayerFree(ref UIntPtr player){
+        if(player != UIntPtr.Zero){
             libvlc_media_player_stop(player);
             libvlc_media_player_release(player);
-            player = IntPtr.Zero;
+            player = UIntPtr.Zero;
         }
     }
     [DllImport(PluginName)] private extern static void libvlc_release(
-        IntPtr instance);
-    private static void InstFree(ref IntPtr instance){
-        if(instance != IntPtr.Zero){
+        UIntPtr instance);
+    private static void InstFree(ref UIntPtr instance){
+        if(instance != UIntPtr.Zero){
             libvlc_release(instance);
-            instance = IntPtr.Zero;
+            instance = UIntPtr.Zero;
         }
     }
 #else
     private const string PluginName = "VLCPlugin";
-    [DllImport(PluginName, EntryPoint = "InstNew")] private extern static IntPtr libvlc_new(
+    [DllImport(PluginName, EntryPoint = "InstNew")] private extern static UIntPtr libvlc_new(
         int argc, string[] args);
-    [DllImport(PluginName)] public extern static IntPtr MediaNew(IntPtr instance, string path);
-    [DllImport(PluginName)] public extern static IntPtr PlayerNew(IntPtr media, string chroma,
-        uint width, uint height, uint pitch, IntPtr data, long ms = 0);
-    [DllImport(PluginName)] public extern static void PlayerFree(ref IntPtr player);
-    [DllImport(PluginName)] private extern static void MediaFree(IntPtr media);
-    [DllImport(PluginName)] private extern static void InstFree(ref IntPtr instance);
-    [DllImport(PluginName)] public extern static bool PlayerPlaying(IntPtr player);
+    [DllImport(PluginName)] public extern static UIntPtr MediaNew(UIntPtr instance, string path);
+    [DllImport(PluginName)] public extern static unsafe UIntPtr PlayerNew(UIntPtr media, string chroma,
+        uint width, uint height, uint pitch, void* data, long ms = 0);
+    [DllImport(PluginName)] public extern static void PlayerFree(ref UIntPtr player);
+    [DllImport(PluginName)] private extern static void MediaFree(UIntPtr media);
+    [DllImport(PluginName)] private extern static void InstFree(ref UIntPtr instance);
+    [DllImport(PluginName)] public extern static bool PlayerPlaying(UIntPtr player);
 #endif
-    public static IntPtr InstNew(string[] args){
+    public static UIntPtr InstNew(string[] args){
         return args == null ? libvlc_new(0, null) : libvlc_new(args.Length, args);
     }
-    public static IntPtr instance;
-    public static Dictionary<ushort, IntPtr> medias = new Dictionary<ushort, IntPtr>();
+    public static UIntPtr instance;
+    public static Dictionary<ushort, UIntPtr> medias = new Dictionary<ushort, UIntPtr>();
+    [StructLayout(LayoutKind.Explicit)]
     public struct VideoSize{
-        public int width;
-        public int height;
+        [FieldOffset(0)] public int width;
+        [FieldOffset(sizeof(int))] public int height;
     }
     public static Dictionary<ushort, VideoSize> media_sizes = new Dictionary<ushort, VideoSize>();
     public static Texture2D[] media_textures = new Texture2D[4];
     // public static Dictionary<ushort, Texture2D> media_textures = new Dictionary<ushort, Texture2D>();
     public static Color32[][] color32s = new Color32[4][];
-    public static IntPtr[] players = new IntPtr[4];
+    public static UIntPtr[] players = new UIntPtr[4];
     public static void VLCRelease(){
         for(int p = 0; p < players.Length; p++){
             PlayerFree(ref players[p]);

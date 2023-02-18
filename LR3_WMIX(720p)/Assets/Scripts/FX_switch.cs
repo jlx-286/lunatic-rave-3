@@ -19,10 +19,10 @@ public class FX_switch : MonoBehaviour {
         Flanger = 7,
     }
     public ToggleName toggleName;
-    private void Start () {
+    private void Start(){
         toggle = this.gameObject.GetComponent<Toggle>();
         image = this.gameObject.GetComponentInChildren<Image>();
-        switch (toggleName){
+        switch(toggleName){
             case ToggleName.Delay:
                 toggle.isOn = MainVars.echoFilter.enabled;
                 break;
@@ -46,7 +46,7 @@ public class FX_switch : MonoBehaviour {
         toggle.onValueChanged.AddListener((value) => {
             byte val = Convert.ToByte(value ? 1 : 0);
             image.sprite = sprites[val];
-            switch (toggleName){
+            switch(toggleName){
                 case ToggleName.Delay:
                     MainVars.echoFilter.enabled = value;
                     break;
@@ -68,5 +68,5 @@ public class FX_switch : MonoBehaviour {
             }
         });
 	}
-	//private void Update () {}
+	//private void Update(){}
 }

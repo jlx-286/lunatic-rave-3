@@ -2,7 +2,7 @@
 using UnityEngine;
 public class TestThread : MonoBehaviour {
 	private Thread thread;
-	void Start () {
+	private void Start(){
 		thread = new Thread(()=>{
 			while(true){
 				Debug.Log(null);
@@ -11,7 +11,7 @@ public class TestThread : MonoBehaviour {
 		});
 		thread.Start();
 	}
-	private void OnDestroy() {
+	private void OnDestroy(){
 		Debug.Log("OnDestroy");
 		if(thread != null){
 			thread.Abort();

@@ -42,13 +42,13 @@ public class EffectorNum : MonoBehaviour {
         Flanger = 25,
     };
     public FXname fx_name;
-	private void Start () {
+	private void Start(){
         isPercent = true;
         slider = this.GetComponent<Slider>();
         tmp_images.AddRange(target.GetComponentsInChildren<Image>());
         tmp_images.RemoveAt(0);
         digits = tmp_images.ToArray();
-        if (slider.minValue <= -1f){
+        if(slider.minValue <= -1){
             isPercent = false;
         }else{
             isPercent = true;
@@ -57,24 +57,24 @@ public class EffectorNum : MonoBehaviour {
             int value_int = (int)value;
             byte value_byte = (byte)value;
             sbyte valsb = (sbyte)value;
-            if (isPercent){
+            if(isPercent){
                 digits[0].sprite = numImgs[value_int / 100];
                 //target[0].sprite = numImgs[value_int / 100 - value_int / 1000 * 100];
                 digits[1].sprite = numImgs[value_int / 10 - value_int / 100 * 10];
                 digits[2].sprite = numImgs[value_int - value_int / 10 * 10];
                 //target[2].sprite = numImgs[value_int / 1 - value_int / 10 * 10];
-                if (value_int < 100){
+                if(value_int < 100){
                     digits[0].sprite = zeroImg;
                 }
                 if(value_int < 10){
                     digits[1].sprite = zeroImg;
                 }
             }
-            else {
+            else{
                 if(value_int < 0){
                     digits[0].sprite = minusImg;
                 }
-                else {
+                else{
                     digits[0].sprite = plusImg;
                 }
                 value_int = Math.Abs(value_int);
@@ -84,42 +84,43 @@ public class EffectorNum : MonoBehaviour {
                     digits[1].sprite = zeroImg;
                 }
             }
-            switch (fx_name){
+            switch(fx_name){
                 case FXname.Pitch:
                     MainVars.pitch = valsb;
-                    mixer.SetFloat("pitch", Mathf.Pow(2f, value / 12f));
+                    mixer.SetFloat("pitch", Mathf.Pow(2, valsb / 12f));
                     break;
                 case FXname.Frequency:
                     MainVars.freq = valsb;
-                    mixer.SetFloat("freq", Mathf.Pow(2f, value / 12f));
+                    mixer.SetFloat("freq", Mathf.Pow(2, valsb / 12f));
+                    MainVars.speed = (decimal)Math.Pow(2, valsb / 12d);
                     break;
                 case FXname.EQ62:
                     MainVars.eq_62 = valsb;
-                    mixer.SetFloat("eq62", Mathf.Pow(1.4f, value / 12f));
+                    mixer.SetFloat("eq62", Mathf.Pow(1.4f, valsb / 12f));
                     break;
                 case FXname.EQ160:
                     MainVars.eq_160 = valsb;
-                    mixer.SetFloat("eq160", Mathf.Pow(1.4f, value / 12f));
+                    mixer.SetFloat("eq160", Mathf.Pow(1.4f, valsb / 12f));
                     break;
                 case FXname.EQ400:
                     MainVars.eq_400 = valsb;
-                    mixer.SetFloat("eq400", Mathf.Pow(1.4f, value / 12f));
+                    mixer.SetFloat("eq400", Mathf.Pow(1.4f, valsb / 12f));
                     break;
                 case FXname.EQ1000:
                     MainVars.eq_1000 = valsb;
-                    mixer.SetFloat("eq1000", Mathf.Pow(1.4f, value / 12f));
+                    mixer.SetFloat("eq1000", Mathf.Pow(1.4f, valsb / 12f));
                     break;
                 case FXname.EQ2500:
                     MainVars.eq_2500 = valsb;
-                    mixer.SetFloat("eq2500", Mathf.Pow(1.4f, value / 12f));
+                    mixer.SetFloat("eq2500", Mathf.Pow(1.4f, valsb / 12f));
                     break;
                 case FXname.EQ6300:
                     MainVars.eq_6300 = valsb;
-                    mixer.SetFloat("eq6300", Mathf.Pow(1.4f, value / 12f));
+                    mixer.SetFloat("eq6300", Mathf.Pow(1.4f, valsb / 12f));
                     break;
                 case FXname.EQ16000:
                     MainVars.eq_16000 = valsb;
-                    mixer.SetFloat("eq16000", Mathf.Pow(1.4f, value / 12f));
+                    mixer.SetFloat("eq16000", Mathf.Pow(1.4f, valsb / 12f));
                     break;
                 case FXname.MasterVolume:
                     MainVars.master_vol = value_byte; break;
@@ -129,15 +130,15 @@ public class EffectorNum : MonoBehaviour {
                     MainVars.key_vol = value_byte; break;
                 case FXname.EchoDelay:
                     MainVars.delay_d = value_byte;
-                    MainVars.echoFilter.delay = Math.Max(value * 50, 10f);
+                    MainVars.echoFilter.delay = Math.Max(value_byte * 50, 10);
                     break;
                 case FXname.EchoDecayRatio:
                     MainVars.decay_r = value_byte;
-                    MainVars.echoFilter.decayRatio = value / 100;
+                    MainVars.echoFilter.decayRatio = value_byte / 100f;
                     break;
                 case FXname.LowPassCutoff:
                     MainVars.lowpass_c = value_byte;
-                    MainVars.lowPassFilter.cutoffFrequency = Math.Max(value * 220, 10f);
+                    MainVars.lowPassFilter.cutoffFrequency = Math.Max(value_byte * 220, 10);
                     break;
                 case FXname.LowPassRQ:
                     MainVars.lowpass_Q = value_byte;
@@ -145,15 +146,15 @@ public class EffectorNum : MonoBehaviour {
                     break;
                 case FXname.HighPassCutoff:
                     MainVars.hipass_c = value_byte;
-                    MainVars.highPassFilter.cutoffFrequency = Math.Max(value * 220, 10f);
+                    MainVars.highPassFilter.cutoffFrequency = Math.Max(value_byte * 220, 10);
                     break;
                 case FXname.HighPassRQ:
                     MainVars.hipass_Q = value_byte;
-                    MainVars.highPassFilter.highpassResonanceQ = 0.09f * value_byte + 1f;
+                    MainVars.highPassFilter.highpassResonanceQ = 0.09f * value_byte + 1;
                     break;
                 case FXname.Distortion:
                     MainVars.dist = value_byte;
-                    MainVars.distortionFilter.distortionLevel = value / 100;
+                    MainVars.distortionFilter.distortionLevel = value_byte / 100f;
                     break;
                 case FXname.ChorusDelay:
                     MainVars.chorus_del = value_byte;
@@ -165,7 +166,7 @@ public class EffectorNum : MonoBehaviour {
                     break;
                 case FXname.ChorusDepth:
                     MainVars.chorus_dep = value_byte;
-                    MainVars.chorusFilter.depth = value / 100;
+                    MainVars.chorusFilter.depth = value_byte / 100f;
                     break;
                 case FXname.ReverbDecayTime:
                     MainVars.reverb_dt = value_byte;
@@ -173,11 +174,11 @@ public class EffectorNum : MonoBehaviour {
                     break;
                 case FXname.ReverbLevel:
                     MainVars.reverb_level = value_byte;
-                    MainVars.reverbFilter.reverbLevel = -2000f + value_byte * 20;
+                    MainVars.reverbFilter.reverbLevel = value_byte * 20 - 2000;
                     break;
             }
         });
-        switch (fx_name){
+        switch(fx_name){
             case FXname.Pitch:slider.value = MainVars.pitch; break;
             case FXname.Frequency:slider.value = MainVars.freq; break;
             case FXname.MasterVolume:slider.value = MainVars.master_vol; break;
@@ -204,5 +205,5 @@ public class EffectorNum : MonoBehaviour {
             case FXname.ReverbLevel:slider.value = MainVars.reverb_level; break;
         }
 	}
-	//private void Update () {}
+	//private void Update(){}
 }

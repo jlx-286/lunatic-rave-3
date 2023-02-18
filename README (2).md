@@ -1,10 +1,12 @@
 ### Unity Editor Version
 + current:2018.2.0f2 (64-bit)
-+ considering 2019.3 or newer version(s) on Windows
-    - Fatal error in GC "GetThreadContext failed" (due to Unity GC with anti-virus program(s)?)
++ considering 2019.3 or newer version(s)
+    - Windows: Fatal error in GC "GetThreadContext failed" (due to Unity GC with anti-virus program(s)?)
+    - Linux: The number of "Meshes" in <a href="https://docs.unity3d.com/2018.2/Documentation/Manual/ProfilerMemory.html">"Memory Profiler"</a> increases consistently when editor is playing
+    <br/><img src="https://docs.unity3d.com/2018.2/Documentation/uploads/Main/ProfilerMemorySimple.png"/>
 + considering 2020.2.0 or newer version(s)
     - <https://docs.unity3d.com/2020.2/Documentation/ScriptReference/Time.html>
-	- <a href="https://gamedev.stackexchange.com/questions/141807/what-happens-when-time-time-gets-very-large-in-unity/141867#141867">What happens when Time.time gets very large in Unity?</a>
+	- <a href="https://gamedev.stackexchange.com/questions/141807/what-happens-when-time-time-gets-very-large-in-unity">What happens when Time.time gets very large in Unity?</a>
 
 ### Dependencies:
 - Windows (for development)

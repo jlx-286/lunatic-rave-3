@@ -8,21 +8,21 @@ public class SetNumImg : MonoBehaviour{
     //public Sprite point;
     public Sprite eImg;
     public Image[] target;
-	//void Start () {}
-	//void Update () {}
+	//private void Start(){}
+	//private void Update(){}
     public void SetNum(int num, bool filled){
         num = HalveNum(num);
     }
     private int HalveNum(int num){
         byte length = 1;
         int temp = 1;
-        while (temp < num){
+        while(temp < num){
             temp *= 10;
-            if (temp > num) break;
+            if(temp > num) break;
             length++;
         }
         if(num < 0) return Math.Max(num,1 - (int)Math.Pow(10, length - 1));
-        else if (num > 0) return Math.Min(num, (int)Math.Pow(10, length - 1) - 1);
+        else if(num > 0) return Math.Min(num, (int)Math.Pow(10, length - 1) - 1);
         return 0;
     }
 }

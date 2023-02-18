@@ -8,14 +8,14 @@ public class TabBar : MonoBehaviour{
     public GameObject[] panels;
     public Toggle[] toggles;
     public Material high_lighted;
-    void Start(){
-        for (int i = 0; i < toggles.Length; i++){
+    private void Start(){
+        for(int i = 0; i < toggles.Length; i++){
             int j = i;
             toggles[j].onValueChanged.AddListener(
                 value => panels[j].SetActive(value)
             );
         }
-        if (high_lighted != null){
+        if(high_lighted != null){
             EventTrigger[] eventTriggers;
             //eventTriggers = this.gameObject.GetComponentsInChildren<EventTrigger>();
             eventTriggers = new EventTrigger[toggles.Length];
@@ -42,5 +42,5 @@ public class TabBar : MonoBehaviour{
             }
         }
     }
-    //void Update () {}
+    //private void Update(){}
 }

@@ -15,7 +15,7 @@ public class BMSPlayer : MonoBehaviour {
     [HideInInspector] public int bgm_table_row;
     [HideInInspector] public int bga_table_row;
     [HideInInspector] public int row_key;
-    private void Start () {
+    private void Start(){
         MainVars.cur_scene_name = BMSInfo.playing_scene_name;
         no_key_notes = no_bgm_notes = no_bgi = false;
         title_text.text = BMSInfo.title;
@@ -26,22 +26,22 @@ public class BMSPlayer : MonoBehaviour {
         playingTimeAsMilliseconds = 0;
         fixedDeltaTimeAsMilliseconds = (uint)(Time.fixedDeltaTime * 1000);
     }
-    private void Update() {
-        if (escaped) return;
-        if (Input.GetKeyUp(KeyCode.Escape) && !escaped){
+    private void Update(){
+        if(escaped) return;
+        if(Input.GetKeyUp(KeyCode.Escape) && !escaped){
             escaped = true;
             SceneManager.UnloadSceneAsync(MainVars.cur_scene_name);
             SceneManager.LoadScene("Select", LoadSceneMode.Additive);
             return;
         }
-        if (!no_bgm_notes && !no_key_notes && !no_bgi){
-            for (int a = 0; a < sliders.Length; a++)
+        if(!no_bgm_notes && !no_key_notes && !no_bgi){
+            for(int a = 0; a < sliders.Length; a++)
                 sliders[a].value = Convert.ToSingle(playingTimeAsMilliseconds) / BMSInfo.totalTimeAsMilliseconds;
             //return;
         }
     }
     private void FixedUpdate(){
-        if (escaped) return;
+        if(escaped) return;
         if(!no_bgm_notes && !no_key_notes && !no_bgi){
             if (row_key >= BMSInfo.note_num_arr.Length
                 && bgm_table_row >= BMSInfo.bgm_num_arr.Length
