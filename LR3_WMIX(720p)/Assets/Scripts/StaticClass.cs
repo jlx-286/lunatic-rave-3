@@ -47,7 +47,7 @@ public static class StaticClass{
     /// <returns></returns>
     public static Encoding GetEncodingByFilePath(string path){
         CharsetDetector detector = new CharsetDetector();
-        using (FileStream fileStream = File.OpenRead(path)){
+        using(FileStream fileStream = File.OpenRead(path)){
             detector.Feed(fileStream);
             detector.DataEnd();
             fileStream.Flush();
@@ -56,7 +56,7 @@ public static class StaticClass{
         Encoding Shift_JIS = Encoding.GetEncoding("shift_jis");
         // Debug.Log(detector.Charset);
         // Debug.Log(detector.Confidence);
-        if (!string.IsNullOrEmpty(detector.Charset)){
+        if(!string.IsNullOrEmpty(detector.Charset)){
             Encoding encoding = Encoding.GetEncoding(detector.Charset);
             if(encoding != Shift_JIS && detector.Confidence <= 0.7f && detector.Confidence > 0.6f){
                 return Encoding.GetEncoding("GB18030");
@@ -74,7 +74,7 @@ public static class StaticClass{
     /// <param name="s"></param>
     /// <returns>ushort number</returns>
     public static ushort Convert36To10(string s){
-        if (s == null || !Regex.IsMatch(s, @"^[0-9a-z]{1,}$", StaticClass.regexOption)){
+        if(s == null || !Regex.IsMatch(s, @"^[0-9a-z]{1,}$", StaticClass.regexOption)){
             return 0;
         }
         s = s.ToLower();
@@ -153,7 +153,7 @@ public static class StaticClass{
     }
     public static bool TryParseDecimal(string s, out decimal m){
         m = decimal.Zero;
-        if (string.IsNullOrEmpty(s) || string.IsNullOrWhiteSpace(s)) return false;
+        if(string.IsNullOrEmpty(s) || string.IsNullOrWhiteSpace(s)) return false;
         s = s.Trim();
         bool res = false;
         BigInteger bigInteger;
@@ -163,7 +163,7 @@ public static class StaticClass{
             //s = Regex.Match(s, @"^(\+|\-)?0x[0-9a-f]{1,}", StaticClass.regexOption).Captures[0].Value;
             //s = Regex.Match(s, @"^(\+|\-)?0x[0-9a-f]{1,}", StaticClass.regexOption).Groups[0].Captures[0].Value;
             bool minus = false;
-            switch (s[0]){
+            switch(s[0]){
                 case '0': case '+': minus = false; break;
                 case '-': minus = true; break;
                 default: break;
@@ -171,10 +171,10 @@ public static class StaticClass{
             // s = s.Substring(s.IndexOf('0') + 1);
             s = s.TrimStart('+').TrimStart('-').Substring(2);
             res = BigInteger.TryParse(s, NumberStyles.AllowHexSpecifier, NumberFormatInfo.InvariantInfo, out bigInteger);
-            if (minus && res) bigInteger *= -1;
-            if (bigInteger > (BigInteger)decimal.MaxValue)
+            if(minus && res) bigInteger *= -1;
+            if(bigInteger > (BigInteger)decimal.MaxValue)
                 m = decimal.MaxValue;
-            else if (bigInteger < (BigInteger)decimal.MinValue)
+            else if(bigInteger < (BigInteger)decimal.MinValue)
                 m = decimal.MinValue;
             else m = (decimal)bigInteger;
         }
@@ -183,9 +183,9 @@ public static class StaticClass{
             // Debug.Log(s);
             res = BigInteger.TryParse(s, NumberStyles.Any & (~NumberStyles.AllowCurrencySymbol), NumberFormatInfo.InvariantInfo, out bigInteger);
             // Debug.Log(bigInteger);
-            if (bigInteger >= (BigInteger)decimal.MaxValue)
+            if(bigInteger >= (BigInteger)decimal.MaxValue)
                 m = decimal.MaxValue;
-            else if (bigInteger <= (BigInteger)decimal.MinValue)
+            else if(bigInteger <= (BigInteger)decimal.MinValue)
                 m = decimal.MinValue;
             else res = decimal.TryParse(s, NumberStyles.Any & (~NumberStyles.AllowCurrencySymbol), NumberFormatInfo.InvariantInfo, out m);
         }

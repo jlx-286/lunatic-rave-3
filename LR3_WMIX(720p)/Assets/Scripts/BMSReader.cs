@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -87,7 +88,8 @@ public class BMSReader : MonoBehaviour{
         Keys18 = 2,
     }
     public Slider slider;
-    private Queue<UnityAction> unityActions = new Queue<UnityAction>(StaticClass.Base36ArrLen);
+    private ConcurrentQueue<UnityAction> unityActions = new ConcurrentQueue<UnityAction>();
+    private UnityAction action;
     private bool doingAction = false;
     private bool illegal = false;
     public Button play_btn;
@@ -121,12 +123,12 @@ public class BMSReader : MonoBehaviour{
     DataRow[] dataRows = null;
     private decimal[] track_end_bpms = (decimal[])ArrayList.Repeat(decimal.Zero, 1000).ToArray(typeof(decimal));
     #endregion
-    private void Start () {
+    private void Start(){
         thread = new Thread(ReadScript);
         thread.Start();
     }
-    private void OnDestroy() {
-        if(thread != null) {
+    private void OnDestroy(){
+        if(thread != null){
             thread.Abort();
             thread = null;
         }
@@ -229,8 +231,8 @@ public class BMSReader : MonoBehaviour{
                 file_lines[j] = string.Empty;
             }
             else if(curr_level < min_false_level){
-                //if(file_lines[j].ToUpper().StartsWith(@"%URL ")) { file_lines[j] = string.Empty; continue; }
-                //if(file_lines[j].ToUpper().StartsWith(@"%EMAIL ")) { file_lines[j] = string.Empty; continue; }
+                //if(file_lines[j].ToUpper().StartsWith(@"%URL ")){ file_lines[j] = string.Empty; continue; }
+                //if(file_lines[j].ToUpper().StartsWith(@"%EMAIL ")){ file_lines[j] = string.Empty; continue; }
                 if(!file_lines[j].StartsWith("#")) file_lines[j] = string.Empty;
                 else if(Regex.IsMatch(file_lines[j], @"^#RANDOM(\s+.+)$", StaticClass.regexOption)){
                     if(ifs_count.Count > 0 && ifs_count.top.value == 0){
@@ -393,7 +395,7 @@ public class BMSReader : MonoBehaviour{
                     || file_lines[j].ToUpper().StartsWith("#DEFEXRANK")
                 ){ file_lines[j] = string.Empty; }
                 #endregion
-                else {
+                else{
                     if(Regex.IsMatch(file_lines[j], @"^#[0-9]{3}[0-9A-Z]{2}:[0-9A-Z\.]{2,}", StaticClass.regexOption)){
                         track = Convert.ToUInt16(file_lines[j].Substring(1, 3));
                         if(tracks_count < track) tracks_count = track;
@@ -603,10 +605,10 @@ public class BMSReader : MonoBehaviour{
                                 ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
                                 trackOffset_ms = ConvertOffset(track, curr_bpm, ld);
-                                try {
+                                try{
                                     bgm_note_table.Rows.Add(BMSInfo.time_as_ms_before_track[track] + trackOffset_ms, u);
                                     CalcTotalTime();
-                                }catch(Exception e) {
+                                }catch(Exception e){
                                     Debug.Log(e.GetBaseException());
                                 }
                             }
@@ -630,7 +632,7 @@ public class BMSReader : MonoBehaviour{
                                 try{
                                     bgm_note_table.Rows.Add(BMSInfo.time_as_ms_before_track[track] + trackOffset_ms, u);
                                     CalcTotalTime();
-                                }catch (Exception e){
+                                }catch(Exception e){
                                     Debug.Log(e.GetBaseException());
                                 }
                             }
@@ -648,7 +650,7 @@ public class BMSReader : MonoBehaviour{
                                     try{
                                         bgm_note_table.Rows.Add(BMSInfo.time_as_ms_before_track[track] + trackOffset_ms, u);
                                         CalcTotalTime();
-                                    }catch (Exception e){
+                                    }catch(Exception e){
                                         Debug.Log(e.GetBaseException());
                                     }
                                     trackOffset_ms += ConvertOffset(track, curr_bpm, Convert.ToDecimal(dataRows[0]["index"]) - ld);
@@ -662,7 +664,7 @@ public class BMSReader : MonoBehaviour{
                                         try{
                                             bgm_note_table.Rows.Add(BMSInfo.time_as_ms_before_track[track] + trackOffset_ms, u);
                                             CalcTotalTime();
-                                        }catch (Exception e){
+                                        }catch(Exception e){
                                             Debug.Log(e.GetBaseException());
                                         }
                                         trackOffset_ms += ConvertOffset(track, curr_bpm, Convert.ToDecimal(dataRows[a]["index"]) - ld);
@@ -678,7 +680,7 @@ public class BMSReader : MonoBehaviour{
                                     try{
                                         bgm_note_table.Rows.Add(BMSInfo.time_as_ms_before_track[track] + trackOffset_ms, u);
                                         CalcTotalTime();
-                                    }catch (Exception e){
+                                    }catch(Exception e){
                                         Debug.Log(e.GetBaseException());
                                     }
                                 }
@@ -702,7 +704,7 @@ public class BMSReader : MonoBehaviour{
                                     bga_table.Rows.Add(channel.ToUpper(), BMSInfo.time_as_ms_before_track[track] + trackOffset_ms, u);
                                     CalcTotalTime();
                                 }
-                                catch (Exception e){
+                                catch(Exception e){
                                     Debug.Log(e.Message);
                                 }
                             }
@@ -727,7 +729,7 @@ public class BMSReader : MonoBehaviour{
                                     bga_table.Rows.Add(channel.ToUpper(), BMSInfo.time_as_ms_before_track[track] + trackOffset_ms, u);
                                     CalcTotalTime();
                                 }
-                                catch (Exception e){
+                                catch(Exception e){
                                     Debug.Log(e.Message);
                                 }
                             }
@@ -746,7 +748,7 @@ public class BMSReader : MonoBehaviour{
                                         bga_table.Rows.Add(channel.ToUpper(), BMSInfo.time_as_ms_before_track[track] + trackOffset_ms, u);
                                         CalcTotalTime();
                                     }
-                                    catch (Exception e){
+                                    catch(Exception e){
                                         Debug.Log(e.Message);
                                     }
                                     trackOffset_ms += ConvertOffset(track, curr_bpm, Convert.ToDecimal(dataRows[0]["index"]) - ld);
@@ -759,7 +761,7 @@ public class BMSReader : MonoBehaviour{
                                             bga_table.Rows.Add(channel.ToUpper(), BMSInfo.time_as_ms_before_track[track] + trackOffset_ms, u);
                                             CalcTotalTime();
                                         }
-                                        catch (Exception e){
+                                        catch(Exception e){
                                             Debug.Log(e.Message);
                                         }
                                         trackOffset_ms += ConvertOffset(track, curr_bpm, Convert.ToDecimal(dataRows[a]["index"]) - ld);
@@ -775,7 +777,7 @@ public class BMSReader : MonoBehaviour{
                                         bga_table.Rows.Add(channel.ToUpper(), BMSInfo.time_as_ms_before_track[track] + trackOffset_ms, u);
                                         CalcTotalTime();
                                     }
-                                    catch (Exception e){
+                                    catch(Exception e){
                                         Debug.Log(e.Message);
                                     }
                                 }
@@ -841,14 +843,14 @@ public class BMSReader : MonoBehaviour{
         });
     }
 
-    // private void FixedUpdate() { }
+    // private void FixedUpdate(){ }
     private void Update(){
-        if(!isDone && unityActions != null && unityActions.Count > 0
+        if(!isDone && unityActions != null && !unityActions.IsEmpty
             && !doingAction
         ){
-            while(unityActions.Count > 0){
+            while(unityActions.TryDequeue(out action)){
                 doingAction = true;
-                unityActions.Dequeue()();
+                action();
             }
         }
     }
@@ -872,7 +874,7 @@ public class BMSReader : MonoBehaviour{
         bga_table.Clear();
         bga_table.Dispose();
         bga_table = null;
-        unityActions.Clear();
+        // unityActions.Clear();
         unityActions = null;
         random_nums.Clear();
         random_nums = null;
@@ -936,7 +938,7 @@ public class BMSReader : MonoBehaviour{
                                     note_dataTable.Rows.Add(channel, BMSInfo.time_as_ms_before_track[track] + trackOffset_ms, u, noteType);
                                     CalcTotalTime();
                                 }
-                                catch (Exception e){
+                                catch(Exception e){
                                     Debug.Log(e.Message);
                                 }
                             }
@@ -972,7 +974,7 @@ public class BMSReader : MonoBehaviour{
                                     note_dataTable.Rows.Add(channel, BMSInfo.time_as_ms_before_track[track] + trackOffset_ms, u, noteType);
                                     CalcTotalTime();
                                 }
-                                catch (Exception e){
+                                catch(Exception e){
                                     Debug.Log(e.Message);
                                 }
                             }
@@ -1001,7 +1003,7 @@ public class BMSReader : MonoBehaviour{
                                         note_dataTable.Rows.Add(channel, BMSInfo.time_as_ms_before_track[track] + trackOffset_ms, u, noteType);
                                         CalcTotalTime();
                                     }
-                                    catch (Exception e){
+                                    catch(Exception e){
                                         Debug.Log(e.Message);
                                     }
                                     trackOffset_ms += ConvertOffset(track, curr_bpm, Convert.ToDecimal(dataRows[0]["index"]) - ld);
@@ -1014,7 +1016,7 @@ public class BMSReader : MonoBehaviour{
                                             note_dataTable.Rows.Add(channel, BMSInfo.time_as_ms_before_track[track] + trackOffset_ms, u, noteType);
                                             CalcTotalTime();
                                         }
-                                        catch (Exception e){
+                                        catch(Exception e){
                                             Debug.Log(e.Message);
                                         }
                                         trackOffset_ms += ConvertOffset(track, curr_bpm, Convert.ToDecimal(dataRows[a]["index"]) - ld);
@@ -1030,7 +1032,7 @@ public class BMSReader : MonoBehaviour{
                                         note_dataTable.Rows.Add(channel, BMSInfo.time_as_ms_before_track[track] + trackOffset_ms, u, noteType);
                                         CalcTotalTime();
                                     }
-                                    catch (Exception e){
+                                    catch(Exception e){
                                         Debug.Log(e.Message);
                                     }
                                 }
@@ -1063,7 +1065,7 @@ public class BMSReader : MonoBehaviour{
                 playerType = PlayerType.Keys14;
                 BMSInfo.playing_scene_name = "14k_Play";
             }
-            else {
+            else{
                 playerType = PlayerType.Keys10;
                 BMSInfo.playing_scene_name = "14k_Play";
             }
@@ -1072,7 +1074,7 @@ public class BMSReader : MonoBehaviour{
             playerType = PlayerType.Keys7;
             BMSInfo.playing_scene_name = "7k_1P_Play";
         }
-        else {
+        else{
             playerType = PlayerType.Keys5;
             BMSInfo.playing_scene_name = "7k_1P_Play";
         }
@@ -1119,7 +1121,7 @@ public class BMSReader : MonoBehaviour{
                                     note_dataTable.Rows.Add(channel, BMSInfo.time_as_ms_before_track[track] + trackOffset_ms, u, noteType);
                                     CalcTotalTime();
                                 }
-                                catch (Exception e){
+                                catch(Exception e){
                                     Debug.Log(e.Message);
                                 }
                             }
@@ -1155,7 +1157,7 @@ public class BMSReader : MonoBehaviour{
                                     note_dataTable.Rows.Add(channel, BMSInfo.time_as_ms_before_track[track] + trackOffset_ms, u, noteType);
                                     CalcTotalTime();
                                 }
-                                catch (Exception e){
+                                catch(Exception e){
                                     Debug.Log(e.Message);
                                 }
                             }
@@ -1183,7 +1185,7 @@ public class BMSReader : MonoBehaviour{
                                     try{
                                         note_dataTable.Rows.Add(channel, BMSInfo.time_as_ms_before_track[track] + trackOffset_ms, u, noteType);
                                         CalcTotalTime();
-                                    }catch (Exception e){
+                                    }catch(Exception e){
                                         Debug.Log(e.Message);
                                     }
                                     trackOffset_ms += ConvertOffset(track, curr_bpm, Convert.ToDecimal(dataRows[0]["index"]) - ld);
@@ -1196,7 +1198,7 @@ public class BMSReader : MonoBehaviour{
                                             note_dataTable.Rows.Add(channel, BMSInfo.time_as_ms_before_track[track] + trackOffset_ms, u, noteType);
                                             CalcTotalTime();
                                         }
-                                        catch (Exception e){
+                                        catch(Exception e){
                                             Debug.Log(e.Message);
                                         }
                                         trackOffset_ms += ConvertOffset(track, curr_bpm, Convert.ToDecimal(dataRows[a]["index"]) - ld);
@@ -1212,7 +1214,7 @@ public class BMSReader : MonoBehaviour{
                                         note_dataTable.Rows.Add(channel, BMSInfo.time_as_ms_before_track[track] + trackOffset_ms, u, noteType);
                                         CalcTotalTime();
                                     }
-                                    catch (Exception e){
+                                    catch(Exception e){
                                         Debug.Log(e.Message);
                                     }
                                 }
@@ -1241,12 +1243,12 @@ public class BMSReader : MonoBehaviour{
         else if((channelEnum & ChannelEnum.BME_SP) == ChannelEnum.BME_SP){
             if((channelEnum & ChannelEnum.PMS_DP) == ChannelEnum.PMS_DP)
                 playerType = PlayerType.BME_DP;
-            else {
+            else{
                 playerType = PlayerType.BME_SP;
                 BMSInfo.playing_scene_name = "9k_wide_play";
             }
         }
-        else {
+        else{
             playerType = PlayerType.BMS_DP;
             BMSInfo.playing_scene_name = "9k_wide_play";
         }

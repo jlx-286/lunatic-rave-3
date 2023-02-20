@@ -43,7 +43,7 @@ public class BMSPlayer : MonoBehaviour {
     private void FixedUpdate(){
         if(escaped) return;
         if(!no_bgm_notes && !no_key_notes && !no_bgi){
-            if (row_key >= BMSInfo.note_num_arr.Length
+            if(row_key >= BMSInfo.note_num_arr.Length
                 && bgm_table_row >= BMSInfo.bgm_num_arr.Length
                 && bga_table_row >= BMSInfo.bga_num_arr.Length
             ){

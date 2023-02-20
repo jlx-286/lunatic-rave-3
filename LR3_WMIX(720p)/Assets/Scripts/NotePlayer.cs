@@ -61,9 +61,9 @@ public class NotePlayer : MonoBehaviour {
                     // str_note = BMS_Reader.note_dataTable.Rows[BMS_Player.row_key][0].ToString();
                     // if(laneDict.ContainsKey(str_note)){
                     //     //channel = laneDict[str_note];
-                    //     //if (channel >= 0 && channel < 16){
+                    //     //if(channel >= 0 && channel < 16){
                     //     //}
-                    // }//else { channel = -1; }
+                    // }//else{ channel = -1; }
                     if(BMS_Player.row_key >= BMSInfo.note_num_arr.Length - 10){
                         Debug.Log("near note end");
                     }

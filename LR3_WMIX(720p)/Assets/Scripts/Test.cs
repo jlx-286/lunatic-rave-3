@@ -44,7 +44,7 @@ public class Test : MonoBehaviour {
                 FluidManager.channels, frequency, false);
             FluidManager.fluid_player_play(player);
             while(FluidManager.fluid_player_get_status(player) == FluidManager.fluid_player_status.FLUID_PLAYER_PLAYING){
-                if (FluidManager.fluid_synth_write_float(FluidManager.synth, FluidManager.audio_period_size,
+                if(FluidManager.fluid_synth_write_float(FluidManager.synth, FluidManager.audio_period_size,
                     temp, 0, FluidManager.channels, temp, 1, FluidManager.channels) == 0){
                         audioSource.clip.SetData(samples, offset);
                         offset += FluidManager.audio_period_size;
@@ -59,7 +59,7 @@ public class Test : MonoBehaviour {
         float[] samples = StaticClass.AudioToSamples(Application.dataPath + "/~Media~/Angel Dust.mp3", out channels, out frequency);
         // FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 1d);
         // samples = FluidManager.MidiToSamples(Application.dataPath + "/~Media~/onestop.mid", out lengthSamples, out frequency);
-        if (samples != null){
+        if(samples != null){
             // clip = AudioClip.Create("midiclip", samples.Length / FluidManager.channels, FluidManager.channels, frequency, false);
             clip = AudioClip.Create("ffmpeg", samples.Length / channels, channels, frequency, false);
             clip.SetData(samples, 0);
@@ -80,7 +80,7 @@ public class Test : MonoBehaviour {
     
     // Update is called once per frame
     // private void Update(){
-    //     if (Input.GetKeyUp(KeyCode.Space)){
+    //     if(Input.GetKeyUp(KeyCode.Space)){
     //        Debug.Log(KeyCode.Space);
     //     }
     // }
@@ -92,15 +92,15 @@ public class Test : MonoBehaviour {
             Debug.Log(Time.realtimeSinceStartup);
             count--;
         }
-        //if (Input.GetKey(KeyCode.Space)){
+        //if(Input.GetKey(KeyCode.Space)){
         //    playingTime += Time.fixedDeltaTime;
         //    Debug.Log(playingTime);
         //}
-        //if (unityActions != null && unityActions.Count > 0 && !doingAction){
+        //if(unityActions != null && unityActions.Count > 0 && !doingAction){
         //    doingAction = true;
         //    unityActions.Dequeue()();
         //}
-        //if (Input.GetKeyUp(KeyCode.Return)){
+        //if(Input.GetKeyUp(KeyCode.Return)){
         //    Debug.Log(KeyCode.Return);
         //}
     }*/
