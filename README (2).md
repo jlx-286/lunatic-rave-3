@@ -1,15 +1,7 @@
 ### Unity Editor Version
 + current:2018.3.0f2 (64-bit)
 + considering 2019.3 or newer version(s)
-    - Windows: Fatal error in GC "GetThreadContext failed"
-        1. (due to "Queue" without "lock"?)
-        ```cs
-        using System.Collections.Concurrent;
-        //using System.Collections.Generic;
-        //private Queue<UnityAction> unityActions = new Queue<UnityAction>(36*36-1);
-        private ConcurrentQueue<UnityAction> unityActions = new ConcurrentQueue<UnityAction>();
-        ```
-        2. (due to Unity GC with anti-virus program(s)?)
+    - Windows: Fatal error in GC "GetThreadContext failed" (due to Unity GC with anti-virus program(s)?)
 + considering 2020.2.0 or newer version(s)
     - <https://docs.unity3d.com/2020.2/Documentation/ScriptReference/Time.html>
 	- <a href="https://gamedev.stackexchange.com/questions/141807/what-happens-when-time-time-gets-very-large-in-unity">What happens when Time.time gets very large in Unity?</a>

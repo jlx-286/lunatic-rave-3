@@ -17,11 +17,11 @@ public class BGAPlayer : MonoBehaviour {
     private unsafe void Update(){
         if(BMS_Player.escaped) return;
         if(!BMS_Player.no_bgi){
-            while(BMS_Player.bga_table_row < BMSInfo.bga_num_arr.Length){
-                if(BMSInfo.bga_time_arr[BMS_Player.bga_table_row] <= BMS_Player.playingTimeAsMilliseconds){
-                    bgi_num = BMSInfo.bga_num_arr[BMS_Player.bga_table_row];
-                    switch(BMSInfo.bga_channel_arr[BMS_Player.bga_table_row]){
-                        case "04"://base
+            while(BMS_Player.bga_table_row < BMSInfo.bga_list_table.Count){
+                if(BMSInfo.bga_list_table[BMS_Player.bga_table_row].time <= BMS_Player.playingTimeAsMilliseconds){
+                    bgi_num = BMSInfo.bga_list_table[BMS_Player.bga_table_row].bgNum;
+                    switch(BMSInfo.bga_list_table[BMS_Player.bga_table_row].channel){
+                        case BMSInfo.BGAChannel.Base:
                             if(VLCPlayer.medias.ContainsKey(bgi_num)){
                                 VLCPlayer.PlayerFree(ref VLCPlayer.players[0]);
                                 try{
@@ -55,7 +55,7 @@ public class BGAPlayer : MonoBehaviour {
                                     rawImages[i].texture = Texture2D.blackTexture;
                             }
                             break;
-                        case "07"://layer
+                        case BMSInfo.BGAChannel.Layer1:
                             if(VLCPlayer.medias.ContainsKey(bgi_num)){
                                 VLCPlayer.PlayerFree(ref VLCPlayer.players[1]);
                                 try{
@@ -89,7 +89,7 @@ public class BGAPlayer : MonoBehaviour {
                                     rawImages[i].texture = Texture2D.blackTexture;
                             }
                             break;
-                        case "0A"://layer2
+                        case BMSInfo.BGAChannel.Layer2:
                             if(VLCPlayer.medias.ContainsKey(bgi_num)){
                                 VLCPlayer.PlayerFree(ref VLCPlayer.players[2]);
                                 try{
@@ -123,7 +123,7 @@ public class BGAPlayer : MonoBehaviour {
                                     rawImages[i].texture = Texture2D.blackTexture;
                             }
                             break;
-                        /*case "06":// bad/poor
+                        /*case BMSInfo.BGAChannel.Poor:
                             if(VLCPlayer.medias.ContainsKey(bgi_num)){
                                 //
                             }

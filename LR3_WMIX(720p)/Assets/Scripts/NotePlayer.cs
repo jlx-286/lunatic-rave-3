@@ -55,16 +55,16 @@ public class NotePlayer : MonoBehaviour {
     private void FixedUpdate(){
         if(BMS_Player.escaped) return;
         if(!BMS_Player.no_key_notes){
-            while(BMS_Player.row_key < BMSInfo.note_num_arr.Length){
-                if(BMSInfo.note_time_arr[BMS_Player.row_key] <= BMS_Player.playingTimeAsMilliseconds){
-                    MainMenu.audioSources[BMSInfo.note_num_arr[BMS_Player.row_key]].Play();
+            while(BMS_Player.row_key < BMSInfo.note_list_table.Count){
+                if(BMSInfo.note_list_table[BMS_Player.row_key].time <= BMS_Player.playingTimeAsMilliseconds){
+                    MainMenu.audioSources[BMSInfo.note_list_table[BMS_Player.row_key].clipNum].Play();
                     // str_note = BMS_Reader.note_dataTable.Rows[BMS_Player.row_key][0].ToString();
                     // if(laneDict.ContainsKey(str_note)){
                     //     //channel = laneDict[str_note];
                     //     //if(channel >= 0 && channel < 16){
                     //     //}
                     // }//else{ channel = -1; }
-                    if(BMS_Player.row_key >= BMSInfo.note_num_arr.Length - 10){
+                    if(BMS_Player.row_key >= BMSInfo.note_list_table.Count - 10){
                         Debug.Log("near note end");
                     }
                     BMS_Player.row_key++;

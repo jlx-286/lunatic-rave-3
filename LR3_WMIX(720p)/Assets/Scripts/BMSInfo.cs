@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using UnityEngine;
 /// <summary>
 /// also supports PMS files
@@ -51,8 +50,11 @@ public static class BMSInfo {
 	public enum BGAChannel : byte{
 		// Video,
 		Base = 4,
+		Layer = 7,
 		Layer1 = 7,
 		Layer2 = 0xA,
+		Miss = 6,
+		Bad = 6,
 		Poor = 6
 	}
 	public enum NoteChannel : byte{
@@ -76,20 +78,9 @@ public static class BMSInfo {
 	public static Dictionary<ushort,Texture2D> textures = new Dictionary<ushort, Texture2D>();
 #region time table
 	public static List<NoteTimeRow> note_list_table = new List<NoteTimeRow>();
-	public static string[] note_channel_arr = null;
-	public static uint[] note_time_arr = null;
-	public static ushort[] note_num_arr = null;
-	public static NoteType[] note_type_arr = null;
 	public static List<BGMTimeRow> bgm_list_table = new List<BGMTimeRow>();
-	public static uint[] bgm_time_arr = null;
-	public static ushort[] bgm_num_arr = null;
 	public static List<BGATimeRow> bga_list_table = new List<BGATimeRow>();
-	public static string[] bga_channel_arr = null;
-	public static uint[] bga_time_arr = null;
-	public static ushort[] bga_num_arr = null;
 	public static List<BPMTimeRow> bpm_list_table = new List<BPMTimeRow>();
-	public static uint[] bpm_time_arr = null;
-	public static decimal[] bpm_val_arr = null;
 	public static Dictionary<ushort,uint> time_as_ms_before_track = new Dictionary<ushort, uint>();
 #endregion
 	public static void CleanUp(){
@@ -101,17 +92,10 @@ public static class BMSInfo {
 		sub_title.Clear();
 		sub_artist.Clear();
 		comment.Clear();
-		note_channel_arr = null;
-		note_time_arr = null;
-		note_num_arr = null;
-		note_type_arr = null;
-		bgm_num_arr = null;
-		bgm_time_arr = null;
-		bga_channel_arr = null;
-		bga_time_arr = null;
-		bga_num_arr = null;
-		bpm_time_arr = null;
-		bpm_val_arr = null;
+		note_list_table.Clear();
+		bgm_list_table.Clear();
+		bga_list_table.Clear();
+		bpm_list_table.Clear();
 		time_as_ms_before_track.Clear();
 		textures.Clear();
 	}

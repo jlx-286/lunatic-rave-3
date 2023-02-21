@@ -57,6 +57,7 @@ public class MainVars : MonoBehaviour {
     private void OnApplicationQuit(){
         FluidManager.CleanUp();
         VLCPlayer.VLCRelease();
+        BMSInfo.CleanUp();
         Resources.UnloadUnusedAssets();
         AssetBundle.UnloadAllAssetBundles(true);
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, false);
