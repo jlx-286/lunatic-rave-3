@@ -20,47 +20,22 @@ public class Test : MonoBehaviour {
     // private IntPtr player;
     // private int offset = 0;
     //private byte count;
+    [StructLayout(LayoutKind.Explicit)] private struct TestDecimal{
+        [FieldOffset(0)] public decimal value;
+        [FieldOffset(0)] public ushort unused;
+        [FieldOffset(2)] public readonly byte exp;
+        [FieldOffset(3)] public readonly sbyte sign;
+        [FieldOffset((sizeof(uint)))] public readonly uint higher;
+        [FieldOffset((sizeof(ulong)))] public readonly ulong lower;
+    }
     // Start is called before the first frame update
     private void Start(){
         //count = 16;
-        /*Debug.Log(7922816251426433759.3543950335e10);
-        decimal m;
-        string s = "7922816251426433759.3543950336e10";
-        StaticClass.TryParseDecimal(s, out m);
-        Debug.Log(m);*/
-        /*FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 1d);
-        player = FluidManager.new_fluid_player(FluidManager.synth);
-        if(player != IntPtr.Zero){
-            float[] samples = new float[FluidManager.audio_period_size];
-            IntPtr temp = Marshal.UnsafeAddrOfPinnedArrayElement(samples, 0);
-            FluidManager.fluid_player_add(player, Application.dataPath + "/~Media~/onestop.mid");
-            int frequency = 44100;
-            audioSource.clip = AudioClip.Create("test",
-                #if UNITY_EDITOR_WIN || UNITY_STANDAONE_WIN
-                frequency * FluidManager.audio_period_size * 2,
-                #else
-                frequency * FluidManager.audio_period_size * sizeof(float),
-                #endif
-                FluidManager.channels, frequency, false);
-            FluidManager.fluid_player_play(player);
-            while(FluidManager.fluid_player_get_status(player) == FluidManager.fluid_player_status.FLUID_PLAYER_PLAYING){
-                if(FluidManager.fluid_synth_write_float(FluidManager.synth, FluidManager.audio_period_size,
-                    temp, 0, FluidManager.channels, temp, 1, FluidManager.channels) == 0){
-                        audioSource.clip.SetData(samples, offset);
-                        offset += FluidManager.audio_period_size;
-                    } else break;
-            }
-            FluidManager.fluid_player_join(player);
-            FluidManager.delete_fluid_player(player);
-        }*/
         Debug.Log((int)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond) & int.MaxValue);
         /*AudioClip clip = null;
         int channels, frequency, length, lengthSamples;
         float[] samples = StaticClass.AudioToSamples(Application.dataPath + "/~Media~/Angel Dust.mp3", out channels, out frequency);
-        // FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 1d);
-        // samples = FluidManager.MidiToSamples(Application.dataPath + "/~Media~/onestop.mid", out lengthSamples, out frequency);
         if(samples != null){
-            // clip = AudioClip.Create("midiclip", samples.Length / FluidManager.channels, FluidManager.channels, frequency, false);
             clip = AudioClip.Create("ffmpeg", samples.Length / channels, channels, frequency, false);
             clip.SetData(samples, 0);
             Debug.Log(clip.samples);
@@ -68,8 +43,6 @@ public class Test : MonoBehaviour {
             //Debug.Log(samples.Length);
         }
         audioSource.clip = clip;
-        Debug.Log(DateTime.Now.TimeOfDay.TotalSeconds);
-        Debug.Log(DateTime.Now.Date.Second);
         rawImage.texture = Texture2D.blackTexture;
         play_b.onClick.AddListener(() => {
             audioSource.Play();
@@ -95,10 +68,6 @@ public class Test : MonoBehaviour {
         //if(Input.GetKey(KeyCode.Space)){
         //    playingTime += Time.fixedDeltaTime;
         //    Debug.Log(playingTime);
-        //}
-        //if(unityActions != null && unityActions.Count > 0 && !doingAction){
-        //    doingAction = true;
-        //    unityActions.Dequeue()();
         //}
         //if(Input.GetKeyUp(KeyCode.Return)){
         //    Debug.Log(KeyCode.Return);

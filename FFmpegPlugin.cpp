@@ -3,9 +3,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-// #include <float.h>
 #include <deque>
 // #include <cmath>
+// #include <float.h>
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -90,7 +90,8 @@ extern "C" bool GetAudioInfo(const char* path, int32_t* channels, int32_t* frequ
                 // buffer = new uint8_t[buffer_size];
                 if(buffer == NULL) goto cleanup;
                 memset(buffer, 0, buffer_size);
-                got_samples = swr_convert(swr_ctx, &buffer, frame->nb_samples, (const uint8_t **)frame->extended_data, frame->nb_samples);
+                got_samples = swr_convert(swr_ctx, &buffer, frame->nb_samples,
+                    (const uint8_t **)frame->extended_data, frame->nb_samples);
                 if (got_samples < 0) goto cleanup;
                 while (got_samples > 0) {
                     // buffer_size = av_samples_get_buffer_size(
@@ -186,7 +187,8 @@ extern "C" void CopyPixels(void* addr, int width, int height, bool isBitmap){
         && pkt->stream_index == picStream
         && avcodec_send_packet(pcc, pkt) == 0
         && avcodec_receive_frame(pcc, frame) == 0
-        && sws_scale(sws, frame->data, frame->linesize, 0, frame->height, target->data, target->linesize) > 0
+        && sws_scale(sws, frame->data, frame->linesize, 0, frame->height,
+        target->data, target->linesize) > 0
     ){
         if(isBitmap){
             if(width >= height){
@@ -215,10 +217,10 @@ extern "C" void CopyPixels(void* addr, int width, int height, bool isBitmap){
                     }
                 }
             }
-        } else {
+        }else{
             if(width >= height){
                 for(int h = 0; h < height; h++){
-                    memcpy(addr + (width - 1 - h) * width * 4,
+                    memcpy(addr + (width - 1 - h - (width - height) / 2) * width * 4,
                         target->data[0] + h * width * 4, 4UL * width);
                     // memcpy(addr + h * width * 4,
                     //     target->data[0] + (height - 1 - h) * width * 4, 4UL * width);

@@ -1,11 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Linq;
 using UnityEngine;
 public class NotePlayer : MonoBehaviour {
     public BMSPlayer BMS_Player;
     // private string str_note = string.Empty;
     public GameObject[] lanes;
-    private Dictionary<byte, byte> laneDict = new Dictionary<byte, byte>();
+    private byte[] laneDict = Enumerable.Repeat(byte.MaxValue, byte.MaxValue).ToArray();
     private enum KeyState : byte{
         Free = 0,
         Down = 1,
@@ -14,7 +13,7 @@ public class NotePlayer : MonoBehaviour {
     }
     private KeyState[] laneKeyStates;
     private void Start(){
-        laneKeyStates = (KeyState[])ArrayList.Repeat(KeyState.Free, lanes.Length).ToArray(typeof(KeyState));
+        laneKeyStates = Enumerable.Repeat(KeyState.Free, lanes.Length).ToArray();
         switch(BMSInfo.scriptType){
             case BMSInfo.ScriptType.BMS:
                 laneDict[0x11] = laneDict[0x51] = 1;// laneDict[0xD1] = 1;

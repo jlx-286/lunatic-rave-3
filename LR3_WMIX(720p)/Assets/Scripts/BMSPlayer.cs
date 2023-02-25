@@ -20,8 +20,10 @@ public class BMSPlayer : MonoBehaviour {
         no_key_notes = no_bgm_notes = no_bgi = false;
         title_text.text = BMSInfo.title;
         escaped = false;
-        for(int a = 0; a < sliders.Length; a++)
+        for(byte a = 0; a < sliders.Length; a++){
+            sliders[a].maxValue = BMSInfo.totalTimeAsMilliseconds;
             sliders[a].value = float.Epsilon / 2;
+        }
         bgm_table_row = bga_table_row = row_key = 0;
         playingTimeAsMilliseconds = 0;
         fixedDeltaTimeAsMilliseconds = (uint)(Time.fixedDeltaTime * 1000);
@@ -35,8 +37,8 @@ public class BMSPlayer : MonoBehaviour {
             return;
         }
         if(!no_bgm_notes && !no_key_notes && !no_bgi){
-            for(int a = 0; a < sliders.Length; a++)
-                sliders[a].value = Convert.ToSingle(playingTimeAsMilliseconds) / BMSInfo.totalTimeAsMilliseconds;
+            for(byte a = 0; a < sliders.Length; a++)
+                sliders[a].value = playingTimeAsMilliseconds;
             //return;
         }
     }

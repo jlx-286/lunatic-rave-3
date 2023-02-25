@@ -103,15 +103,12 @@ public static class StaticClass{
             int max = Math.Max(width, height);
             ulong length = (ulong)max;
             length *= length;
-            if(length <= int.MaxValue){
-                if(!isBitmap && Regex.IsMatch(path, @"\.bmp$", regexOption))
-                    isBitmap = true;
-                color32s = new Color32[length];
-                unsafe{fixed(void* p = color32s){
-                    CopyPixels(p, width, height, isBitmap);
-                }}
-                width = height = max;
+            if(length <= int.MaxValue) color32s = new Color32[length];
+            unsafe{fixed(void* p = color32s)
+                CopyPixels(p, width, height, isBitmap
+                || Regex.IsMatch(path, @"\.bmp$", regexOption));
             }
+            width = height = max;
         }
         return color32s;
     }
@@ -124,11 +121,10 @@ public static class StaticClass{
         }
         float[] result = null;
         ulong length;
-        if(GetAudioInfo(path, out channels, out frequency, out length) && length <= int.MaxValue){
+        if(GetAudioInfo(path, out channels, out frequency, out length) && length <= int.MaxValue)
             result = new float[length];
-            unsafe{fixed(float* p = result) CopyAudioSamples(p); }
-        }
         else Debug.LogWarning(path + ":Invalid data or too long data");
+        unsafe{fixed(float* p = result) CopyAudioSamples(p); }
         /*if(result == null){
             try{
                 channels = FluidManager.channels;

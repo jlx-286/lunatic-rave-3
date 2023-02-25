@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using UnityEngine;
 public static class VLCPlayer{
@@ -119,29 +119,27 @@ public static class VLCPlayer{
         return args == null ? libvlc_new(0, null) : libvlc_new(args.Length, args);
     }
     public static UIntPtr instance;
-    public static Dictionary<ushort, UIntPtr> medias = new Dictionary<ushort, UIntPtr>();
+    public static UIntPtr[] medias = Enumerable.Repeat(UIntPtr.Zero, 36*36).ToArray();
     [StructLayout(LayoutKind.Explicit)]
     public struct VideoSize{
         [FieldOffset(0)] public int width;
         [FieldOffset(sizeof(int))] public int height;
+        public VideoSize(int w, int h){ width = w; height = h; }
     }
-    public static Dictionary<ushort, VideoSize> media_sizes = new Dictionary<ushort, VideoSize>();
-    public static Texture2D[] media_textures = new Texture2D[4];
-    // public static Dictionary<ushort, Texture2D> media_textures = new Dictionary<ushort, Texture2D>();
+    public static VideoSize[] media_sizes = new VideoSize[36*36];
+    public static Texture2D[] media_textures = Enumerable.Repeat((Texture2D)null, 4).ToArray();
     public static Color32[][] color32s = new Color32[4][];
-    public static UIntPtr[] players = new UIntPtr[4];
+    public static UIntPtr[] players = Enumerable.Repeat(UIntPtr.Zero, 4).ToArray();
     public static void VLCRelease(){
-        for(int p = 0; p < players.Length; p++){
+        for(byte p = 0; p < players.Length; p++){
             PlayerFree(ref players[p]);
             media_textures[p] = null;
             color32s[p] = null;
         }
-        foreach(ushort num in medias.Keys){
+        for(ushort num = 0; num < medias.Length; num++){
             MediaFree(medias[num]);
+            medias[num] = UIntPtr.Zero;
         }
-        medias.Clear();
         InstFree(ref instance);
-        media_sizes.Clear();
-        // media_textures.Clear();
     }
 }

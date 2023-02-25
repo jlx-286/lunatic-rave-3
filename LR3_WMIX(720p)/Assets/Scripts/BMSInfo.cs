@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 /// <summary>
@@ -75,7 +75,7 @@ public static class BMSInfo {
 	public static uint totalTimeAsMilliseconds = 0;
 	// public static bool illegal = false;
     public static string playing_scene_name = string.Empty;
-	public static Dictionary<ushort,Texture2D> textures = new Dictionary<ushort, Texture2D>();
+	public static Texture2D[] textures = Enumerable.Repeat((Texture2D)null, 36*36).ToArray();
 #region time table
 	public static List<NoteTimeRow> note_list_table = new List<NoteTimeRow>();
 	public static List<BGMTimeRow> bgm_list_table = new List<BGMTimeRow>();
@@ -97,7 +97,8 @@ public static class BMSInfo {
 		bga_list_table.Clear();
 		bpm_list_table.Clear();
 		time_as_ms_before_track.Clear();
-		textures.Clear();
+		for(ushort i = 0; i < textures.Length; i++)
+			textures[i] = null;
 	}
 	public static void Init(){
 		// CleanUp();

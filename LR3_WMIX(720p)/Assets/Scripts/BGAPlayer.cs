@@ -1,20 +1,19 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.UI;
 public class BGAPlayer : MonoBehaviour {
     public BMSPlayer BMS_Player;
     public RawImage[] rawImages;
-    [HideInInspector] public ushort bgi_num;
+    private ushort bgi_num;
 	private void Start(){
         // Color32[] c = new Color32[1]{new Color32(0, 0, 0, 0)};
-        for(int i = 0; i < VLCPlayer.media_textures.Length; i++){
+        for(byte i = 0; i < VLCPlayer.media_textures.Length; i++){
             VLCPlayer.media_textures[i] = new Texture2D(1, 1, TextureFormat.RGBA32, false);
             // VLCPlayer.media_textures[i].SetPixels32(c);
         }
     }
 	//private void FixedUpdate(){}
-    private unsafe void Update(){
+    private void Update(){
         if(BMS_Player.escaped) return;
         if(!BMS_Player.no_bgi){
             while(BMS_Player.bga_table_row < BMSInfo.bga_list_table.Count){
@@ -22,120 +21,79 @@ public class BGAPlayer : MonoBehaviour {
                     bgi_num = BMSInfo.bga_list_table[BMS_Player.bga_table_row].bgNum;
                     switch(BMSInfo.bga_list_table[BMS_Player.bga_table_row].channel){
                         case BMSInfo.BGAChannel.Base:
-                            if(VLCPlayer.medias.ContainsKey(bgi_num)){
-                                VLCPlayer.PlayerFree(ref VLCPlayer.players[0]);
-                                try{
-                                    VLCPlayer.media_textures[0].Resize(
-                                        VLCPlayer.media_sizes[bgi_num].width,
-                                        VLCPlayer.media_sizes[bgi_num].height
-                                        // ,TextureFormat.RGBA32, false
-                                    );
-                                    VLCPlayer.color32s[0] = new Color32[
-                                        VLCPlayer.media_sizes[bgi_num].width * VLCPlayer.media_sizes[bgi_num].height];
-                                    for(int i = 0; i < rawImages.Length; i += 4)
-                                        rawImages[i].texture = VLCPlayer.media_textures[0];
-                                    fixed(void* p = VLCPlayer.color32s[0])
-                                        VLCPlayer.players[0] = VLCPlayer.PlayerNew(VLCPlayer.medias[bgi_num], "RGBA",
-                                            (uint)VLCPlayer.media_sizes[bgi_num].width,
-                                            (uint)VLCPlayer.media_sizes[bgi_num].height,
-                                            (uint)VLCPlayer.media_sizes[bgi_num].width * 4, p
-                                            // , (long)(1000 * 60 * 2 / BMS_Reader.start_bpm)
-                                        );
-                                }
-                                catch(Exception e){
-                                    Debug.LogWarning(e.Message);
-                                }
-                            }
-                            else if(!VLCPlayer.medias.ContainsKey(bgi_num)){
-                                VLCPlayer.PlayerFree(ref VLCPlayer.players[0]);
-                                if(BMSInfo.textures.ContainsKey(bgi_num))
-                                    for(int i = 0; i < rawImages.Length; i += 4)
-                                        rawImages[i].texture = BMSInfo.textures[bgi_num];
-                                else for(int i = 0; i < rawImages.Length; i += 4)
-                                    rawImages[i].texture = Texture2D.blackTexture;
-                            }
+                            ChannelCase(0);
                             break;
                         case BMSInfo.BGAChannel.Layer1:
-                            if(VLCPlayer.medias.ContainsKey(bgi_num)){
-                                VLCPlayer.PlayerFree(ref VLCPlayer.players[1]);
-                                try{
-                                    VLCPlayer.media_textures[1].Resize(
-                                        VLCPlayer.media_sizes[bgi_num].width,
-                                        VLCPlayer.media_sizes[bgi_num].height
-                                        // ,TextureFormat.RGBA32, false
-                                    );
-                                    VLCPlayer.color32s[1] = new Color32[
-                                        VLCPlayer.media_sizes[bgi_num].width * VLCPlayer.media_sizes[bgi_num].height];
-                                    for(int i = 1; i < rawImages.Length; i += 4)
-                                        rawImages[i].texture = VLCPlayer.media_textures[1];
-                                    fixed(void* p = VLCPlayer.color32s[1])
-                                        VLCPlayer.players[1] = VLCPlayer.PlayerNew(VLCPlayer.medias[bgi_num], "RGBA",
-                                            (uint)VLCPlayer.media_sizes[bgi_num].width,
-                                            (uint)VLCPlayer.media_sizes[bgi_num].height,
-                                            (uint)VLCPlayer.media_sizes[bgi_num].width * 4, p
-                                            // , (long)(1000 * 60 * 2 / BMS_Reader.start_bpm)
-                                        );
-                                }
-                                catch(Exception e){
-                                    Debug.LogWarning(e.Message);
-                                }
-                            }
-                            else if(!VLCPlayer.medias.ContainsKey(bgi_num)){
-                                VLCPlayer.PlayerFree(ref VLCPlayer.players[1]);
-                                if(BMSInfo.textures.ContainsKey(bgi_num))
-                                    for(int i = 1; i < rawImages.Length; i += 4)
-                                        rawImages[i].texture = BMSInfo.textures[bgi_num];
-                                else for(int i = 1; i < rawImages.Length; i += 4)
-                                    rawImages[i].texture = Texture2D.blackTexture;
-                            }
+                            ChannelCase(1);
                             break;
                         case BMSInfo.BGAChannel.Layer2:
-                            if(VLCPlayer.medias.ContainsKey(bgi_num)){
-                                VLCPlayer.PlayerFree(ref VLCPlayer.players[2]);
-                                try{
-                                    VLCPlayer.media_textures[2].Resize(
-                                        VLCPlayer.media_sizes[bgi_num].width,
-                                        VLCPlayer.media_sizes[bgi_num].height
-                                        // ,TextureFormat.RGBA32, false
-                                    );
-                                    VLCPlayer.color32s[2] = new Color32[
-                                        VLCPlayer.media_sizes[bgi_num].width * VLCPlayer.media_sizes[bgi_num].height];
-                                    for(int i = 2; i < rawImages.Length; i += 4)
-                                        rawImages[i].texture = VLCPlayer.media_textures[2];
-                                    fixed(void* p = VLCPlayer.color32s[2])
-                                        VLCPlayer.players[2] = VLCPlayer.PlayerNew(VLCPlayer.medias[bgi_num], "RGBA",
-                                            (uint)VLCPlayer.media_sizes[bgi_num].width,
-                                            (uint)VLCPlayer.media_sizes[bgi_num].height,
-                                            (uint)VLCPlayer.media_sizes[bgi_num].width * 4, p
-                                            // , (long)(1000 * 60 * 2 / BMS_Reader.start_bpm)
-                                        );
-                                }
-                                catch(Exception e){
-                                    Debug.LogWarning(e.Message);
-                                }
-                            }
-                            else if(!VLCPlayer.medias.ContainsKey(bgi_num)){
-                                VLCPlayer.PlayerFree(ref VLCPlayer.players[2]);
-                                if(BMSInfo.textures.ContainsKey(bgi_num))
-                                    for(int i = 2; i < rawImages.Length; i += 4)
-                                        rawImages[i].texture = BMSInfo.textures[bgi_num];
-                                else for(int i = 2; i < rawImages.Length; i += 4)
-                                    rawImages[i].texture = Texture2D.blackTexture;
-                            }
+                            ChannelCase(2);
                             break;
-                        /*case BMSInfo.BGAChannel.Poor:
-                            if(VLCPlayer.medias.ContainsKey(bgi_num)){
-                                //
-                            }
-                            else if(!VLCPlayer.medias.ContainsKey(bgi_num)){
-                                if(BMSInfo.textures.ContainsKey(bgi_num)){}
-                                else{}
-                            }
-                            break;*/
+                        case BMSInfo.BGAChannel.Poor:
+                            ChannelCase(3);
+                            break;
                     }
                     BMS_Player.bga_table_row++;
                 }else break;
             }
+        }
+    }
+    private unsafe void ChannelCase(byte ii){
+        if(VLCPlayer.medias[bgi_num] != UIntPtr.Zero){
+            VLCPlayer.PlayerFree(ref VLCPlayer.players[ii]);
+            try{
+                if(VLCPlayer.media_sizes[bgi_num].width <= VLCPlayer.media_sizes[bgi_num].height){
+                    VLCPlayer.media_textures[ii].Resize(
+                        VLCPlayer.media_sizes[bgi_num].width,
+                        VLCPlayer.media_sizes[bgi_num].height
+                        // ,TextureFormat.RGBA32, false
+                    );
+                    VLCPlayer.color32s[ii] = new Color32[
+                        VLCPlayer.media_sizes[bgi_num].width * VLCPlayer.media_sizes[bgi_num].height];
+                    for(byte i = ii; i < rawImages.Length; i += 4)
+                        rawImages[i].texture = VLCPlayer.media_textures[ii];
+                    fixed(void* p = VLCPlayer.color32s[ii])
+                        VLCPlayer.players[ii] = VLCPlayer.PlayerNew(VLCPlayer.medias[bgi_num], "RGBA",
+                            (uint)VLCPlayer.media_sizes[bgi_num].width,
+                            (uint)VLCPlayer.media_sizes[bgi_num].height,
+                            (uint)VLCPlayer.media_sizes[bgi_num].width * 4, p
+                            // , (long)(1000 * 60 * 2 / BMS_Reader.start_bpm)
+                        );
+                }
+                else{
+                    VLCPlayer.media_textures[ii].Resize(
+                        VLCPlayer.media_sizes[bgi_num].width,
+                        VLCPlayer.media_sizes[bgi_num].width
+                        // ,TextureFormat.RGBA32, false
+                    );
+                    VLCPlayer.color32s[ii] = new Color32[
+                        VLCPlayer.media_sizes[bgi_num].width * VLCPlayer.media_sizes[bgi_num].width];
+                    for(byte i = ii; i < rawImages.Length; i += 4)
+                        rawImages[i].texture = VLCPlayer.media_textures[ii];
+                    fixed(Color32* p = VLCPlayer.color32s[ii]){
+                        VLCPlayer.players[ii] = VLCPlayer.PlayerNew(VLCPlayer.medias[bgi_num], "RGBA",
+                            (uint)VLCPlayer.media_sizes[bgi_num].width,
+                            (uint)VLCPlayer.media_sizes[bgi_num].height,
+                            (uint)VLCPlayer.media_sizes[bgi_num].width * 4,
+                            p + (VLCPlayer.media_sizes[bgi_num].width - 
+                            VLCPlayer.media_sizes[bgi_num].height) / 2
+                            * VLCPlayer.media_sizes[bgi_num].width
+                            // , (long)(1000 * 60 * 2 / BMS_Reader.start_bpm)
+                        );
+                    }
+                }
+            }
+            catch(Exception e){ 
+                Debug.LogWarning(e.Message);
+            }
+        }
+        else if(VLCPlayer.medias[bgi_num] == UIntPtr.Zero){
+            VLCPlayer.PlayerFree(ref VLCPlayer.players[ii]);
+            if(BMSInfo.textures[bgi_num] != null)
+                for(byte i = ii; i < rawImages.Length; i += 4)
+                    rawImages[i].texture = BMSInfo.textures[bgi_num];
+            else for(byte i = ii; i < rawImages.Length; i += 4)
+                rawImages[i].texture = Texture2D.blackTexture;
         }
     }
 }

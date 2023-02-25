@@ -921,7 +921,6 @@ MonoBehaviour:
   - {fileID: 801550082}
   - {fileID: 483935794}
   - {fileID: 341870668}
-  bgi_num: 0
 --- !u!1 &180342231
 GameObject:
   m_ObjectHideFlags: 0
@@ -8666,7 +8665,7 @@ MonoBehaviour:
   m_Direction: 3
   m_MinValue: 0
   m_MaxValue: 1
-  m_WholeNumbers: 0
+  m_WholeNumbers: 1
   m_Value: 0
   m_OnValueChanged:
     m_PersistentCalls:

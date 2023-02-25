@@ -1,16 +1,13 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
@@ -21,16 +18,16 @@ using Random = System.Random;
 /// </summary>
 public class BMSReader : MonoBehaviour{
     private decimal curr_bpm;
-    private decimal[] exbpm_dict = (decimal[])ArrayList.Repeat(decimal.Zero, StaticClass.Base36ArrLen).ToArray(typeof(decimal));
-    private decimal[] beats_tracks = (decimal[])ArrayList.Repeat(decimal.One, 1000).ToArray(typeof(decimal));
-    private bool[] lnobj = (bool[])ArrayList.Repeat(false, StaticClass.Base36ArrLen).ToArray(typeof(bool));
-    private string[] wav_names = (string[])ArrayList.Repeat(string.Empty, 36*36).ToArray(typeof(string));
-    private string[] bmp_names = (string[])ArrayList.Repeat(string.Empty, 36*36).ToArray(typeof(string));
-    // private BigInteger[] stop_dict = (BigInteger[])ArrayList.Repeat(BigInteger.Zero, StaticClass.Base36ArrLen).ToArray(typeof(BigInteger));
+    private decimal[] exbpm_dict = Enumerable.Repeat(decimal.Zero, StaticClass.Base36ArrLen).ToArray();
+    private decimal[] beats_tracks = Enumerable.Repeat(decimal.One, 1000).ToArray();
+    private bool[] lnobj = Enumerable.Repeat(false, StaticClass.Base36ArrLen).ToArray();
+    private string[] wav_names = Enumerable.Repeat(string.Empty, 36*36).ToArray();
+    private string[] bmp_names = Enumerable.Repeat(string.Empty, 36*36).ToArray();
+    // private BigInteger[] stop_dict = Enumerable.Repeat(BigInteger.Zero, StaticClass.Base36ArrLen).ToArray(typeof(BigInteger));
     private Thread thread;
     [HideInInspector] public string bms_directory;
     [HideInInspector] public string bms_file_name;
-    private List<BPMMeasureRow>[] bpm_index_lists = (List<BPMMeasureRow>[])ArrayList.Repeat(null, 1000).ToArray(typeof(List<BPMMeasureRow>));
+    private List<BPMMeasureRow>[] bpm_index_lists = Enumerable.Repeat((List<BPMMeasureRow>)null, 1000).ToArray();
     private List<BPMMeasureRow> temp_bpm_index;
     private bool isDone = false;
     private ushort total_medias_count = 0;
@@ -42,33 +39,33 @@ public class BMSReader : MonoBehaviour{
     }
     private enum ChannelEnum : byte{
         /// <summary>
-        /// BMS:(1|3|5|D)[1-7], PMS:(1|3|5|D)[1-5]
+        /// BMS:[135D][1-7], PMS:[135D][1-5]
         /// </summary>
         Default = 0,
 
         /// <summary>
-        /// BMS:(1|3|5|D)(8|9)
+        /// BMS:[135D][89]
         /// </summary>
         Has_1P_7 = 1,
         /// <summary>
-        /// BMS:(2|4|6|E)[1-7]
+        /// BMS:[246E][1-7]
         /// </summary>
         Has_2P_5 = 2,
         /// <summary>
-        /// BMS:(2|4|6|E)(8|9)
+        /// BMS:[246E][89]
         /// </summary>
         Has_2P_7 = 4,
 
         /// <summary>
-        /// PMS:(2|4|6|E)[2-5]
+        /// PMS:[246E][2-5]
         /// </summary>
         PMS_DP = 1,
         /// <summary>
-        /// PMS:(1|3|5|D)[6-9]
+        /// PMS:[135D][6-9]
         /// </summary>
         BME_SP = 2,
         /// <summary>
-        /// PMS:(2|4|6|E)[16-9]
+        /// PMS:[246E][16-9]
         /// </summary>
         BME_DP = 4,
     }
@@ -117,7 +114,7 @@ public class BMSReader : MonoBehaviour{
     private StringBuilder file_names = new StringBuilder();
     string channel = string.Empty;
     uint trackOffset_ms = 0;
-    private decimal[] track_end_bpms = (decimal[])ArrayList.Repeat(decimal.Zero, 1000).ToArray(typeof(decimal));
+    private decimal[] track_end_bpms = Enumerable.Repeat(decimal.Zero, 1000).ToArray();
     #endregion
     private void Start(){
         thread = new Thread(ReadScript);
@@ -145,7 +142,7 @@ public class BMSReader : MonoBehaviour{
         bms_directory = Path.GetDirectoryName(MainVars.bms_file_path).Replace('\\', '/') + '/';
         bms_file_name = Path.GetFileName(MainVars.bms_file_path);
         BMSInfo.scriptType = BMSInfo.ScriptType.Unknown;
-        if(Regex.IsMatch(bms_file_name, @"\.bm(s|e|l)$", StaticClass.regexOption))
+        if(Regex.IsMatch(bms_file_name, @"\.bm[sel]$", StaticClass.regexOption))
             BMSInfo.scriptType = BMSInfo.ScriptType.BMS;
         else if(Regex.IsMatch(bms_file_name, @"\.pms$", StaticClass.regexOption))
             BMSInfo.scriptType = BMSInfo.ScriptType.PMS;
@@ -169,7 +166,7 @@ public class BMSReader : MonoBehaviour{
             }
             else if(file_lines[j] == string.Empty) continue;
             file_lines[j] = file_lines[j].Trim();
-            if(Regex.IsMatch(file_lines[j], @"^#IF(\s+.+)$", StaticClass.regexOption)){
+            if(Regex.IsMatch(file_lines[j], @"^#IF(\s+.+)?$", StaticClass.regexOption)){
                 if(ifs_count.Count > 0 && ifs_count.top.value < ulong.MaxValue)
                     ifs_count.top.value++;
                 else if(ifs_count.Count < 1) ifs_count.Push(1);
@@ -199,7 +196,7 @@ public class BMSReader : MonoBehaviour{
                 //if(file_lines[j].ToUpper().StartsWith(@"%URL ")){ file_lines[j] = string.Empty; continue; }
                 //if(file_lines[j].ToUpper().StartsWith(@"%EMAIL ")){ file_lines[j] = string.Empty; continue; }
                 if(!file_lines[j].StartsWith("#")) file_lines[j] = string.Empty;
-                else if(Regex.IsMatch(file_lines[j], @"^#RANDOM(\s+.+)$", StaticClass.regexOption)){
+                else if(Regex.IsMatch(file_lines[j], @"^#RANDOM(\s+.+)?$", StaticClass.regexOption)){
                     if(ifs_count.Count > 0 && ifs_count.top.value == 0){
                         ifs_count.Pop();
                         random_nums.Pop();
@@ -210,7 +207,7 @@ public class BMSReader : MonoBehaviour{
                     ifs_count.Push(0);
                     file_lines[j] = string.Empty;
                 }
-                else if(Regex.IsMatch(file_lines[j], @"^#SETRANDOM(\s+.+)$", StaticClass.regexOption)){
+                else if(Regex.IsMatch(file_lines[j], @"^#SETRANDOM(\s+.+)?$", StaticClass.regexOption)){
                     if(ifs_count.Count > 0 && ifs_count.top.value == 0){
                         ifs_count.Pop();
                         random_nums.Pop();
@@ -228,7 +225,7 @@ public class BMSReader : MonoBehaviour{
                         BMSInfo.bpm = file_lines[j];
                     file_lines[j] = string.Empty;
                 }
-                else if(Regex.IsMatch(file_lines[j], @"^#GENRE(\s+.+)$", StaticClass.regexOption)){
+                else if(Regex.IsMatch(file_lines[j], @"^#GENRE(\s+.+)?$", StaticClass.regexOption)){
                     string temp = file_lines[j].Substring(6).TrimStart();
                     BMSInfo.genre = temp;
                     unityActions.Enqueue(() => {
@@ -237,7 +234,7 @@ public class BMSReader : MonoBehaviour{
                     });
                     file_lines[j] = string.Empty;
                 }
-                else if(Regex.IsMatch(file_lines[j], @"^#TITLE(\s+.+)$", StaticClass.regexOption)){
+                else if(Regex.IsMatch(file_lines[j], @"^#TITLE(\s+.+)?$", StaticClass.regexOption)){
                     string temp = file_lines[j].Substring(6).TrimStart();
                     BMSInfo.title = temp;
                     unityActions.Enqueue(() => {
@@ -246,7 +243,7 @@ public class BMSReader : MonoBehaviour{
                     });
                     file_lines[j] = string.Empty;
                 }
-                else if(Regex.IsMatch(file_lines[j], @"^#SUBTITLE(\s+.+)$", StaticClass.regexOption)){
+                else if(Regex.IsMatch(file_lines[j], @"^#SUBTITLE(\s+.+)?$", StaticClass.regexOption)){
                     string temp = file_lines[j].Substring(9).TrimStart();
                     BMSInfo.sub_title.Add(temp);
                     unityActions.Enqueue(() => {
@@ -255,7 +252,7 @@ public class BMSReader : MonoBehaviour{
                     });
                     file_lines[j] = string.Empty;
                 }
-                else if(Regex.IsMatch(file_lines[j], @"^#ARTIST(\s+.+)$", StaticClass.regexOption)){
+                else if(Regex.IsMatch(file_lines[j], @"^#ARTIST(\s+.+)?$", StaticClass.regexOption)){
                     string temp = file_lines[j].Substring(7).TrimStart();
                     BMSInfo.artist = temp;
                     unityActions.Enqueue(() => {
@@ -264,44 +261,36 @@ public class BMSReader : MonoBehaviour{
                     });
                     file_lines[j] = string.Empty;
                 }
-                else if(Regex.IsMatch(file_lines[j], @"^#(EX)?BPM[0-9A-Z]{2}\s+[\+-]?\d+(\.\d*)?", StaticClass.regexOption)){
+                else if(Regex.IsMatch(file_lines[j], @"^#(EX)?BPM[\d\w]{2}\s+[\+-]?\d+(\.\d*)?", StaticClass.regexOption)){
                     file_lines[j] = file_lines[j].ToUpper().Replace("#BPM", "").Replace("#EXBPM", "");//xx 294
                     u = StaticClass.Convert36To10(file_lines[j].Substring(0, 2));
                     if(u > 0 && decimal.TryParse(file_lines[j].Substring(2).TrimStart(), out ld) && ld > decimal.Zero)
                         exbpm_dict[u - 1] = ld;
                     file_lines[j] = string.Empty;
                 }
-                else if(Regex.IsMatch(file_lines[j], @"^#LNOBJ\s+[0-9A-Z]{2,}", StaticClass.regexOption)){
+                else if(Regex.IsMatch(file_lines[j], @"^#LNOBJ\s+[\d\w]{2}", StaticClass.regexOption)){
                     u = StaticClass.Convert36To10(file_lines[j].Substring(7).TrimStart().Substring(0, 2));
                     if(u > 0) lnobj[u - 1] = true;
                     file_lines[j] = string.Empty;
                 }
-                else if(Regex.IsMatch(file_lines[j], @"^#BMP[0-9A-Z]{2}\s", StaticClass.regexOption)){
+                else if(Regex.IsMatch(file_lines[j], @"^#BMP[\d\w]{2}\s", StaticClass.regexOption)){
                     u = StaticClass.Convert36To10(file_lines[j].Substring(4,2));
-                    if(u > 0){
-                        bmp_names[u] = file_lines[j].Substring(6).TrimEnd('.').Trim();
-                        if(string.IsNullOrWhiteSpace(bmp_names[u])) bmp_names[u] = string.Empty;
-                        if(bmp_names[u] != string.Empty){
-                            // bmp_names[u] = bmp_names[u].Replace('\\', '/');
-                            total_medias_count++;
-                        }
+                    bmp_names[u] = file_lines[j].Substring(6).TrimEnd('.').Trim();
+                    if(string.IsNullOrWhiteSpace(bmp_names[u])) bmp_names[u] = string.Empty;
+                    if(bmp_names[u] != string.Empty){
+                        // bmp_names[u] = bmp_names[u].Replace('\\', '/');
+                        total_medias_count++;
                     }
                     file_lines[j] = string.Empty;
                 }
-                else if(Regex.IsMatch(file_lines[j], @"^#WAV[0-9A-Z]{2}\s", StaticClass.regexOption)){
+                else if(Regex.IsMatch(file_lines[j], @"^#WAV[\d\w]{2}\s", StaticClass.regexOption)){
                     u = StaticClass.Convert36To10(file_lines[j].Substring(4,2));
-                    if(u > 0){
-                        wav_names[u] = file_lines[j].Substring(6).TrimEnd('.').Trim();
-                        try{
-                            wav_names[u] = wav_names[u].Substring(0, wav_names[u].LastIndexOf('.'));
-                            if(string.IsNullOrWhiteSpace(wav_names[u])) wav_names[u] = string.Empty;
-                        }catch{
-                            wav_names[u] = string.Empty;
-                        }
-                        if(wav_names[u] != string.Empty){
-                            wav_names[u] = wav_names[u].Replace('\\', '/');
-                            total_medias_count++;
-                        }
+                    wav_names[u] = file_lines[j].Substring(6).TrimEnd('.').Trim();
+                    wav_names[u] = wav_names[u].Substring(0, wav_names[u].LastIndexOf('.'));
+                    if(string.IsNullOrWhiteSpace(wav_names[u])) wav_names[u] = string.Empty;
+                    if(wav_names[u] != string.Empty){
+                        wav_names[u] = wav_names[u].Replace('\\', '/');
+                        total_medias_count++;
                     }
                     file_lines[j] = string.Empty;
                 }
@@ -361,15 +350,15 @@ public class BMSReader : MonoBehaviour{
                 ){ file_lines[j] = string.Empty; }
                 #endregion
                 else{
-                    if(Regex.IsMatch(file_lines[j], @"^#[0-9]{3}[0-9A-Z]{2}:[0-9A-Z\.]{2,}", StaticClass.regexOption)){
+                    if(Regex.IsMatch(file_lines[j], @"^#\d{3}[\d\w]{2}:[\d\w\.]{2,}", StaticClass.regexOption)){
                         track = Convert.ToUInt16(file_lines[j].Substring(1, 3));
                         if(tracks_count < track) tracks_count = track;
-                        if(Regex.IsMatch(file_lines[j], @"^#[0-9]{3}02:", StaticClass.regexOption)){
+                        if(Regex.IsMatch(file_lines[j], @"^#\d{3}02:", StaticClass.regexOption)){
                             if(decimal.TryParse(file_lines[j].Substring(7), out ld) && ld != decimal.Zero)
                                 beats_tracks[track] = Math.Abs(ld);
                             file_lines[j] = string.Empty;
                         }
-                        else if(Regex.IsMatch(file_lines[j], @"^#[0-9]{3}03:[0-9A-F]{2,}", StaticClass.regexOption)){// bpm index
+                        else if(Regex.IsMatch(file_lines[j], @"^#\d{3}03:[\dA-F]{2,}", StaticClass.regexOption)){// bpm index
                             message = file_lines[j].Substring(7);
                             for(int i = 0; i < message.Length; i += 2){
                                 hex_digits = Convert.ToByte(message.Substring(i, 2), 16);
@@ -386,7 +375,7 @@ public class BMSReader : MonoBehaviour{
         }
         for(int j = 0; j < file_lines.Length; j++){
             if(file_lines[j] == string.Empty) continue;
-            else if(Regex.IsMatch(file_lines[j], @"^#[0-9]{3}08:[0-9A-F]{2,}", StaticClass.regexOption)){// exbpm index
+            else if(Regex.IsMatch(file_lines[j], @"^#\d{3}08:[\dA-F]{2,}", StaticClass.regexOption)){// exbpm index
                 track = Convert.ToUInt16(file_lines[j].Substring(1, 3));
                 message = file_lines[j].Substring(7);
                 for(int i = 0; i < message.Length; i += 2){
@@ -409,9 +398,9 @@ public class BMSReader : MonoBehaviour{
         });
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
         decimal.TryParse(
-            Regex.Match(BMSInfo.bpm, @"\d{1,}", StaticClass.regexOption).Value,
-            // Regex.Match(BMSInfo.bpm, @"^\d{1,}").Captures[0].Value,
-            // Regex.Match(BMSInfo.bpm, @"^\d{1,}").Groups[0].Captures[0].Value,
+            Regex.Match(BMSInfo.bpm, @"\d+", StaticClass.regexOption).Value,
+            // Regex.Match(BMSInfo.bpm, @"^\d+").Captures[0].Value,
+            // Regex.Match(BMSInfo.bpm, @"^\d+").Groups[0].Captures[0].Value,
             out BMSInfo.start_bpm);
         if(BMSInfo.start_bpm <= decimal.Zero) BMSInfo.start_bpm = 130;
         for(ushort i = 0; i < bpm_index_lists.Length; i++){
@@ -482,15 +471,24 @@ public class BMSReader : MonoBehaviour{
                         int width, height;
                         VLCPlayer.medias[i] = VLCPlayer.MediaNew(VLCPlayer.instance, tmp_path);
                         if(VLCPlayer.medias[i] != UIntPtr.Zero && StaticClass.GetVideoSize(tmp_path, out width, out height)){
-                            VLCPlayer.media_sizes[i] = new VLCPlayer.VideoSize(){ width = width, height = height };
+                            VLCPlayer.media_sizes[i] = new VLCPlayer.VideoSize(width, height);
                         }
-                        else VLCPlayer.medias.Remove(i);
+                        else VLCPlayer.PlayerFree(ref VLCPlayer.medias[i]);
                     }
                 }
                 else if(Regex.IsMatch(Path.GetExtension(bmp_names[i]),
                     @"^\.(bmp|png|jpg|jpeg|gif|mag|wmf|emf|cur|ico|tga|dds|dib|tiff|webp|pbm|pgm|ppm|xcf|pcx|iff|ilbm|pxr|svg|psd)$",
                     RegexOptions.ECMAScript | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)
                 ){
+                    // bmp_names[i] = Path.GetFileNameWithoutExtension(bmp_names[i]);
+                    bmp_names[i] = bmp_names[i].Substring(0, bmp_names[i].LastIndexOf('.'));
+                    bmp_names[i] = bmp_names[i].Replace('\\', '/');
+                    bmp_names[i] = Regex.Match(file_names.ToString(), bmp_names[i].Replace(".", @"\.")
+                    .Replace("$", @"\$").Replace("^", @"\^").Replace("{", @"\{").Replace("[", @"\[")
+                    .Replace("(", @"\(").Replace("|", @"\|").Replace(")", @"\)").Replace("*", @"\*")
+                    .Replace("+", @"\+").Replace("?", @"\?").Replace("\t", @"\s").Replace(" ", @"\s")
+                    + @"\.(bmp|png|jpg|jpeg|gif|mag|wmf|emf|cur|ico|tga|dds|dib|tiff|webp|pbm|pgm|ppm|xcf|pcx|iff|ilbm|pxr|svg|psd)\n"
+                    , StaticClass.regexOption).Value.TrimEnd();
                     if(File.Exists(bms_directory + bmp_names[i])){
                         int width, height;
                         Color32[] color32s = StaticClass.GetTextureInfo(bms_directory + bmp_names[i], out width, out height);
@@ -520,9 +518,10 @@ public class BMSReader : MonoBehaviour{
                     .Replace("+", @"\+").Replace("?", @"\?").Replace("\t", @"\s").Replace(" ", @"\s")
                     // .Replace("<", @"\<").Replace(">", @"\>").Replace("]", @"\]").Replace("}", @"\}")
                     // .Replace("-", @"\-").Replace(":", @"\:").Replace("=", @"\=").Replace("!", @"\!")
-                    + @"\.(WAV|OGG|MP3|AIFF|AIF|MOD|IT|S3M|XM|MID|AAC|M3A|WMA|AMR|FLAC)\n", StaticClass.regexOption).Value;
-                if(!string.IsNullOrWhiteSpace(wav_names[i]) && wav_names[i] != string.Empty){
-                    wav_names[i] = wav_names[i].Trim();
+                    + @"\.(WAV|OGG|MP3|AIFF|AIF|MOD|IT|S3M|XM|MID|AAC|M3A|WMA|AMR|FLAC)\n",
+                    StaticClass.regexOption).Value.TrimEnd();
+                // if(!string.IsNullOrWhiteSpace(wav_names[i]) && wav_names[i] != string.Empty){
+                //     wav_names[i] = wav_names[i].Trim();
                     if(File.Exists(bms_directory + wav_names[i])){
                         int channels = 0, frequency = 0;
                         float[] samples = StaticClass.AudioToSamples(bms_directory + wav_names[i], out channels, out frequency);
@@ -539,7 +538,7 @@ public class BMSReader : MonoBehaviour{
                             });
                         }
                     }
-                }
+                // }
                 unityActions.Enqueue(() => {
                     wav_names[a] = string.Empty;
                     loaded_medias_count++;
@@ -557,8 +556,8 @@ public class BMSReader : MonoBehaviour{
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
         for(int j = 0; j < file_lines.Length; j++){
             if(file_lines[j] == string.Empty) continue;
-            if(Regex.IsMatch(file_lines[j], @"^#[0-9]{3}[0-9A-Z]{2}:[0-9A-Z]{2,}", StaticClass.regexOption)){
-                hex_digits = byte.Parse(file_lines[j].Substring(4, 2), NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo);
+            if(Regex.IsMatch(file_lines[j], @"^#\d{3}[\d\w]{2}:[\d\w]{2,}", StaticClass.regexOption)){
+                byte.TryParse(file_lines[j].Substring(4, 2), NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo, out hex_digits);
                 if(hex_digits == 1){// bgm
                     message = file_lines[j].Substring(7);
                     track = Convert.ToUInt16(file_lines[j].Substring(1, 3));
@@ -635,6 +634,7 @@ public class BMSReader : MonoBehaviour{
                 else if(hex_digits == (byte)BMSInfo.BGAChannel.Base
                     || hex_digits == (byte)BMSInfo.BGAChannel.Layer1
                     || hex_digits == (byte)BMSInfo.BGAChannel.Layer2
+                    || hex_digits == (byte)BMSInfo.BGAChannel.Poor
                 ){// Layers
                     message = file_lines[j].Substring(7);
                     track = Convert.ToUInt16(file_lines[j].Substring(1, 3));
@@ -851,6 +851,10 @@ public class BMSReader : MonoBehaviour{
                     }
                     file_lines[j] = string.Empty;
                 }
+                else if(hex_digits == 0){
+                    // u = StaticClass.Convert36To10(file_lines[j].Substring(4, 2));
+                    Debug.Log(file_lines[j].Substring(4, 2));
+                }
             }
         }
         if(BMSInfo.scriptType == BMSInfo.ScriptType.BMS){ BMS_region(); }
@@ -877,6 +881,10 @@ public class BMSReader : MonoBehaviour{
             });
             BMSInfo.bga_list_table = BMSInfo.bga_list_table.GroupBy(v => new {v.time, v.channel}).Select(v => v.First()).ToList();
             GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
+        }
+        if((VLCPlayer.medias[0] != UIntPtr.Zero || BMSInfo.textures[0] != null) &&
+            !BMSInfo.bga_list_table.Any(v => (v.channel == BMSInfo.BGAChannel.Poor) && (v.time == 0))){
+            BMSInfo.bga_list_table.Insert(0, new BGATimeRow(0, 0, (byte)BMSInfo.BGAChannel.Poor));
         }
         if(BMSInfo.bga_list_table.Count > 0 && BMSInfo.totalTimeAsMilliseconds < BMSInfo.bga_list_table.Last().time)
             BMSInfo.totalTimeAsMilliseconds = BMSInfo.bga_list_table.Last().time;
@@ -961,7 +969,6 @@ public class BMSReader : MonoBehaviour{
             file_names.Clear();
             file_names = null;
         }
-        // file_lines = (string[])ArrayList.Repeat(string.Empty, file_lines.Length).ToArray(typeof(string));
         // for(int i = 0; i < file_lines.Length; i++)
         //     file_lines[i] = null;
         file_lines = null;
@@ -972,19 +979,19 @@ public class BMSReader : MonoBehaviour{
     private void BMS_region(){
         for(int j = 0; j < file_lines.Length; j++){
             if(file_lines[j] == string.Empty) continue;
-            if(Regex.IsMatch(file_lines[j], @"^#[0-9]{3}[0-9A-Z]{2}:[0-9A-Z]{2,}", StaticClass.regexOption)){
+            if(Regex.IsMatch(file_lines[j], @"^#\d{3}[\d\w]{2}:[\d\w]{2,}", StaticClass.regexOption)){
                 message = file_lines[j].Substring(7);
                 channel = file_lines[j].Substring(4, 2);
-                if(Regex.IsMatch(channel, @"^(1|2|5|6|D|E)[1-68-9]$", StaticClass.regexOption)){// 1P and 2P visible, longnote, landmine
-                    if(Regex.IsMatch(channel, @"^(D|E)[1-9]$", StaticClass.regexOption)){
+                if(Regex.IsMatch(channel, @"^[1256DE][1-689]$", StaticClass.regexOption)){// 1P and 2P visible, longnote, landmine
+                    if(Regex.IsMatch(channel, @"^[DE][1-9]$", StaticClass.regexOption)){
                         noteType = BMSInfo.NoteType.Landmine;
                         channelType = ChannelType.Landmine;
                     }
-                    else if(Regex.IsMatch(channel, @"^(5|6)[1-9]$", StaticClass.regexOption)){
+                    else if(Regex.IsMatch(channel, @"^[56][1-9]$", StaticClass.regexOption)){
                         noteType = BMSInfo.NoteType.Longnote;
                         channelType = ChannelType.Longnote;
                     }
-                    else if(Regex.IsMatch(channel, @"^(1|2)[1-9]$", StaticClass.regexOption)){
+                    else if(Regex.IsMatch(channel, @"^[12][1-9]$", StaticClass.regexOption)){
                         noteType = BMSInfo.NoteType.Default;
                         channelType = ChannelType.Default;
                     }
@@ -995,11 +1002,11 @@ public class BMSReader : MonoBehaviour{
                         for(int i = 0; i < message.Length; i += 2){
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if(u > 0){
-                                if(Regex.IsMatch(channel, @"^(1|5|D)[8-9]$", StaticClass.regexOption))
+                                if(Regex.IsMatch(channel, @"^[15D][89]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.Has_1P_7;
-                                else if(Regex.IsMatch(channel, @"^(2|6|E)[1-6]$", StaticClass.regexOption))
+                                else if(Regex.IsMatch(channel, @"^[26E][1-6]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.Has_2P_5;
-                                else if(Regex.IsMatch(channel, @"^(2|6|E)[8-9]$", StaticClass.regexOption))
+                                else if(Regex.IsMatch(channel, @"^[26E][89]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.Has_2P_7;
                                 if(channelType == ChannelType.Default && lnobj[u - 1])
                                     noteType = BMSInfo.NoteType.Longnote;
@@ -1017,11 +1024,11 @@ public class BMSReader : MonoBehaviour{
                         for(int i = 0; i < message.Length; i += 2){
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if(u > 0){
-                                if(Regex.IsMatch(channel, @"^(1|5|D)[8-9]$", StaticClass.regexOption))
+                                if(Regex.IsMatch(channel, @"^[15D][89]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.Has_1P_7;
-                                else if(Regex.IsMatch(channel, @"^(2|6|E)[1-6]$", StaticClass.regexOption))
+                                else if(Regex.IsMatch(channel, @"^[26E][1-6]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.Has_2P_5;
-                                else if(Regex.IsMatch(channel, @"^(2|6|E)[8-9]$", StaticClass.regexOption))
+                                else if(Regex.IsMatch(channel, @"^[26E][89]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.Has_2P_7;
                                 if(channelType == ChannelType.Default && lnobj[u - 1])
                                     noteType = BMSInfo.NoteType.Longnote;
@@ -1048,11 +1055,11 @@ public class BMSReader : MonoBehaviour{
                         for(int i = 0; i < message.Length; i += 2){
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if(u > 0){
-                                if(Regex.IsMatch(channel, @"^(1|5|D)[8-9]$", StaticClass.regexOption))
+                                if(Regex.IsMatch(channel, @"^[15D][89]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.Has_1P_7;
-                                else if(Regex.IsMatch(channel, @"^(2|6|E)[1-6]$", StaticClass.regexOption))
+                                else if(Regex.IsMatch(channel, @"^[26E][1-6]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.Has_2P_5;
-                                else if(Regex.IsMatch(channel, @"^(2|6|E)[8-9]$", StaticClass.regexOption))
+                                else if(Regex.IsMatch(channel, @"^[26E][89]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.Has_2P_7;
                                 if(channelType == ChannelType.Default && lnobj[u - 1])
                                     noteType = BMSInfo.NoteType.Longnote;
@@ -1089,15 +1096,15 @@ public class BMSReader : MonoBehaviour{
                         }
                     }
                 }
-                else if(Regex.IsMatch(channel, @"^(3|4)[1-68-9]$", StaticClass.regexOption)){// invisible
+                else if(Regex.IsMatch(channel, @"^[34][1-689]$", StaticClass.regexOption)){// invisible
                     for(int i = 0; i < message.Length; i += 2){
                         u = StaticClass.Convert36To10(message.Substring(i, 2));
                         if(u > 0){
-                            if(Regex.IsMatch(channel, @"3[8-9]", StaticClass.regexOption))
+                            if(Regex.IsMatch(channel, @"3[89]", StaticClass.regexOption))
                                 channelEnum |= ChannelEnum.Has_1P_7;
                             else if(Regex.IsMatch(channel, @"4[1-6]", StaticClass.regexOption))
                                 channelEnum |= ChannelEnum.Has_2P_5;
-                            else if(Regex.IsMatch(channel, @"4[8-9]", StaticClass.regexOption))
+                            else if(Regex.IsMatch(channel, @"4[89]", StaticClass.regexOption))
                                 channelEnum |= ChannelEnum.Has_2P_7;
                         }
                     }
@@ -1131,19 +1138,19 @@ public class BMSReader : MonoBehaviour{
     private void PMS_region(){
         for(int j = 0; j < file_lines.Length; j++){
             if(file_lines[j] == string.Empty) continue;
-            if(Regex.IsMatch(file_lines[j], @"^#[0-9]{3}[0-9A-Z]{2}:[0-9A-Z]{2,}", StaticClass.regexOption)){
+            if(Regex.IsMatch(file_lines[j], @"^#\d{3}[\d\w]{2}:[\d\w]{2,}", StaticClass.regexOption)){
                 message = file_lines[j].Substring(7);
                 channel = file_lines[j].Substring(4, 2);
-                if(Regex.IsMatch(channel, @"^(1|2|5|6|D|E)[1-9]$", StaticClass.regexOption)){// visible, longnote, landmine
-                    if(Regex.IsMatch(channel, @"^(D|E)[1-9]$", StaticClass.regexOption)){
+                if(Regex.IsMatch(channel, @"^[1256DE][1-9]$", StaticClass.regexOption)){// visible, longnote, landmine
+                    if(Regex.IsMatch(channel, @"^[DE][1-9]$", StaticClass.regexOption)){
                         noteType = BMSInfo.NoteType.Landmine;
                         channelType = ChannelType.Landmine;
                     }
-                    else if(Regex.IsMatch(channel, @"^(5|6)[1-9]$", StaticClass.regexOption)){
+                    else if(Regex.IsMatch(channel, @"^[56][1-9]$", StaticClass.regexOption)){
                         noteType = BMSInfo.NoteType.Longnote;
                         channelType = ChannelType.Longnote;
                     }
-                    else if(Regex.IsMatch(channel, @"^(1|2)[1-9]$", StaticClass.regexOption)){
+                    else if(Regex.IsMatch(channel, @"^[12][1-9]$", StaticClass.regexOption)){
                         noteType = BMSInfo.NoteType.Default;
                         channelType = ChannelType.Default;
                     }
@@ -1154,11 +1161,11 @@ public class BMSReader : MonoBehaviour{
                         for(int i = 0; i < message.Length; i += 2){
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if(u > 0){
-                                if(Regex.IsMatch(channel, @"^(1|5|D)[6-9]$", StaticClass.regexOption))
+                                if(Regex.IsMatch(channel, @"^[15D][6-9]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.BME_SP;
-                                else if(Regex.IsMatch(channel, @"^(2|6|E)[2-5]$", StaticClass.regexOption))
+                                else if(Regex.IsMatch(channel, @"^[26E][2-5]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.PMS_DP;
-                                else if(Regex.IsMatch(channel, @"^(2|6|E)[16-9]$", StaticClass.regexOption))
+                                else if(Regex.IsMatch(channel, @"^[26E][16-9]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.BME_DP;
                                 if(channelType == ChannelType.Default && lnobj[u - 1])
                                     noteType = BMSInfo.NoteType.Longnote;
@@ -1176,11 +1183,11 @@ public class BMSReader : MonoBehaviour{
                         for(int i = 0; i < message.Length; i += 2){
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if(u > 0){
-                                if(Regex.IsMatch(channel, @"^(1|5|D)[6-9]$", StaticClass.regexOption))
+                                if(Regex.IsMatch(channel, @"^[15D][6-9]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.BME_SP;
-                                else if(Regex.IsMatch(channel, @"^(2|6|E)[2-5]$", StaticClass.regexOption))
+                                else if(Regex.IsMatch(channel, @"^[26E][2-5]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.PMS_DP;
-                                else if(Regex.IsMatch(channel, @"^(2|6|E)[16-9]$", StaticClass.regexOption))
+                                else if(Regex.IsMatch(channel, @"^[26E][16-9]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.BME_DP;
                                 if(channelType == ChannelType.Default && lnobj[u - 1])
                                     noteType = BMSInfo.NoteType.Longnote;
@@ -1207,11 +1214,11 @@ public class BMSReader : MonoBehaviour{
                         for(int i = 0; i < message.Length; i += 2){
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if(u > 0){
-                                if(Regex.IsMatch(channel, @"^(1|5|D)[6-9]$", StaticClass.regexOption))
+                                if(Regex.IsMatch(channel, @"^[15D][6-9]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.BME_SP;
-                                else if(Regex.IsMatch(channel, @"^(2|6|E)[2-5]$", StaticClass.regexOption))
+                                else if(Regex.IsMatch(channel, @"^[26E][2-5]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.PMS_DP;
-                                else if(Regex.IsMatch(channel, @"^(2|6|E)[16-9]$", StaticClass.regexOption))
+                                else if(Regex.IsMatch(channel, @"^[26E][16-9]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.BME_DP;
                                 if(channelType == ChannelType.Default && lnobj[u - 1])
                                     noteType = BMSInfo.NoteType.Longnote;
@@ -1248,7 +1255,7 @@ public class BMSReader : MonoBehaviour{
                         }
                     }
                 }
-                else if(Regex.IsMatch(channel, @"^(3|4)[1-9]$", StaticClass.regexOption)){// invisible
+                else if(Regex.IsMatch(channel, @"^[34][1-9]$", StaticClass.regexOption)){// invisible
                     for(int i = 0; i < message.Length; i += 2){
                         u = StaticClass.Convert36To10(message.Substring(i, 2));
                         if(u > 0){
