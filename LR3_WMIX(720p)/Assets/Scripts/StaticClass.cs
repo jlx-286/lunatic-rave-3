@@ -69,12 +69,12 @@ public static class StaticClass{
     }
 
     /// <summary>
-    /// returns 0 if the string is null or the string doesn't match ^[0-9a-zA-Z]{1,}$
+    /// returns 0 if the string is null or the string doesn't match ^[\d\w]+$
     /// </summary>
     /// <param name="s"></param>
     /// <returns>ushort number</returns>
     public static ushort Convert36To10(string s){
-        if(s == null || !Regex.IsMatch(s, @"^[0-9a-z]{1,}$", StaticClass.regexOption)){
+        if(s == null || !Regex.IsMatch(s, @"^[\d\w]+$", StaticClass.regexOption)){
             return 0;
         }
         s = s.ToLower();
@@ -153,11 +153,11 @@ public static class StaticClass{
         s = s.Trim();
         bool res = false;
         BigInteger bigInteger;
-        if(Regex.IsMatch(s, @"^(\+|\-)?0x[0-9a-f]{1,}", StaticClass.regexOption)){
-            s = Regex.Match(s, @"^(\+|\-)?0x[0-9a-f]{1,}", StaticClass.regexOption).Value;
-            //s = Regex.Match(s, @"^(\+|\-)?0x[0-9a-f]{1,}", StaticClass.regexOption).Groups[0].Value;
-            //s = Regex.Match(s, @"^(\+|\-)?0x[0-9a-f]{1,}", StaticClass.regexOption).Captures[0].Value;
-            //s = Regex.Match(s, @"^(\+|\-)?0x[0-9a-f]{1,}", StaticClass.regexOption).Groups[0].Captures[0].Value;
+        if(Regex.IsMatch(s, @"^[\+-]?0x[\da-f]+", StaticClass.regexOption)){
+            s = Regex.Match(s, @"^[\+-]?0x[\da-f]+", StaticClass.regexOption).Value;
+            //s = Regex.Match(s, @"^[\+-]?0x[\da-f]+", StaticClass.regexOption).Groups[0].Value;
+            //s = Regex.Match(s, @"^[\+-]?0x[\da-f]+", StaticClass.regexOption).Captures[0].Value;
+            //s = Regex.Match(s, @"^[\+-]?0x[\da-f]+", StaticClass.regexOption).Groups[0].Captures[0].Value;
             bool minus = false;
             switch(s[0]){
                 case '0': case '+': minus = false; break;
@@ -174,8 +174,8 @@ public static class StaticClass{
                 m = decimal.MinValue;
             else m = (decimal)bigInteger;
         }
-        else if(Regex.IsMatch(s, @"^(\+|\-)?\d{1,}(\.\d{1,})?(e(\+|\-)?\d{1,})?", StaticClass.regexOption)){
-            s = Regex.Match(s, @"^(\+|\-)?\d{1,}(\.\d{1,})?(e(\+|\-)?\d{1,})?", StaticClass.regexOption).Value;
+        else if(Regex.IsMatch(s, @"^[\+-]?\d+(\.\d+)?(e[\+-]?\d+)?", StaticClass.regexOption)){
+            s = Regex.Match(s, @"^[\+-]?\d+(\.\d+)?(e[\+-]?\d+)?", StaticClass.regexOption).Value;
             // Debug.Log(s);
             res = BigInteger.TryParse(s, NumberStyles.Any & (~NumberStyles.AllowCurrencySymbol), NumberFormatInfo.InvariantInfo, out bigInteger);
             // Debug.Log(bigInteger);
@@ -190,7 +190,7 @@ public static class StaticClass{
     // private static RandomNumberGenerator randomNumberGenerator = RandomNumberGenerator.Create();
     // private static RNGCryptoServiceProvider rNGCryptoServiceProvider = new RNGCryptoServiceProvider();
     public static BigInteger NextBigInteger(this System.Random random, BigInteger max){
-        // string match = Regex.Match(s, @"^\s{0,}\+?0{0,}\d{1,}").Value;
+        // string match = Regex.Match(s, @"^\s*\+?0*\d+").Value;
         // if(string.IsNullOrEmpty(match)) return 0;
         // BigInteger max = BigInteger.Parse(match, NumberStyles.AllowLeadingSign
         //     | NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite

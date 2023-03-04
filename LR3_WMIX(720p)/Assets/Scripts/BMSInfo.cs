@@ -101,7 +101,7 @@ public static class BMSInfo {
 			textures[i] = null;
 	}
 	public static void Init(){
-		// CleanUp();
+		CleanUp();
 		start_bpm = 130;
 		min_bpm = decimal.MaxValue;
 		max_bpm = 0;

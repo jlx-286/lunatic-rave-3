@@ -35,7 +35,6 @@ public class MainVars : MonoBehaviour {
         highPassFilter = this.gameObject.GetComponent<AudioHighPassFilter>();
         lowPassFilter = this.gameObject.GetComponent<AudioLowPassFilter>();
         reverbFilter = this.gameObject.GetComponent<AudioReverbFilter>();
-        // Application.quitting += OnApplicationQuit;
         // FluidManager.Init(Application.streamingAssetsPath + "/FluidR3_GM.sf2");
         // FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 1000d, 3d);
         FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 2.8d);

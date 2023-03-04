@@ -18,12 +18,12 @@ using Random = System.Random;
 /// </summary>
 public class BMSReader : MonoBehaviour{
     private decimal curr_bpm;
-    private decimal[] exbpm_dict = Enumerable.Repeat(decimal.Zero, StaticClass.Base36ArrLen).ToArray();
+    private Dictionary<ushort, decimal> exbpm_dict = new Dictionary<ushort, decimal>();
     private decimal[] beats_tracks = Enumerable.Repeat(decimal.One, 1000).ToArray();
     private bool[] lnobj = Enumerable.Repeat(false, StaticClass.Base36ArrLen).ToArray();
     private string[] wav_names = Enumerable.Repeat(string.Empty, 36*36).ToArray();
     private string[] bmp_names = Enumerable.Repeat(string.Empty, 36*36).ToArray();
-    // private BigInteger[] stop_dict = Enumerable.Repeat(BigInteger.Zero, StaticClass.Base36ArrLen).ToArray(typeof(BigInteger));
+    // private Dictionary<ushort, decimal> stop_dict = new Dictionary<ushort, decimal>();
     private Thread thread;
     [HideInInspector] public string bms_directory;
     [HideInInspector] public string bms_file_name;
@@ -104,9 +104,9 @@ public class BMSReader : MonoBehaviour{
     string message = string.Empty;
     ushort track = 0;
     BigInteger k = 0;
-    decimal ld = decimal.Zero;
+    decimal ld = 0;
     // double d = double.Epsilon / 2;
-    ushort tracks_count = 0;
+    ushort max_tracks = 0;
     ushort u = 0;
     private byte hex_digits;
     private LinkedStack<BigInteger> random_nums = new LinkedStack<BigInteger>();
@@ -218,11 +218,11 @@ public class BMSReader : MonoBehaviour{
                     ifs_count.Push(0);
                     file_lines[j] = string.Empty;
                 }
-                else if(Regex.IsMatch(file_lines[j], @"^#BPM\s+\d+(\.\d*)?", StaticClass.regexOption)){
-                    file_lines[j] = Regex.Match(file_lines[j], @"^#BPM\s+\d+(\.\d*)?", StaticClass.regexOption)
-                        .Value.Substring(4).TrimStart();
-                    if(decimal.TryParse(file_lines[j], out ld) && ld > decimal.Zero)
-                        BMSInfo.bpm = file_lines[j];
+                else if(Regex.IsMatch(file_lines[j], @"^#BPM\s+[\+-]?\d+(\.\d+)?", StaticClass.regexOption)){
+                    // file_lines[j] = Regex.Match(file_lines[j], @"^#BPM\s+[\+-]?\d+(\.\d+)?", StaticClass.regexOption)
+                    //     .Value.Substring(4).TrimStart();
+                    // if(decimal.TryParse(file_lines[j], out ld))
+                    BMSInfo.bpm = file_lines[j];
                     file_lines[j] = string.Empty;
                 }
                 else if(Regex.IsMatch(file_lines[j], @"^#GENRE(\s+.+)?$", StaticClass.regexOption)){
@@ -261,11 +261,12 @@ public class BMSReader : MonoBehaviour{
                     });
                     file_lines[j] = string.Empty;
                 }
-                else if(Regex.IsMatch(file_lines[j], @"^#(EX)?BPM[\d\w]{2}\s+[\+-]?\d+(\.\d*)?", StaticClass.regexOption)){
-                    file_lines[j] = file_lines[j].ToUpper().Replace("#BPM", "").Replace("#EXBPM", "");//xx 294
+                else if(Regex.IsMatch(file_lines[j], @"^#(EX)?BPM[\d\w]{2}\s+[\+-]?\d+(\.\d+)?", StaticClass.regexOption)){
+                    file_lines[j] = Regex.Match(file_lines[j], @"[\d\w]{2}\s+[\+-]?\d+(\.\d+)?",
+                        StaticClass.regexOption).Value;
                     u = StaticClass.Convert36To10(file_lines[j].Substring(0, 2));
-                    if(u > 0 && decimal.TryParse(file_lines[j].Substring(2).TrimStart(), out ld) && ld > decimal.Zero)
-                        exbpm_dict[u - 1] = ld;
+                    if(u > 0 && decimal.TryParse(file_lines[j].Substring(2).TrimStart(), out ld) && ld > 0)
+                        exbpm_dict[u] = ld;
                     file_lines[j] = string.Empty;
                 }
                 else if(Regex.IsMatch(file_lines[j], @"^#LNOBJ\s+[\d\w]{2}", StaticClass.regexOption)){
@@ -352,16 +353,17 @@ public class BMSReader : MonoBehaviour{
                 else{
                     if(Regex.IsMatch(file_lines[j], @"^#\d{3}[\d\w]{2}:[\d\w\.]{2,}", StaticClass.regexOption)){
                         track = Convert.ToUInt16(file_lines[j].Substring(1, 3));
-                        if(tracks_count < track) tracks_count = track;
+                        if(max_tracks < track) max_tracks = track;
                         if(Regex.IsMatch(file_lines[j], @"^#\d{3}02:", StaticClass.regexOption)){
-                            if(decimal.TryParse(file_lines[j].Substring(7), out ld) && ld != decimal.Zero)
+                            if(decimal.TryParse(file_lines[j].Substring(7), out ld) && ld != 0)
                                 beats_tracks[track] = Math.Abs(ld);
                             file_lines[j] = string.Empty;
                         }
                         else if(Regex.IsMatch(file_lines[j], @"^#\d{3}03:[\dA-F]{2,}", StaticClass.regexOption)){// bpm index
                             message = file_lines[j].Substring(7);
                             for(int i = 0; i < message.Length; i += 2){
-                                hex_digits = Convert.ToByte(message.Substring(i, 2), 16);
+                                byte.TryParse(message.Substring(i, 2), NumberStyles.AllowHexSpecifier,
+                                    NumberFormatInfo.InvariantInfo, out hex_digits);
                                 if(hex_digits > 0){
                                     if(bpm_index_lists[track] == null) bpm_index_lists[track] = new List<BPMMeasureRow>();
                                     bpm_index_lists[track].Add(new BPMMeasureRow(i / 2, message.Length / 2, hex_digits, false));
@@ -375,17 +377,14 @@ public class BMSReader : MonoBehaviour{
         }
         for(int j = 0; j < file_lines.Length; j++){
             if(file_lines[j] == string.Empty) continue;
-            else if(Regex.IsMatch(file_lines[j], @"^#\d{3}08:[\dA-F]{2,}", StaticClass.regexOption)){// exbpm index
+            else if(Regex.IsMatch(file_lines[j], @"^#\d{3}08:[\d\w]{2,}", StaticClass.regexOption)){// exbpm index
                 track = Convert.ToUInt16(file_lines[j].Substring(1, 3));
                 message = file_lines[j].Substring(7);
                 for(int i = 0; i < message.Length; i += 2){
                     u = StaticClass.Convert36To10(message.Substring(i, 2));
-                    if(u > 0){
-                        ld = exbpm_dict[u - 1];
-                        if(ld > 0){
-                            if(bpm_index_lists[track] == null) bpm_index_lists[track] = new List<BPMMeasureRow>();
-                            bpm_index_lists[track].Add(new BPMMeasureRow(i / 2, message.Length / 2, ld, true));
-                        }
+                    if(u > 0 && exbpm_dict.ContainsKey(u)){
+                        if(bpm_index_lists[track] == null) bpm_index_lists[track] = new List<BPMMeasureRow>();
+                        bpm_index_lists[track].Add(new BPMMeasureRow(i / 2, message.Length / 2, exbpm_dict[u], true));
                     }
                 }
             }
@@ -398,32 +397,38 @@ public class BMSReader : MonoBehaviour{
         });
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
         decimal.TryParse(
-            Regex.Match(BMSInfo.bpm, @"\d+", StaticClass.regexOption).Value,
-            // Regex.Match(BMSInfo.bpm, @"^\d+").Captures[0].Value,
-            // Regex.Match(BMSInfo.bpm, @"^\d+").Groups[0].Captures[0].Value,
+            Regex.Match(BMSInfo.bpm, @"\d+(\.\d+)?", StaticClass.regexOption).Value,
+            // Regex.Match(BMSInfo.bpm, @"\d+(\.\d+)?").Captures[0].Value,
+            // Regex.Match(BMSInfo.bpm, @"\d+(\.\d+)?").Groups[0].Captures[0].Value,
             out BMSInfo.start_bpm);
-        if(BMSInfo.start_bpm <= decimal.Zero) BMSInfo.start_bpm = 130;
-        for(ushort i = 0; i < bpm_index_lists.Length; i++){
-            if(bpm_index_lists[i] != null && bpm_index_lists[i].Count > 1){
-                bpm_index_lists[i].Sort((x, y) => {
-                    if(x.measure != y.measure)
-                        return x.measure.CompareTo(y.measure);
-                    if(x.IsBPMXX != y.IsBPMXX)
-                        return y.IsBPMXX.CompareTo(x.IsBPMXX);
-                        // return x.IsBPMXX.CompareTo(y.IsBPMXX);
-                    if(x.BPM != y.BPM)
-                        return y.BPM.CompareTo(x.BPM);
-                    return 0;
-                });
-                bpm_index_lists[i] = bpm_index_lists[i].GroupBy(v => v.measure).Select(v => v.First()).ToList();
+        if(BMSInfo.start_bpm <= 0) BMSInfo.start_bpm = 130;
+        for(ushort i = 0; i <= max_tracks; i++){
+            if(bpm_index_lists[i] != null){
+                if(bpm_index_lists[i].Count > 1){
+                    bpm_index_lists[i].Sort((x, y) => {
+                        if(x.measure != y.measure)
+                            return x.measure.CompareTo(y.measure);
+                        if(x.IsBPMXX != y.IsBPMXX)
+                            return y.IsBPMXX.CompareTo(x.IsBPMXX);
+                            // return x.IsBPMXX.CompareTo(y.IsBPMXX);
+                        if(x.BPM != y.BPM)
+                            return y.BPM.CompareTo(x.BPM);
+                        return 0;
+                    });
+                    bpm_index_lists[i] = bpm_index_lists[i].GroupBy(v => v.measure).Select(v => v.First()).ToList();
+                }
+                BMSInfo.min_bpm = Math.Min(bpm_index_lists[i].Min(v => v.BPM), BMSInfo.min_bpm);
+                BMSInfo.max_bpm = Math.Max(bpm_index_lists[i].Max(v => v.BPM), BMSInfo.max_bpm);
             }
         }
+        BMSInfo.min_bpm = Math.Min(BMSInfo.start_bpm, BMSInfo.min_bpm);
+        BMSInfo.max_bpm = Math.Max(BMSInfo.start_bpm, BMSInfo.max_bpm);
         if(bpm_index_lists[0] == null) bpm_index_lists[0] = new List<BPMMeasureRow>();
         if(bpm_index_lists[0].Count < 1)
             bpm_index_lists[0].Insert(0, new BPMMeasureRow(0, 1, BMSInfo.start_bpm, true));
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
         curr_bpm = BMSInfo.start_bpm;
-        for(ushort i = 0; i <= tracks_count; i++){
+        for(ushort i = 0; i <= max_tracks; i++){
             temp_bpm_index = bpm_index_lists[i];
             if(temp_bpm_index == null || temp_bpm_index.Count < 1){
                 trackOffset_ms = ConvertOffset(i, curr_bpm);
@@ -446,7 +451,7 @@ public class BMSReader : MonoBehaviour{
                 trackOffset_ms += ConvertOffset(i, curr_bpm, decimal.One - temp_bpm_index[0].measure);
                 track_end_bpms[i] = curr_bpm;
             }
-            BMSInfo.time_as_ms_before_track.Add(Convert.ToUInt16(i + 1), BMSInfo.time_as_ms_before_track[i] + trackOffset_ms);
+            BMSInfo.time_as_ms_before_track.Add((ushort)(i + 1), BMSInfo.time_as_ms_before_track[i] + trackOffset_ms);
         }
         curr_bpm = BMSInfo.start_bpm;
         unityActions.Enqueue(()=>{
@@ -714,19 +719,19 @@ public class BMSReader : MonoBehaviour{
                     if(temp_bpm_index == null || temp_bpm_index.Count < 1){
                         for(int i = 0; i < message.Length; i += 2){
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
-                            if(u > 0){
+                            if(u > 0 && exbpm_dict.ContainsKey(u)){
                                 ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
                                 trackOffset_ms = ConvertOffset(track, curr_bpm, ld);
                                 BMSInfo.bpm_list_table.Add(new BPMTimeRow(BMSInfo.time_as_ms_before_track
-                                    [track] + trackOffset_ms, exbpm_dict[u - 1], true));
+                                    [track] + trackOffset_ms, exbpm_dict[u], true));
                             }
                         }
                     }
                     else if(temp_bpm_index.Count == 1){
                         for(int i = 0; i < message.Length; i += 2){
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
-                            if(u > 0){
+                            if(u > 0 && exbpm_dict.ContainsKey(u)){
                                 ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
                                 if(ld <= temp_bpm_index[0].measure){
@@ -739,21 +744,21 @@ public class BMSReader : MonoBehaviour{
                                 }
                                 //curr_bpm = temp_bpm_index[0].BPM;
                                 BMSInfo.bpm_list_table.Add(new BPMTimeRow(BMSInfo.time_as_ms_before_track
-                                    [track] + trackOffset_ms, exbpm_dict[u - 1], true));
+                                    [track] + trackOffset_ms, exbpm_dict[u], true));
                             }
                         }
                     }
                     else if(temp_bpm_index.Count > 1){
                         for(int i = 0; i < message.Length; i += 2){
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
-                            if(u > 0){
+                            if(u > 0 && exbpm_dict.ContainsKey(u)){
                                 trackOffset_ms = 0;
                                 ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
                                 if(ld <= temp_bpm_index[0].measure){
                                     curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
                                     trackOffset_ms += ConvertOffset(track, curr_bpm, ld);
                                     BMSInfo.bpm_list_table.Add(new BPMTimeRow(BMSInfo.time_as_ms_before_track
-                                        [track] + trackOffset_ms, exbpm_dict[u - 1], true));
+                                        [track] + trackOffset_ms, exbpm_dict[u], true));
                                     trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[0].measure - ld);
                                 }
                                 for(int a = 1; a < temp_bpm_index.Count; a++){
@@ -761,7 +766,7 @@ public class BMSReader : MonoBehaviour{
                                     if(ld > temp_bpm_index[a - 1].measure && ld <= temp_bpm_index[a].measure){
                                         trackOffset_ms += ConvertOffset(track, curr_bpm, ld - temp_bpm_index[a - 1].measure);
                                         BMSInfo.bpm_list_table.Add(new BPMTimeRow(BMSInfo.time_as_ms_before_track
-                                            [track] + trackOffset_ms, exbpm_dict[u - 1], true));
+                                            [track] + trackOffset_ms, exbpm_dict[u], true));
                                         trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[a].measure - ld);
                                         break;
                                     }
@@ -772,7 +777,7 @@ public class BMSReader : MonoBehaviour{
                                     curr_bpm = temp_bpm_index.Last().BPM;
                                     trackOffset_ms += ConvertOffset(track, curr_bpm, ld - temp_bpm_index.Last().measure);
                                     BMSInfo.bpm_list_table.Add(new BPMTimeRow(BMSInfo.time_as_ms_before_track
-                                        [track] + trackOffset_ms, exbpm_dict[u - 1], true));
+                                        [track] + trackOffset_ms, exbpm_dict[u], true));
                                 }
                             }
                         }
@@ -785,7 +790,7 @@ public class BMSReader : MonoBehaviour{
                     temp_bpm_index = bpm_index_lists[track];
                     if(temp_bpm_index == null || temp_bpm_index.Count < 1){
                         for(int i = 0; i < message.Length; i += 2){
-                            hex_digits = byte.Parse(message.Substring(i, 2), NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo);
+                            byte.TryParse(message.Substring(i, 2), NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo, out hex_digits);
                             if(hex_digits > 0){
                                 ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
@@ -797,7 +802,7 @@ public class BMSReader : MonoBehaviour{
                     }
                     else if(temp_bpm_index.Count == 1){
                         for(int i = 0; i < message.Length; i += 2){
-                            hex_digits = byte.Parse(message.Substring(i, 2), NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo);
+                            byte.TryParse(message.Substring(i, 2), NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo, out hex_digits);
                             if(hex_digits > 0){
                                 ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
@@ -817,7 +822,7 @@ public class BMSReader : MonoBehaviour{
                     }
                     else if(temp_bpm_index.Count > 1){
                         for(int i = 0; i < message.Length; i += 2){
-                            hex_digits = byte.Parse(message.Substring(i, 2), NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo);
+                            byte.TryParse(message.Substring(i, 2), NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo, out hex_digits);
                             if(hex_digits > 0){
                                 trackOffset_ms = 0;
                                 ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
@@ -932,12 +937,15 @@ public class BMSReader : MonoBehaviour{
             doingAction = false;
         });
     }
-
-    // private void FixedUpdate(){}
+    // private void FixedUpdate(){
+    //     if(!isDone && unityActions != null && !doingAction
+    //         && unityActions.TryDequeue(out action)){
+    //         doingAction = true;
+    //         action();
+    //     }
+    // }
     private void Update(){
-        if(!isDone && unityActions != null && !unityActions.IsEmpty
-            && !doingAction
-        ){
+        if(!isDone && unityActions != null && !doingAction){
             while(unityActions.TryDequeue(out action)){
                 doingAction = true;
                 action();
@@ -949,7 +957,14 @@ public class BMSReader : MonoBehaviour{
     //         BMSInfo.totalTimeAsMilliseconds = BMSInfo.time_as_ms_before_track[track] + trackOffset_ms;
     // }
     private void CleanUp(){
-        exbpm_dict = null;
+        if(exbpm_dict != null){
+            exbpm_dict.Clear();
+            exbpm_dict = null;
+        }
+        // if(stop_dict != null){
+        //     stop_dict.Clear();
+        //     stop_dict = null;
+        // }
         beats_tracks = null;
         lnobj = null;
         for(ushort i = 0; i < bpm_index_lists.Length; i++)

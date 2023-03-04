@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Runtime.InteropServices;
 [StructLayout(LayoutKind.Explicit)] public struct BPMMeasureRow {
     [FieldOffset(0)] public decimal BPM;
@@ -46,18 +47,20 @@ using System.Runtime.InteropServices;
         time = t; bgNum = num; channel = (BMSInfo.BGAChannel)ch;
     }
 }
-[StructLayout(LayoutKind.Explicit)] public struct BPMTimeRow{
-	[FieldOffset(0)] public uint time;
-    // [UnityEngine.Range(float.Epsilon / 2, 999)]
-	[FieldOffset(sizeof(uint) + 1)] public ushort value;
-    [FieldOffset(sizeof(uint))] public bool IsBPMXX;
+[StructLayout(LayoutKind.Auto)] public struct BPMTimeRow{
+    public uint time;
+    public bool IsBPMXX;
+    public string value;
     public BPMTimeRow(uint t, decimal v, bool ex){
         try{
-            value = (ushort)Math.Min(999, Math.Round(
-                Math.Abs(v) * MainVars.speed,
-                MidpointRounding.AwayFromZero));
+            // value = Math.Min(999, Math.Round(
+            //     Math.Abs(v) * MainVars.speed,
+            //     MidpointRounding.AwayFromZero)).ToString();
+            value = (Math.Abs(v) * MainVars.speed).ToString(
+                "G29", NumberFormatInfo.InvariantInfo);
         }catch(OverflowException){
-            value = 999;
+            // value = "999";
+            value = "∞";
         }
         time = t; IsBPMXX = ex;
     }
