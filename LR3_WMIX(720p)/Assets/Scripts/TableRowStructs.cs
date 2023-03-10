@@ -4,21 +4,20 @@ using System.Runtime.InteropServices;
 [StructLayout(LayoutKind.Explicit)] public struct BPMMeasureRow {
     [FieldOffset(0)] public decimal BPM;
     [FieldOffset(0)] public bool IsBPMXX;
-    // [FieldOffset(sizeof(decimal) + sizeof(bool))] public Fraction32 measure;
-    // [FieldOffset(sizeof(decimal) + sizeof(bool))] public decimal measure;
-    [FieldOffset(sizeof(decimal))] public decimal measure;
+    [FieldOffset(sizeof(decimal))] public Fraction32 measure;
+    // [FieldOffset(sizeof(decimal))] public decimal measure;
     public BPMMeasureRow(uint num, uint den, decimal v, bool e){
         BPM = v; IsBPMXX = e;
-        // measure = new Fraction32(num, den);
-        measure = (decimal)num / den;
+        measure = new Fraction32(num, den);
+        // measure = (decimal)num / den;
     }
-    public unsafe BPMMeasureRow(int num, int den, decimal v, bool e){
+    public BPMMeasureRow(int num, int den, decimal v, bool e){
         BPM = v; IsBPMXX = e;
-        // measure = new Fraction32(num, den);
-        measure = (decimal)*(uint*)&num / *(uint*)&den;
+        measure = new Fraction32(num, den);
+        // measure = (decimal)*(uint*)&num / *(uint*)&den;
     }
-    // public BPMIndex(ushort t, Fraction32 f, decimal v, bool e){
-    //     new BPMIndex(t, f.Numerator, f.Denominator, v, e);
+    // public BPMMeasureRow(ushort t, Fraction32 f, decimal v, bool e){
+    //     BPM = v; IsBPMXX = e; measure = f;
     // }
 }
 [StructLayout(LayoutKind.Explicit)] public struct NoteTimeRow{

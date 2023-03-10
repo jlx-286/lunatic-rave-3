@@ -48,6 +48,7 @@ extern "C" bool GetVideoSize(const char* path, int32_t* width, int32_t* height){
 }
 std::deque<float> AudioSamples;
 extern "C" bool GetAudioInfo(const char* path, int32_t* channels, int32_t* frequency, size_t* length){
+    AudioSamples.clear();
     *channels = *frequency = *length = 0;
     AVFormatContext* fc = NULL;
     AVCodecContext* cc = NULL;
@@ -157,7 +158,7 @@ extern "C" bool GetPixelsInfo(const char* url, int* width, int* height, bool* is
     pcc = NULL;
     return false;
 }
-extern "C" void CopyPixels(void* addr, int width, int height, bool isBitmap){
+extern "C" void CopyPixels(void* addr, int width, int height, bool isBitmap, bool strech = false){
     if(pfc == NULL || pcc == NULL || addr == NULL) return;
     AVFrame* frame = NULL;
     AVPacket* pkt = NULL;
@@ -190,49 +191,54 @@ extern "C" void CopyPixels(void* addr, int width, int height, bool isBitmap){
         && sws_scale(sws, frame->data, frame->linesize, 0, frame->height,
         target->data, target->linesize) > 0
     ){
-        if(isBitmap){
-            if(width >= height){
-                for(int h = 0; h < height; h++){
-                    for(int w = 0; w < width; w++){
-                        r = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 0);
-                        g = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 1);
-                        b = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 2);
-                        if(r > 4 || g > 4 || b > 4)
-                            memcpy(addr + ((width - 1 - h) * width + w) * 4,
-                                target->data[0] + (h * width + w) * 4, 4);
-                            // memcpy(addr + (h * width + w) * 4,
-                            //     target->data[0] + ((height - 1 - h) * width + w) * 4, 4);
+        if(!strech){
+            if(isBitmap){
+                if(width >= height){
+                    for(int h = 0; h < height; h++){
+                        for(int w = 0; w < width; w++){
+                            r = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 0);
+                            g = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 1);
+                            b = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 2);
+                            if(r > 4 || g > 4 || b > 4)
+                                memcpy(addr + ((width - 1 - h) * width + w) * 4,
+                                    target->data[0] + (h * width + w) * 4, 4);
+                                // memcpy(addr + (h * width + w) * 4,
+                                //     target->data[0] + ((height - 1 - h) * width + w) * 4, 4);
+                        }
                     }
                 }
-            }
-            else if(width < height){
-                for(int h = 0; h < height; h++){
-                    for(int w = 0; w < width; w++){
-                        r = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 0);
-                        g = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 1);
-                        b = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 2);
-                        if(r > 4 || g > 4 || b > 4)
-                            memcpy(addr + (h * height + (height - width) / 2 + w) * 4,
-                                target->data[0] + ((height - 1 - h) * width + w) * 4, 4);
+                else if(width < height){
+                    for(int h = 0; h < height; h++){
+                        for(int w = 0; w < width; w++){
+                            r = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 0);
+                            g = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 1);
+                            b = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 2);
+                            if(r > 4 || g > 4 || b > 4)
+                                memcpy(addr + (h * height + (height - width) / 2 + w) * 4,
+                                    target->data[0] + ((height - 1 - h) * width + w) * 4, 4);
+                        }
                     }
                 }
-            }
-        }else{
-            if(width >= height){
-                for(int h = 0; h < height; h++){
-                    memcpy(addr + (width - 1 - h - (width - height) / 2) * width * 4,
-                        target->data[0] + h * width * 4, 4UL * width);
-                    // memcpy(addr + h * width * 4,
-                    //     target->data[0] + (height - 1 - h) * width * 4, 4UL * width);
+            }else{
+                if(width >= height){
+                    for(int h = 0; h < height; h++){
+                        memcpy(addr + (width - 1 - h - (width - height) / 2) * width * 4,
+                            target->data[0] + h * width * 4, 4UL * width);
+                        // memcpy(addr + h * width * 4,
+                        //     target->data[0] + (height - 1 - h) * width * 4, 4UL * width);
+                    }
                 }
-            }
-            else if(width < height){
-                for(int h = 0; h < height; h++){
-                    memcpy(addr + (h * height + (height - width) / 2) * 4,
-                        target->data[0] + (height - 1 - h) * width * 4, 4UL * width);
+                else if(width < height){
+                    for(int h = 0; h < height; h++){
+                        memcpy(addr + (h * height + (height - width) / 2) * 4,
+                            target->data[0] + (height - 1 - h) * width * 4, 4UL * width);
+                    }
                 }
             }
         }
+        else for(int h = 0; h < height; h++)
+            memcpy(addr + h * width * 4, target->data[0]
+                + (height - 1 - h) * width * 4, 4UL * width);
     }
     cleanup:
     if(sws != NULL) sws_freeContext(sws);

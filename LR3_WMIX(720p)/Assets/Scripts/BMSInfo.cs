@@ -76,6 +76,7 @@ public static class BMSInfo {
 	// public static bool illegal = false;
     public static string playing_scene_name = string.Empty;
 	public static Texture2D[] textures = Enumerable.Repeat((Texture2D)null, 36*36).ToArray();
+	// public static Texture2D backBMP = null;
 #region time table
 	public static List<NoteTimeRow> note_list_table = new List<NoteTimeRow>();
 	public static List<BGMTimeRow> bgm_list_table = new List<BGMTimeRow>();
@@ -99,6 +100,7 @@ public static class BMSInfo {
 		time_as_ms_before_track.Clear();
 		for(ushort i = 0; i < textures.Length; i++)
 			textures[i] = null;
+		// backBMP = null;
 	}
 	public static void Init(){
 		CleanUp();

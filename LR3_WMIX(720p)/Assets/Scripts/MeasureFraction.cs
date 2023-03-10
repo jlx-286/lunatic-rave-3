@@ -21,7 +21,7 @@ IComparable<Fraction32>, IEquatable<Fraction32>, IFormattable {
 			Numerator = 0;
 			Denominator = 1;
 		}else{
-			uint t = StaticClass.gcd(num, den);
+			uint t = (uint)StaticClass.gcd(num, den);
 			Numerator = num / t;
 			Denominator = den / t;
 		}
@@ -30,15 +30,13 @@ IComparable<Fraction32>, IEquatable<Fraction32>, IFormattable {
 		this = new Fraction32(*(uint*)&num, *(uint*)&den);
 	}
 	// private static Fraction32 Reduce(uint num, uint den) => new Fraction32(num, den);
-	private static Fraction32 Reduce(Fraction32 value) => new Fraction32(value.Numerator, value.Denominator);
+	// private static Fraction32 Reduce(Fraction32 value) => new Fraction32(value.Numerator, value.Denominator);
 	public static Fraction64 operator -(Fraction32 left, Fraction32 right){
-        ulong lcm = (ulong)left.Denominator / StaticClass.gcd(left.Denominator, right.Denominator) * right.Denominator;
-        Fraction64 fraction64 = new Fraction64(){
-            numerator = lcm / left.Denominator * left.Numerator
-                + lcm / right.Denominator * right.Numerator,
-            denominator = lcm
-        };
-		return Fraction64.Reduce(fraction64);
+        ulong lcm = right.Denominator / StaticClass.gcd(left.Denominator, right.Denominator) * left.Denominator;
+        return new Fraction64(
+			lcm / left.Denominator * left.Numerator
+			- lcm / right.Denominator * right.Numerator,
+			lcm);
 	}
 	public static bool operator >(Fraction32 left, Fraction32 right)
 		=> (ulong)left.Numerator * right.Denominator > (ulong)right.Numerator * left.Denominator;
@@ -56,8 +54,8 @@ IComparable<Fraction32>, IEquatable<Fraction32>, IFormattable {
 	public static bool operator !=(Fraction32 left, Fraction32 right) => !(left == right);
 	public static bool operator >=(Fraction32 left, Fraction32 right) => !(left < right);
 	public static bool operator <=(Fraction32 left, Fraction32 right) => !(left > right);
-	public string ToString(string format, IFormatProvider formatProvider){
-		this = Fraction32.Reduce(this);
+	public string ToString(string format = null, IFormatProvider formatProvider = null){
+		// this = Fraction32.Reduce(this);
 		return $"{this.Numerator}/{this.Denominator}";
 	}
 	public int CompareTo(Fraction32 other){
@@ -102,43 +100,22 @@ IComparable<Fraction32>, IEquatable<Fraction32>, IFormattable {
 [StructLayout(LayoutKind.Explicit)] public struct Fraction64{
 	[FieldOffset(0)] public ulong numerator;
 	[FieldOffset(sizeof(ulong))] public ulong denominator;
-	private static ulong gcd(ulong a, ulong b){
-		if(a == 0 || a == b) return b;
-		if(b == 0) return a;
-		byte c = 0;
-		while(((a & 1) == 0) && ((b & 1) == 0)){
-			a >>= 1; b >>= 1; c++;
-		}
-		while(((a & 1) == 0)) a >>= 1;
-		while(((b & 1) == 0)) b >>= 1;
-		while(true){
-			if(a == 0 || a == b) return b << c;
-			if(b == 0) return a << c;
-			if(a < b){
-				b = (b - a) >> 1;
-				// b -= a;
-				while(((b & 1) == 0)) b >>= 1;
-			}
-			else if(a > b){
-				a = (a - b) >> 1;
-				// a -= b;
-				while(((a & 1) == 0)) a >>= 1;
-			}
-		}
-	}
-	private Fraction64(ulong num, ulong den){
+	public Fraction64(ulong num, ulong den){
 		if(den == 0) throw new DivideByZeroException();
 		else if(num == 0){
 			numerator = 0;
 			denominator = 1;
 		}else{
-			ulong t = gcd(num, den);
+			ulong t = StaticClass.gcd(num, den);
 			numerator = num / t;
 			denominator = den / t;
 		}
 	}
-	public static readonly Fraction64 Zero = new Fraction64(0, 1);
-	public static Fraction64 Reduce(Fraction64 value) => new Fraction64(value.numerator, value.denominator);
+	public static readonly Fraction64 Zero = new Fraction64(){
+		numerator = 0, denominator = 1};
+	public static readonly Fraction64 One = new Fraction64(){
+		numerator = 1, denominator = 1};
+	// public static Fraction64 Reduce(Fraction64 value) => new Fraction64(value.numerator, value.denominator);
 	// public static readonly Fraction64 One = new Fraction64(1, 1);
 	// public static readonly Fraction64 NaN = new Fraction64(){
 	// 	numerator = 0, denominator = 0};

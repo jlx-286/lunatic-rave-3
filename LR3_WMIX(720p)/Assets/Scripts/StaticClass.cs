@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-// using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 // using System.Threading.Tasks;
@@ -26,7 +26,7 @@ public static class StaticClass{
     [DllImport(PluginName)] private extern static bool GetPixelsInfo(
         string url, out int width, out int height, out bool isBitmap);
     [DllImport(PluginName)] private extern static unsafe void CopyPixels(
-        void* addr, int width, int height, bool isBitmap);
+        void* addr, int width, int height, bool isBitmap, bool strech = false);
 /*
     /// <summary>
     /// seconds
@@ -112,7 +112,19 @@ public static class StaticClass{
         }
         return color32s;
     }
-
+    public static Color32[] GetStageImage(string path, out int width, out int height){
+        width = height = 0;
+        if(!File.Exists(path)) return null;
+        Color32[] color32s = null;
+        bool isBitmap;
+        if(GetPixelsInfo(path, out width, out height, out isBitmap)){
+            color32s = new Color32[width * height];
+            unsafe{fixed(void* p = color32s)
+                CopyPixels(p, width, height, false, true);
+            }
+        }
+        return color32s;
+    }
     public static float[] AudioToSamples(string path, out int channels, out int frequency){
         if(!File.Exists(path)){
             channels = frequency = 0;
@@ -187,8 +199,7 @@ public static class StaticClass{
         }
         return res;
     }
-    // private static RandomNumberGenerator randomNumberGenerator = RandomNumberGenerator.Create();
-    // private static RNGCryptoServiceProvider rNGCryptoServiceProvider = new RNGCryptoServiceProvider();
+    public static readonly RandomNumberGenerator rng = RandomNumberGenerator.Create();
     public static BigInteger NextBigInteger(this System.Random random, BigInteger max){
         // string match = Regex.Match(s, @"^\s*\+?0*\d+").Value;
         // if(string.IsNullOrEmpty(match)) return 0;
@@ -208,7 +219,18 @@ public static class StaticClass{
         }while(result < 1 || result > max);
         return result;
     }
-    public static uint gcd(uint a, uint b){
+    public static BigInteger NextBigInteger(this RandomNumberGenerator rng, BigInteger max){
+        if(max < 1) return 0;
+        if(max == 1) return 1;
+        byte[] src = max.ToByteArray();
+        BigInteger result;
+        do{
+            rng.GetBytes(src);
+            result = new BigInteger(src);
+        }while(result < 1 || result > max);
+        return result;
+    }
+    public static ulong gcd(ulong a, ulong b){
         if(a == 0 || a == b) return b;
 		if(b == 0) return a;
 		byte c = 0;
@@ -232,7 +254,7 @@ public static class StaticClass{
 			}
 		}
     }
-    private sealed class EqualityComparer<T> : IEqualityComparer<T> where T : class{
+    private struct EqualityComparer<T> : IEqualityComparer<T> where T : struct{
         private readonly Func<T, T, bool> _func;
         public EqualityComparer(Func<T, T, bool> func){ _func = func; }
         public bool Equals(T x, T y) => _func(x, y);
@@ -240,7 +262,7 @@ public static class StaticClass{
     }
     public static IEnumerable<T> Distinct<T>(
         this IEnumerable<T> source, Func<T, T, bool> comparer)
-        where T : class => source.Distinct(new EqualityComparer<T>(comparer));
+        where T : struct => source.Distinct(new EqualityComparer<T>(comparer));
     /*public unsafe static uint TryGetGCD(int a, int b){
         uint aa,bb;
         if(a == int.MinValue) aa = *(uint*)&a;
@@ -250,20 +272,5 @@ public static class StaticClass{
         else if(b < 0) bb = (uint)Math.Abs(b);
         else bb = (uint)b;
 		return gcd(aa, bb);
-	}
-    
-    public static BigInteger LCM(SortedSet<int> s){
-        if(s == null || s.Count < 1 || s.Min < 1) return 0;
-        s.Remove(1);
-        if(s.Count < 1) return 1;
-        if(s.Count == 1) return s.Min;
-        int[] integers = new int[s.Count];
-        s.CopyTo(integers);
-        BigInteger result = integers[0];
-        for(int i = 1; i < integers.Length; i++){
-            //result *= integers[i] / (int)BigInteger.GreatestCommonDivisor(result, integers[i]);
-            result *= integers[i] / BigInteger.GreatestCommonDivisor(result, integers[i]);
-        }
-        return result;
-    }*/
+	}*/
 }

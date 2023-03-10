@@ -46,9 +46,8 @@ public class BMSPlayer : MonoBehaviour {
         //     timeLeft--;
         //     // Debug.Log(timeLeft);
         //     toUpdate = true;
-        // });
+        // }, null, 0, 1000);
         StartCoroutine(SetTimeLeft());
-        // timer.Change(0, 1000);
     }
     private void Update(){
         if(escaped) return;

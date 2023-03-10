@@ -95,7 +95,9 @@ public class BMSReader : MonoBehaviour{
     public Text title;
     public Text sub_title;
     public Text artist;
+    public RawImage stageFile;
     #region
+    private Fraction32 fraction32;
     private BMSInfo.NoteType noteType;
     private ChannelType channelType;
     private PlayerType playerType = PlayerType.Keys5;
@@ -128,10 +130,20 @@ public class BMSReader : MonoBehaviour{
         CleanUp();
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, false);
     }
-    private uint ConvertOffset(ushort track, decimal bpm, decimal index = decimal.One){
-        return Convert.ToUInt32(Math.Round(60 * 4 * 1000 * index *
-            beats_tracks[track] / bpm / MainVars.speed, MidpointRounding.ToEven));
-    }
+    // private uint ConvertOffset(ushort track, decimal bpm, decimal index = decimal.One){
+    //     return Convert.ToUInt32(Math.Round(60 * 4 * 1000 * index *
+    //         beats_tracks[track] / bpm / MainVars.speed, MidpointRounding.ToEven));
+    // }
+    private uint ConvertOffset(ushort track, decimal bpm, ulong num, ulong den)
+        => Convert.ToUInt32(Math.Round(60 * 4 * 1000 * num *
+            beats_tracks[track] / bpm / MainVars.speed / den,
+            MidpointRounding.ToEven));
+    private uint ConvertOffset(ushort track, decimal bpm, Fraction64 measure)
+        => ConvertOffset(track, bpm, measure.numerator, measure.denominator);
+    private uint ConvertOffset(ushort track, decimal bpm, Fraction32 measure)
+        => ConvertOffset(track, bpm, measure.Numerator, measure.Denominator);
+    private uint ConvertOffset(ushort track, decimal bpm)
+        => ConvertOffset(track, bpm, 1, 1);
     private void ReadScript(){
         MainVars.cur_scene_name = "Decide";
         back_btn.onClick.AddListener(() => {
@@ -155,7 +167,7 @@ public class BMSReader : MonoBehaviour{
         ulong min_false_level = ulong.MaxValue;
         ulong curr_level = 0;
         file_lines = File.ReadAllLines(bms_directory + bms_file_name, encoding);
-        Random random = new Random((int)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond) & int.MaxValue);
+        // Random random = new Random((int)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond) & int.MaxValue);
         VLCPlayer.instance = VLCPlayer.InstNew(new string[]{ "--video-filter=transform",
             "--transform-type=vflip", "--no-osd", "--no-audio", "--no-repeat",
             "--no-loop", $"--rate={MainVars.speed}" });
@@ -202,7 +214,7 @@ public class BMSReader : MonoBehaviour{
                         random_nums.Pop();
                     }
                     BigInteger.TryParse(file_lines[j].Substring(7).TrimStart(), out k);
-                    if(k > 0) random_nums.Push(random.NextBigInteger(k));
+                    if(k > 0) random_nums.Push(StaticClass.rng.NextBigInteger(k));
                     else random_nums.Push(0);
                     ifs_count.Push(0);
                     file_lines[j] = string.Empty;
@@ -293,6 +305,54 @@ public class BMSReader : MonoBehaviour{
                         wav_names[u] = wav_names[u].Replace('\\', '/');
                         total_medias_count++;
                     }
+                    file_lines[j] = string.Empty;
+                }
+                else if(Regex.IsMatch(file_lines[j], @"^#STAGEFILE\s+", StaticClass.regexOption)){
+                    file_lines[j] = file_lines[j].Substring(11).TrimStart();
+                    Debug.Log(file_lines[j]);
+#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX
+                    // file_lines[j] = file_lines[j].Substring(0, file_lines[j].LastIndexOf('.'));
+                    file_lines[j] = Regex.Match(file_names.ToString(), file_lines[j].Replace(".", @"\.")
+                    .Replace("$", @"\$").Replace("^", @"\^").Replace("{", @"\{").Replace("[", @"\[")
+                    .Replace("(", @"\(").Replace("|", @"\|").Replace(")", @"\)").Replace("*", @"\*")
+                    .Replace("+", @"\+").Replace("?", @"\?").Replace("\t", @"\s").Replace(" ", @"\s")
+                    // + @"\.(bmp|png|jpg|jpeg|gif|mag|wmf|emf|cur|ico|tga|dds|dib|tiff|webp|pbm|pgm|ppm|xcf|pcx|iff|ilbm|pxr|svg|psd)\n"
+                    , StaticClass.regexOption).Value.TrimEnd();
+#endif
+                    int width, height;
+                    Color32[] color32s = StaticClass.GetStageImage(bms_directory + file_lines[j], out width, out height);
+                    if(color32s != null && color32s.Length > 0 && width * height > 0){
+                        unityActions.Enqueue(()=>{
+                            Texture2D t2d = new Texture2D(width, height, TextureFormat.RGBA32, false);
+                            t2d.SetPixels32(color32s);
+                            t2d.Apply(false);
+                            stageFile.texture = t2d;
+                            doingAction = false;
+                        });
+                    }
+                    file_lines[j] = string.Empty;
+                }
+                else if(Regex.IsMatch(file_lines[j], @"^#BACKBMP\s+", StaticClass.regexOption)){
+                    // file_lines[j] = file_lines[j].Substring(9).TrimStart();
+                    // Debug.Log(file_lines[j]);
+                    // int width, height;
+                    // Color32[] color32s = StaticClass.GetStageImage(bms_directory + file_lines[j], out width, out height);
+                    // if(color32s != null && color32s.Length > 0 && width * height > 0){
+                    //     unityActions.Enqueue(()=>{
+                    //         Texture2D t2d = new Texture2D(width, height, TextureFormat.RGBA32, false);
+                    //         t2d.SetPixels32(color32s);
+                    //         t2d.Apply(false);
+                    //         BMSInfo.backBMP = t2d;//Sprite.Create(t2d, Rect.zero, UnityEngine.Vector2.zero);
+                    //         doingAction = false;
+                    //     });
+                    // }
+                    file_lines[j] = string.Empty;
+                }
+                else if(Regex.IsMatch(file_lines[j], @"^#LNMODE\s+\d", StaticClass.regexOption)){
+                    file_lines[j] = string.Empty;
+                }
+                else if(Regex.IsMatch(file_lines[j], @"^#S(CROLL|PEED)[\d\w]{2}\s+", StaticClass.regexOption)
+                    || Regex.IsMatch(file_lines[j], @"^#\d{3}S[CP]:", StaticClass.regexOption)){
                     file_lines[j] = string.Empty;
                 }
                 #region ignored control flow (not supported widely)
@@ -405,6 +465,7 @@ public class BMSReader : MonoBehaviour{
         for(ushort i = 0; i <= max_tracks; i++){
             if(bpm_index_lists[i] != null){
                 if(bpm_index_lists[i].Count > 1){
+                    // bpm_index_lists[i] = bpm_index_lists[i].Distinct((a, b) => a.measure == b.measure).ToList();
                     bpm_index_lists[i].Sort((x, y) => {
                         if(x.measure != y.measure)
                             return x.measure.CompareTo(y.measure);
@@ -442,13 +503,13 @@ public class BMSReader : MonoBehaviour{
                     trackOffset_ms += ConvertOffset(i, curr_bpm, temp_bpm_index[a].measure - temp_bpm_index[a - 1].measure);
                 }
                 curr_bpm = temp_bpm_index.Last().BPM;
-                trackOffset_ms += ConvertOffset(i, curr_bpm, decimal.One - temp_bpm_index.Last().measure);
+                trackOffset_ms += ConvertOffset(i, curr_bpm, Fraction32.One - temp_bpm_index.Last().measure);
                 track_end_bpms[i] = curr_bpm;
             }
             else if(temp_bpm_index.Count == 1){
                 trackOffset_ms = ConvertOffset(i, curr_bpm, temp_bpm_index[0].measure);
                 curr_bpm = temp_bpm_index[0].BPM;
-                trackOffset_ms += ConvertOffset(i, curr_bpm, decimal.One - temp_bpm_index[0].measure);
+                trackOffset_ms += ConvertOffset(i, curr_bpm, Fraction32.One - temp_bpm_index[0].measure);
                 track_end_bpms[i] = curr_bpm;
             }
             BMSInfo.time_as_ms_before_track.Add((ushort)(i + 1), BMSInfo.time_as_ms_before_track[i] + trackOffset_ms);
@@ -571,9 +632,9 @@ public class BMSReader : MonoBehaviour{
                         for(int i = 0; i < message.Length; i += 2){
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if(u > 0){
-                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
+                                fraction32 = new Fraction32(i / 2, message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
-                                trackOffset_ms = ConvertOffset(track, curr_bpm, ld);
+                                trackOffset_ms = ConvertOffset(track, curr_bpm, fraction32);
                                 BMSInfo.bgm_list_table.Add(new BGMTimeRow(BMSInfo.time_as_ms_before_track
                                     [track] + trackOffset_ms, u));
                             }
@@ -583,15 +644,15 @@ public class BMSReader : MonoBehaviour{
                         for(int i = 0; i < message.Length; i += 2){
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if(u > 0){
-                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
+                                fraction32 = new Fraction32(i / 2, message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
-                                if(ld <= temp_bpm_index[0].measure){
-                                    trackOffset_ms = ConvertOffset(track, curr_bpm, ld);
+                                if(fraction32 <= temp_bpm_index[0].measure){
+                                    trackOffset_ms = ConvertOffset(track, curr_bpm, fraction32);
                                 }
-                                else if(ld > temp_bpm_index[0].measure){
+                                else if(fraction32 > temp_bpm_index[0].measure){
                                     trackOffset_ms = ConvertOffset(track, curr_bpm, temp_bpm_index[0].measure);
                                     curr_bpm = temp_bpm_index[0].BPM;
-                                    trackOffset_ms += ConvertOffset(track, curr_bpm, ld - temp_bpm_index[0].measure);
+                                    trackOffset_ms += ConvertOffset(track, curr_bpm, fraction32 - temp_bpm_index[0].measure);
                                 }
                                 //curr_bpm = temp_bpm_index[0].BPM;
                                 BMSInfo.bgm_list_table.Add(new BGMTimeRow(BMSInfo.time_as_ms_before_track
@@ -604,30 +665,30 @@ public class BMSReader : MonoBehaviour{
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if(u > 0){
                                 trackOffset_ms = 0;
-                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
-                                if(ld <= temp_bpm_index[0].measure){
+                                fraction32 = new Fraction32(i / 2, message.Length / 2);
+                                if(fraction32 <= temp_bpm_index[0].measure){
                                     curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
-                                    trackOffset_ms += ConvertOffset(track, curr_bpm, ld);
+                                    trackOffset_ms += ConvertOffset(track, curr_bpm, fraction32);
                                     BMSInfo.bgm_list_table.Add(new BGMTimeRow(BMSInfo.time_as_ms_before_track
                                         [track] + trackOffset_ms, u));
-                                    trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[0].measure - ld);
+                                    trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[0].measure - fraction32);
                                 }
                                 for(int a = 1; a < temp_bpm_index.Count; a++){
                                     curr_bpm = temp_bpm_index[a - 1].BPM;
-                                    if(ld > temp_bpm_index[a - 1].measure && ld <= temp_bpm_index[a].measure){
-                                        trackOffset_ms += ConvertOffset(track, curr_bpm, ld - temp_bpm_index[a - 1].measure);
+                                    if(fraction32 > temp_bpm_index[a - 1].measure && fraction32 <= temp_bpm_index[a].measure){
+                                        trackOffset_ms += ConvertOffset(track, curr_bpm, fraction32 - temp_bpm_index[a - 1].measure);
                                         BMSInfo.bgm_list_table.Add(new BGMTimeRow(BMSInfo.time_as_ms_before_track
                                             [track] + trackOffset_ms, u));
-                                        trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[a].measure - ld);
+                                        trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[a].measure - fraction32);
                                         break;
                                     }
                                     trackOffset_ms += ConvertOffset(track, curr_bpm,
                                         temp_bpm_index[a].measure - temp_bpm_index[a - 1].measure);
                                 }
-                                if(ld > temp_bpm_index.Last().measure){
+                                if(fraction32 > temp_bpm_index.Last().measure){
                                     curr_bpm = temp_bpm_index.Last().BPM;
                                     trackOffset_ms += ConvertOffset(track, curr_bpm,
-                                        ld - temp_bpm_index.Last().measure);
+                                        fraction32 - temp_bpm_index.Last().measure);
                                     BMSInfo.bgm_list_table.Add(new BGMTimeRow(BMSInfo.time_as_ms_before_track
                                         [track] + trackOffset_ms, u));
                                 }
@@ -648,9 +709,9 @@ public class BMSReader : MonoBehaviour{
                         for(int i = 0; i < message.Length; i += 2){
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if(u > 0){
-                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
+                                fraction32 = new Fraction32(i / 2, message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
-                                trackOffset_ms = ConvertOffset(track, curr_bpm, ld);
+                                trackOffset_ms = ConvertOffset(track, curr_bpm, fraction32);
                                 BMSInfo.bga_list_table.Add(new BGATimeRow(BMSInfo.time_as_ms_before_track
                                     [track] + trackOffset_ms, u, hex_digits));
                             }
@@ -660,15 +721,15 @@ public class BMSReader : MonoBehaviour{
                         for(int i = 0; i < message.Length; i += 2){
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if(u > 0){
-                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
+                                fraction32 = new Fraction32(i / 2, message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
-                                if(ld <= temp_bpm_index[0].measure){
-                                    trackOffset_ms = ConvertOffset(track, curr_bpm, ld);
+                                if(fraction32 <= temp_bpm_index[0].measure){
+                                    trackOffset_ms = ConvertOffset(track, curr_bpm, fraction32);
                                 }
-                                else if(ld > temp_bpm_index[0].measure){
+                                else if(fraction32 > temp_bpm_index[0].measure){
                                     trackOffset_ms = ConvertOffset(track, curr_bpm, temp_bpm_index[0].measure);
                                     curr_bpm = temp_bpm_index[0].BPM;
-                                    trackOffset_ms += ConvertOffset(track, curr_bpm, ld - temp_bpm_index[0].measure);
+                                    trackOffset_ms += ConvertOffset(track, curr_bpm, fraction32 - temp_bpm_index[0].measure);
                                 }
                                 //curr_bpm = temp_bpm_index[0].BPM;
                                 BMSInfo.bga_list_table.Add(new BGATimeRow(BMSInfo.time_as_ms_before_track
@@ -681,29 +742,29 @@ public class BMSReader : MonoBehaviour{
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if(u > 0){
                                 trackOffset_ms = 0;
-                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
-                                if(ld <= temp_bpm_index[0].measure){
+                                fraction32 = new Fraction32(i / 2, message.Length / 2);
+                                if(fraction32 <= temp_bpm_index[0].measure){
                                     curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
-                                    trackOffset_ms += ConvertOffset(track, curr_bpm, ld);
+                                    trackOffset_ms += ConvertOffset(track, curr_bpm, fraction32);
                                     BMSInfo.bga_list_table.Add(new BGATimeRow(BMSInfo.time_as_ms_before_track
                                         [track] + trackOffset_ms, u, hex_digits));
-                                    trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[0].measure - ld);
+                                    trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[0].measure - fraction32);
                                 }
                                 for(int a = 1; a < temp_bpm_index.Count; a++){
                                     curr_bpm = temp_bpm_index[a].BPM;
-                                    if(ld > temp_bpm_index[a - 1].measure && ld <= temp_bpm_index[a].measure){
-                                        trackOffset_ms += ConvertOffset(track, curr_bpm, ld - temp_bpm_index[a - 1].measure);
+                                    if(fraction32 > temp_bpm_index[a - 1].measure && fraction32 <= temp_bpm_index[a].measure){
+                                        trackOffset_ms += ConvertOffset(track, curr_bpm, fraction32 - temp_bpm_index[a - 1].measure);
                                         BMSInfo.bga_list_table.Add(new BGATimeRow(BMSInfo.time_as_ms_before_track
                                             [track] + trackOffset_ms, u, hex_digits));
-                                        trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[a].measure - ld);
+                                        trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[a].measure - fraction32);
                                         break;
                                     }
                                     trackOffset_ms += ConvertOffset(track, curr_bpm,
                                         temp_bpm_index[a].measure - temp_bpm_index[a - 1].measure);
                                 }
-                                if(ld > temp_bpm_index.Last().measure){
+                                if(fraction32 > temp_bpm_index.Last().measure){
                                     curr_bpm = temp_bpm_index.Last().BPM;
-                                    trackOffset_ms += ConvertOffset(track, curr_bpm, ld - temp_bpm_index.Last().measure);
+                                    trackOffset_ms += ConvertOffset(track, curr_bpm, fraction32 - temp_bpm_index.Last().measure);
                                     BMSInfo.bga_list_table.Add(new BGATimeRow(BMSInfo.time_as_ms_before_track
                                         [track] + trackOffset_ms, u, hex_digits));
                                 }
@@ -720,9 +781,9 @@ public class BMSReader : MonoBehaviour{
                         for(int i = 0; i < message.Length; i += 2){
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if(u > 0 && exbpm_dict.ContainsKey(u)){
-                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
+                                fraction32 = new Fraction32(i / 2, message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
-                                trackOffset_ms = ConvertOffset(track, curr_bpm, ld);
+                                trackOffset_ms = ConvertOffset(track, curr_bpm, fraction32);
                                 BMSInfo.bpm_list_table.Add(new BPMTimeRow(BMSInfo.time_as_ms_before_track
                                     [track] + trackOffset_ms, exbpm_dict[u], true));
                             }
@@ -732,15 +793,15 @@ public class BMSReader : MonoBehaviour{
                         for(int i = 0; i < message.Length; i += 2){
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if(u > 0 && exbpm_dict.ContainsKey(u)){
-                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
+                                fraction32 = new Fraction32(i / 2, message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
-                                if(ld <= temp_bpm_index[0].measure){
-                                    trackOffset_ms = ConvertOffset(track, curr_bpm, ld);
+                                if(fraction32 <= temp_bpm_index[0].measure){
+                                    trackOffset_ms = ConvertOffset(track, curr_bpm, fraction32);
                                 }
-                                else if(ld > temp_bpm_index[0].measure){
+                                else if(fraction32 > temp_bpm_index[0].measure){
                                     trackOffset_ms = ConvertOffset(track, curr_bpm, temp_bpm_index[0].measure);
                                     curr_bpm = temp_bpm_index[0].BPM;
-                                    trackOffset_ms += ConvertOffset(track, curr_bpm, ld - temp_bpm_index[0].measure);
+                                    trackOffset_ms += ConvertOffset(track, curr_bpm, fraction32 - temp_bpm_index[0].measure);
                                 }
                                 //curr_bpm = temp_bpm_index[0].BPM;
                                 BMSInfo.bpm_list_table.Add(new BPMTimeRow(BMSInfo.time_as_ms_before_track
@@ -753,29 +814,29 @@ public class BMSReader : MonoBehaviour{
                             u = StaticClass.Convert36To10(message.Substring(i, 2));
                             if(u > 0 && exbpm_dict.ContainsKey(u)){
                                 trackOffset_ms = 0;
-                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
-                                if(ld <= temp_bpm_index[0].measure){
+                                fraction32 = new Fraction32(i / 2, message.Length / 2);
+                                if(fraction32 <= temp_bpm_index[0].measure){
                                     curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
-                                    trackOffset_ms += ConvertOffset(track, curr_bpm, ld);
+                                    trackOffset_ms += ConvertOffset(track, curr_bpm, fraction32);
                                     BMSInfo.bpm_list_table.Add(new BPMTimeRow(BMSInfo.time_as_ms_before_track
                                         [track] + trackOffset_ms, exbpm_dict[u], true));
-                                    trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[0].measure - ld);
+                                    trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[0].measure - fraction32);
                                 }
                                 for(int a = 1; a < temp_bpm_index.Count; a++){
                                     curr_bpm = temp_bpm_index[a].BPM;
-                                    if(ld > temp_bpm_index[a - 1].measure && ld <= temp_bpm_index[a].measure){
-                                        trackOffset_ms += ConvertOffset(track, curr_bpm, ld - temp_bpm_index[a - 1].measure);
+                                    if(fraction32 > temp_bpm_index[a - 1].measure && fraction32 <= temp_bpm_index[a].measure){
+                                        trackOffset_ms += ConvertOffset(track, curr_bpm, fraction32 - temp_bpm_index[a - 1].measure);
                                         BMSInfo.bpm_list_table.Add(new BPMTimeRow(BMSInfo.time_as_ms_before_track
                                             [track] + trackOffset_ms, exbpm_dict[u], true));
-                                        trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[a].measure - ld);
+                                        trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[a].measure - fraction32);
                                         break;
                                     }
                                     trackOffset_ms += ConvertOffset(track, curr_bpm,
                                         temp_bpm_index[a].measure - temp_bpm_index[a - 1].measure);
                                 }
-                                if(ld > temp_bpm_index.Last().measure){
+                                if(fraction32 > temp_bpm_index.Last().measure){
                                     curr_bpm = temp_bpm_index.Last().BPM;
-                                    trackOffset_ms += ConvertOffset(track, curr_bpm, ld - temp_bpm_index.Last().measure);
+                                    trackOffset_ms += ConvertOffset(track, curr_bpm, fraction32 - temp_bpm_index.Last().measure);
                                     BMSInfo.bpm_list_table.Add(new BPMTimeRow(BMSInfo.time_as_ms_before_track
                                         [track] + trackOffset_ms, exbpm_dict[u], true));
                                 }
@@ -792,9 +853,9 @@ public class BMSReader : MonoBehaviour{
                         for(int i = 0; i < message.Length; i += 2){
                             byte.TryParse(message.Substring(i, 2), NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo, out hex_digits);
                             if(hex_digits > 0){
-                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
+                                fraction32 = new Fraction32(i / 2, message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
-                                trackOffset_ms = ConvertOffset(track, curr_bpm, ld);
+                                trackOffset_ms = ConvertOffset(track, curr_bpm, fraction32);
                                 BMSInfo.bpm_list_table.Add(new BPMTimeRow(BMSInfo.time_as_ms_before_track
                                     [track] + trackOffset_ms, hex_digits, false));
                             }
@@ -804,15 +865,15 @@ public class BMSReader : MonoBehaviour{
                         for(int i = 0; i < message.Length; i += 2){
                             byte.TryParse(message.Substring(i, 2), NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo, out hex_digits);
                             if(hex_digits > 0){
-                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
+                                fraction32 = new Fraction32(i / 2, message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
-                                if(ld <= temp_bpm_index[0].measure){
-                                    trackOffset_ms = ConvertOffset(track, curr_bpm, ld);
+                                if(fraction32 <= temp_bpm_index[0].measure){
+                                    trackOffset_ms = ConvertOffset(track, curr_bpm, fraction32);
                                 }
-                                else if(ld > temp_bpm_index[0].measure){
+                                else if(fraction32 > temp_bpm_index[0].measure){
                                     trackOffset_ms = ConvertOffset(track, curr_bpm, temp_bpm_index[0].measure);
                                     curr_bpm = temp_bpm_index[0].BPM;
-                                    trackOffset_ms += ConvertOffset(track, curr_bpm, ld - temp_bpm_index[0].measure);
+                                    trackOffset_ms += ConvertOffset(track, curr_bpm, fraction32 - temp_bpm_index[0].measure);
                                 }
                                 //curr_bpm = temp_bpm_index[0].BPM;
                                 BMSInfo.bpm_list_table.Add(new BPMTimeRow(BMSInfo.time_as_ms_before_track
@@ -825,29 +886,29 @@ public class BMSReader : MonoBehaviour{
                             byte.TryParse(message.Substring(i, 2), NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo, out hex_digits);
                             if(hex_digits > 0){
                                 trackOffset_ms = 0;
-                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
-                                if(ld <= temp_bpm_index[0].measure){
+                                fraction32 = new Fraction32(i / 2, message.Length / 2);
+                                if(fraction32 <= temp_bpm_index[0].measure){
                                     curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
-                                    trackOffset_ms += ConvertOffset(track, curr_bpm, ld);
+                                    trackOffset_ms += ConvertOffset(track, curr_bpm, fraction32);
                                     BMSInfo.bpm_list_table.Add(new BPMTimeRow(BMSInfo.time_as_ms_before_track
                                         [track] + trackOffset_ms, hex_digits, false));
-                                    trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[0].measure - ld);
+                                    trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[0].measure - fraction32);
                                 }
                                 for(int a = 1; a < temp_bpm_index.Count; a++){
                                     curr_bpm = temp_bpm_index[a].BPM;
-                                    if(ld > temp_bpm_index[a - 1].measure && ld <= temp_bpm_index[a].measure){
-                                        trackOffset_ms += ConvertOffset(track, curr_bpm, ld - temp_bpm_index[a - 1].measure);
+                                    if(fraction32 > temp_bpm_index[a - 1].measure && fraction32 <= temp_bpm_index[a].measure){
+                                        trackOffset_ms += ConvertOffset(track, curr_bpm, fraction32 - temp_bpm_index[a - 1].measure);
                                         BMSInfo.bpm_list_table.Add(new BPMTimeRow(BMSInfo.time_as_ms_before_track
                                             [track] + trackOffset_ms, hex_digits, false));
-                                        trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[a].measure - ld);
+                                        trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[a].measure - fraction32);
                                         break;
                                     }
                                     trackOffset_ms += ConvertOffset(track, curr_bpm,
                                         temp_bpm_index[a].measure - temp_bpm_index[a - 1].measure);
                                 }
-                                if(ld > temp_bpm_index.Last().measure){
+                                if(fraction32 > temp_bpm_index.Last().measure){
                                     curr_bpm = temp_bpm_index.Last().BPM;
-                                    trackOffset_ms += ConvertOffset(track, curr_bpm, ld - temp_bpm_index.Last().measure);
+                                    trackOffset_ms += ConvertOffset(track, curr_bpm, fraction32 - temp_bpm_index.Last().measure);
                                     BMSInfo.bpm_list_table.Add(new BPMTimeRow(BMSInfo.time_as_ms_before_track
                                         [track] + trackOffset_ms, hex_digits, false));
                                 }
@@ -866,17 +927,22 @@ public class BMSReader : MonoBehaviour{
         else if(BMSInfo.scriptType == BMSInfo.ScriptType.PMS){ PMS_region(); }
         Debug.Log("sorting");
         if(BMSInfo.bgm_list_table.Count > 1){
+            // Debug.Log(BMSInfo.bgm_list_table.Count);
+            // BMSInfo.bgm_list_table = BMSInfo.bgm_list_table.Distinct((a, b) => a.time == b.time && a.clipNum == b.clipNum).ToList();
             BMSInfo.bgm_list_table.Sort((x, y) => {
                 if(x.time != y.time)
                     return x.time.CompareTo(y.time);
                 return 0;
             });
-            BMSInfo.bgm_list_table = BMSInfo.bgm_list_table.GroupBy(v => new {v.time, v.clipNum}).Select(v => v.First()).ToList();
+            // BMSInfo.bgm_list_table = BMSInfo.bgm_list_table.GroupBy(v => new {v.time, v.clipNum}).Select(v => v.First()).ToList();
+            // Debug.Log(BMSInfo.bgm_list_table.Count);
             GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
         }
         if(BMSInfo.bgm_list_table.Count > 0 && BMSInfo.totalTimeAsMilliseconds < BMSInfo.bgm_list_table.Last().time)
             BMSInfo.totalTimeAsMilliseconds = BMSInfo.bgm_list_table.Last().time;
         if(BMSInfo.bga_list_table.Count > 1){
+            // Debug.Log(BMSInfo.bga_list_table.Count);
+            // BMSInfo.bga_list_table = BMSInfo.bga_list_table.Distinct((a, b) => a.time == b.time && a.channel == b.channel).ToList();
             BMSInfo.bga_list_table.Sort((x, y) => {
                 if(x.time != y.time)
                     return x.time.CompareTo(y.time);
@@ -884,7 +950,8 @@ public class BMSReader : MonoBehaviour{
                     return x.channel.CompareTo(y.channel);
                 return 0;
             });
-            BMSInfo.bga_list_table = BMSInfo.bga_list_table.GroupBy(v => new {v.time, v.channel}).Select(v => v.First()).ToList();
+            // BMSInfo.bga_list_table = BMSInfo.bga_list_table.GroupBy(v => new {v.time, v.channel}).Select(v => v.First()).ToList();
+            // Debug.Log(BMSInfo.bga_list_table.Count);
             GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
         }
         if((VLCPlayer.medias[0] != UIntPtr.Zero || BMSInfo.textures[0] != null) &&
@@ -894,6 +961,8 @@ public class BMSReader : MonoBehaviour{
         if(BMSInfo.bga_list_table.Count > 0 && BMSInfo.totalTimeAsMilliseconds < BMSInfo.bga_list_table.Last().time)
             BMSInfo.totalTimeAsMilliseconds = BMSInfo.bga_list_table.Last().time;
         if(BMSInfo.note_list_table.Count > 1){
+            // Debug.Log(BMSInfo.note_list_table.Count);
+            // BMSInfo.note_list_table = BMSInfo.note_list_table.Distinct((a, b) => a.time == b.time && a.channel == b.channel).ToList();
             BMSInfo.note_list_table.Sort((x, y) => {
                 if(x.time != y.time)
                     return x.time.CompareTo(y.time);
@@ -901,23 +970,28 @@ public class BMSReader : MonoBehaviour{
                     return x.channel.CompareTo(y.channel);
                 return 0;
             });
-            BMSInfo.note_list_table = BMSInfo.note_list_table.GroupBy(v => new {v.time, v.channel}).Select(v => v.First()).ToList();
-            Debug.Log(BMSInfo.note_list_table.Count);
+            // BMSInfo.note_list_table = BMSInfo.note_list_table.GroupBy(v => new {v.time, v.channel}).Select(v => v.First()).ToList();
+            // Debug.Log(BMSInfo.note_list_table.Count);
             GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
         }
         if(BMSInfo.note_list_table.Count > 0 && BMSInfo.totalTimeAsMilliseconds < BMSInfo.note_list_table.Last().time)
             BMSInfo.totalTimeAsMilliseconds = BMSInfo.note_list_table.Last().time;
         if(BMSInfo.bpm_list_table.Count > 1){
+            // Debug.Log(BMSInfo.bpm_list_table.Count);
+            // BMSInfo.bpm_list_table = BMSInfo.bpm_list_table.Distinct((a, b) => a.time == b.time).ToList();
             BMSInfo.bpm_list_table.Sort((x, y) =>{
                 if(x.time != y.time)
                     return x.time.CompareTo(y.time);
                 if(x.IsBPMXX != y.IsBPMXX)
                     return y.IsBPMXX.CompareTo(x.IsBPMXX);
                     // return x.IsBPMXX.CompareTo(y.IsBPMXX);
-                if(x.value != y.value)
-                    return y.value.CompareTo(x.value);
+                // if(x.value != y.value)
+                //     return y.value.CompareTo(x.value);
                 return 0;
             });
+            // BMSInfo.bpm_list_table = BMSInfo.bpm_list_table.GroupBy(v => v.time).Select(v => v.First()).ToList();
+            // Debug.Log(BMSInfo.bpm_list_table.Count);
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
         }
         if(BMSInfo.bpm_list_table.Count > 0 && BMSInfo.totalTimeAsMilliseconds < BMSInfo.bpm_list_table.Last().time)
             BMSInfo.totalTimeAsMilliseconds = BMSInfo.bpm_list_table.Last().time;
@@ -1027,9 +1101,9 @@ public class BMSReader : MonoBehaviour{
                                     noteType = BMSInfo.NoteType.Longnote;
                                 else if(channelType == ChannelType.Default && !lnobj[u - 1])
                                     noteType = BMSInfo.NoteType.Default;
-                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
+                                fraction32 = new Fraction32(i / 2, message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
-                                trackOffset_ms = ConvertOffset(track, curr_bpm, ld);
+                                trackOffset_ms = ConvertOffset(track, curr_bpm, fraction32);
                                 BMSInfo.note_list_table.Add(new NoteTimeRow(BMSInfo.time_as_ms_before_track
                                     [track] + trackOffset_ms, (BMSInfo.NoteChannel)hex_digits, u, noteType));
                             }
@@ -1050,15 +1124,15 @@ public class BMSReader : MonoBehaviour{
                                 else if(channelType == ChannelType.Default && !lnobj[u - 1])
                                     noteType = BMSInfo.NoteType.Default;
                                 trackOffset_ms = 0;
-                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
+                                fraction32 = new Fraction32(i / 2, message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
-                                if(ld <= temp_bpm_index[0].measure){
-                                    trackOffset_ms = ConvertOffset(track, curr_bpm, ld);
+                                if(fraction32 <= temp_bpm_index[0].measure){
+                                    trackOffset_ms = ConvertOffset(track, curr_bpm, fraction32);
                                 }
-                                else if(ld > temp_bpm_index[0].measure){
+                                else if(fraction32 > temp_bpm_index[0].measure){
                                     trackOffset_ms = ConvertOffset(track, curr_bpm, temp_bpm_index[0].measure);
                                     curr_bpm = temp_bpm_index[0].BPM;
-                                    trackOffset_ms += ConvertOffset(track, curr_bpm, ld - temp_bpm_index[0].measure);
+                                    trackOffset_ms += ConvertOffset(track, curr_bpm, fraction32 - temp_bpm_index[0].measure);
                                 }
                                 //curr_bpm = temp_bpm_index[0].BPM;
                                 BMSInfo.note_list_table.Add(new NoteTimeRow(BMSInfo.time_as_ms_before_track
@@ -1081,29 +1155,29 @@ public class BMSReader : MonoBehaviour{
                                 else if(channelType == ChannelType.Default && !lnobj[u - 1])
                                     noteType = BMSInfo.NoteType.Default;
                                 trackOffset_ms = 0;
-                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
-                                if(ld <= temp_bpm_index[0].measure){
+                                fraction32 = new Fraction32(i / 2, message.Length / 2);
+                                if(fraction32 <= temp_bpm_index[0].measure){
                                     curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
-                                    trackOffset_ms = ConvertOffset(track, curr_bpm, ld);
+                                    trackOffset_ms = ConvertOffset(track, curr_bpm, fraction32);
                                     BMSInfo.note_list_table.Add(new NoteTimeRow(BMSInfo.time_as_ms_before_track
                                         [track] + trackOffset_ms, (BMSInfo.NoteChannel)hex_digits, u, noteType));
-                                    trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[0].measure - ld);
+                                    trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[0].measure - fraction32);
                                 }
                                 for(int a = 1; a < temp_bpm_index.Count; a++){
                                     curr_bpm = temp_bpm_index[a - 1].BPM;
-                                    if(ld > temp_bpm_index[a - 1].measure && ld <= temp_bpm_index[a].measure){
-                                        trackOffset_ms += ConvertOffset(track, curr_bpm, ld - temp_bpm_index[a - 1].measure);
+                                    if(fraction32 > temp_bpm_index[a - 1].measure && fraction32 <= temp_bpm_index[a].measure){
+                                        trackOffset_ms += ConvertOffset(track, curr_bpm, fraction32 - temp_bpm_index[a - 1].measure);
                                         BMSInfo.note_list_table.Add(new NoteTimeRow(BMSInfo.time_as_ms_before_track
                                             [track] + trackOffset_ms, (BMSInfo.NoteChannel)hex_digits, u, noteType));
-                                        trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[a].measure - ld);
+                                        trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[a].measure - fraction32);
                                         break;
                                     }
                                     trackOffset_ms += ConvertOffset(track, curr_bpm,
                                         temp_bpm_index[a].measure - temp_bpm_index[a - 1].measure);
                                 }
-                                if(ld > temp_bpm_index.Last().measure){
+                                if(fraction32 > temp_bpm_index.Last().measure){
                                     curr_bpm = temp_bpm_index.Last().BPM;
-                                    trackOffset_ms += ConvertOffset(track, curr_bpm, ld - temp_bpm_index.Last().measure);
+                                    trackOffset_ms += ConvertOffset(track, curr_bpm, fraction32 - temp_bpm_index.Last().measure);
                                     BMSInfo.note_list_table.Add(new NoteTimeRow(BMSInfo.time_as_ms_before_track
                                         [track] + trackOffset_ms, (BMSInfo.NoteChannel)hex_digits, u, noteType));
                                 }
@@ -1186,9 +1260,9 @@ public class BMSReader : MonoBehaviour{
                                     noteType = BMSInfo.NoteType.Longnote;
                                 else if(channelType == ChannelType.Default && !lnobj[u - 1])
                                     noteType = BMSInfo.NoteType.Default;
-                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
+                                fraction32 = new Fraction32(i / 2, message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
-                                trackOffset_ms = ConvertOffset(track, curr_bpm, ld);
+                                trackOffset_ms = ConvertOffset(track, curr_bpm, fraction32);
                                 BMSInfo.note_list_table.Add(new NoteTimeRow(BMSInfo.time_as_ms_before_track
                                     [track] + trackOffset_ms, (BMSInfo.NoteChannel)hex_digits, u, noteType));
                             }
@@ -1209,15 +1283,15 @@ public class BMSReader : MonoBehaviour{
                                 else if(channelType == ChannelType.Default && !lnobj[u - 1])
                                     noteType = BMSInfo.NoteType.Default;
                                 trackOffset_ms = 0;
-                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
+                                fraction32 = new Fraction32(i / 2, message.Length / 2);
                                 curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
-                                if(ld <= temp_bpm_index[0].measure){
-                                    trackOffset_ms = ConvertOffset(track, curr_bpm, ld);
+                                if(fraction32 <= temp_bpm_index[0].measure){
+                                    trackOffset_ms = ConvertOffset(track, curr_bpm, fraction32);
                                 }
-                                else if(ld > temp_bpm_index[0].measure){
+                                else if(fraction32 > temp_bpm_index[0].measure){
                                     trackOffset_ms = ConvertOffset(track, curr_bpm, temp_bpm_index[0].measure);
                                     curr_bpm = temp_bpm_index[0].BPM;
-                                    trackOffset_ms += ConvertOffset(track, curr_bpm, ld - temp_bpm_index[0].measure);
+                                    trackOffset_ms += ConvertOffset(track, curr_bpm, fraction32 - temp_bpm_index[0].measure);
                                 }
                                 //curr_bpm = temp_bpm_index[0].BPM;
                                 BMSInfo.note_list_table.Add(new NoteTimeRow(BMSInfo.time_as_ms_before_track
@@ -1240,29 +1314,29 @@ public class BMSReader : MonoBehaviour{
                                 else if(channelType == ChannelType.Default && !lnobj[u - 1])
                                     noteType = BMSInfo.NoteType.Default;
                                 trackOffset_ms = 0;
-                                ld = (decimal)(i / 2) / (decimal)(message.Length / 2);
-                                if(ld <= temp_bpm_index[0].measure){
+                                fraction32 = new Fraction32(i / 2, message.Length / 2);
+                                if(fraction32 <= temp_bpm_index[0].measure){
                                     curr_bpm = track > 0 ? track_end_bpms[track - 1] : BMSInfo.start_bpm;
-                                    trackOffset_ms = ConvertOffset(track, curr_bpm, ld);
+                                    trackOffset_ms = ConvertOffset(track, curr_bpm, fraction32);
                                     BMSInfo.note_list_table.Add(new NoteTimeRow(BMSInfo.time_as_ms_before_track
                                         [track] + trackOffset_ms, (BMSInfo.NoteChannel)hex_digits, u, noteType));
-                                    trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[0].measure - ld);
+                                    trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[0].measure - fraction32);
                                 }
                                 for(int a = 1; a < temp_bpm_index.Count; a++){
                                     curr_bpm = temp_bpm_index[a - 1].BPM;
-                                    if(ld > temp_bpm_index[a - 1].measure && ld <= temp_bpm_index[a].measure){
-                                        trackOffset_ms += ConvertOffset(track, curr_bpm, ld - temp_bpm_index[a - 1].measure);
+                                    if(fraction32 > temp_bpm_index[a - 1].measure && fraction32 <= temp_bpm_index[a].measure){
+                                        trackOffset_ms += ConvertOffset(track, curr_bpm, fraction32 - temp_bpm_index[a - 1].measure);
                                         BMSInfo.note_list_table.Add(new NoteTimeRow(BMSInfo.time_as_ms_before_track
                                             [track] + trackOffset_ms, (BMSInfo.NoteChannel)hex_digits, u, noteType));
-                                        trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[a].measure - ld);
+                                        trackOffset_ms += ConvertOffset(track, curr_bpm, temp_bpm_index[a].measure - fraction32);
                                         break;
                                     }
                                     trackOffset_ms += ConvertOffset(track, curr_bpm,
                                         temp_bpm_index[a].measure - temp_bpm_index[a - 1].measure);
                                 }
-                                if(ld > temp_bpm_index.Last().measure){
+                                if(fraction32 > temp_bpm_index.Last().measure){
                                     curr_bpm = temp_bpm_index.Last().BPM;
-                                    trackOffset_ms += ConvertOffset(track, curr_bpm, ld - temp_bpm_index.Last().measure);
+                                    trackOffset_ms += ConvertOffset(track, curr_bpm, fraction32 - temp_bpm_index.Last().measure);
                                     BMSInfo.note_list_table.Add(new NoteTimeRow(BMSInfo.time_as_ms_before_track
                                         [track] + trackOffset_ms, (BMSInfo.NoteChannel)hex_digits, u, noteType));
                                 }

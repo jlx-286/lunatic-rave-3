@@ -54,6 +54,7 @@ public class MainVars : MonoBehaviour {
         }
     }*/
     private void OnApplicationQuit(){
+        StaticClass.rng.Dispose();
         FluidManager.CleanUp();
         VLCPlayer.VLCRelease();
         BMSInfo.CleanUp();

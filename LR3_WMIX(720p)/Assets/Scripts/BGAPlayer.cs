@@ -1,16 +1,28 @@
 ﻿using System;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 public class BGAPlayer : MonoBehaviour {
     public BMSPlayer BMS_Player;
     public RawImage[] rawImages;
     private ushort bgi_num;
+    public GameObject[] poors;
+    private Image[] images;
+    private Timer timer;
+    private bool toDisable = false;
 	private void Start(){
         // Color32[] c = new Color32[1]{new Color32(0, 0, 0, 0)};
         for(byte i = 0; i < VLCPlayer.media_textures.Length; i++){
             VLCPlayer.media_textures[i] = new Texture2D(1, 1, TextureFormat.RGBA32, false);
             // VLCPlayer.media_textures[i].SetPixels32(c);
         }
+        timer = new Timer(obj => {
+            toDisable = true;
+            timer.Change(Timeout.Infinite, Timeout.Infinite);
+        }, null, Timeout.Infinite, Timeout.Infinite);
+        images = new Image[poors.Length];
+        for(byte i = 0; i < poors.Length; i++)
+            images[i] = poors[i].GetComponent<Image>();
     }
 	//private void FixedUpdate(){}
     private void Update(){
@@ -36,9 +48,23 @@ public class BGAPlayer : MonoBehaviour {
                     BMS_Player.bga_table_row++;
                 }else break;
             }
+            if(toDisable){
+                toDisable = false;
+                for(byte i = 0; i < poors.Length; i++)
+                    poors[i].SetActive(false);
+            }
         }
     }
+    private void OnDestroy(){
+        timer.Dispose();
+        timer = null;
+    }
     private unsafe void ChannelCase(byte ii){
+        // if(ii == 3){
+        //     for(byte i = 0; i < poors.Length; i++)
+        //         poors[i].SetActive(true);
+        //     timer.Change(1000, 0);
+        // }
         if(VLCPlayer.medias[bgi_num] != UIntPtr.Zero){
             VLCPlayer.PlayerFree(ref VLCPlayer.players[ii]);
             try{
@@ -89,11 +115,17 @@ public class BGAPlayer : MonoBehaviour {
         }
         else if(VLCPlayer.medias[bgi_num] == UIntPtr.Zero){
             VLCPlayer.PlayerFree(ref VLCPlayer.players[ii]);
-            if(BMSInfo.textures[bgi_num] != null)
+            if(BMSInfo.textures[bgi_num] != null){
+                if(ii == 3) for(byte i = 0; i < poors.Length; i++)
+                    images[i].enabled = true;
                 for(byte i = ii; i < rawImages.Length; i += 4)
                     rawImages[i].texture = BMSInfo.textures[bgi_num];
-            else for(byte i = ii; i < rawImages.Length; i += 4)
-                rawImages[i].texture = Texture2D.blackTexture;
+            }else{
+                if(ii == 3) for(byte i = 0; i < poors.Length; i++)
+                    images[i].enabled = false;
+                for(byte i = ii; i < rawImages.Length; i += 4)
+                    rawImages[i].texture = Texture2D.blackTexture;
+            }
         }
     }
 }
