@@ -21,36 +21,36 @@ using System.Runtime.InteropServices;
     // }
 }
 [StructLayout(LayoutKind.Explicit)] public struct NoteTimeRow{
-	[FieldOffset(0)] public uint time;
-	[FieldOffset(sizeof(uint))] public BMSInfo.NoteChannel channel;
-	[FieldOffset(sizeof(uint) + sizeof(BMSInfo.NoteChannel))]
+	[FieldOffset(0)] public ulong time;
+	[FieldOffset(sizeof(ulong))] public BMSInfo.NoteChannel channel;
+	[FieldOffset(sizeof(ulong) + sizeof(BMSInfo.NoteChannel))]
 	public ushort clipNum;
-	[FieldOffset(sizeof(uint) + sizeof(BMSInfo.NoteChannel) + sizeof(ushort))]
+	[FieldOffset(sizeof(ulong) + sizeof(BMSInfo.NoteChannel) + sizeof(ushort))]
 	public BMSInfo.NoteType noteType;
-    public NoteTimeRow(uint t, BMSInfo.NoteChannel ch, ushort num, BMSInfo.NoteType tp){
+    public NoteTimeRow(ulong t, BMSInfo.NoteChannel ch, ushort num, BMSInfo.NoteType tp){
         time = t; channel = ch; clipNum = num; noteType = tp;
     }
 }
 [StructLayout(LayoutKind.Explicit)] public struct BGMTimeRow{
-	[FieldOffset(0)] public uint time;
-	[FieldOffset(sizeof(uint))] public ushort clipNum;
-    public BGMTimeRow(uint t, ushort num){
+	[FieldOffset(0)] public ulong time;
+	[FieldOffset(sizeof(ulong))] public ushort clipNum;
+    public BGMTimeRow(ulong t, ushort num){
         time = t; clipNum = num;
     }
 }
 [StructLayout(LayoutKind.Explicit)] public struct BGATimeRow{
-	[FieldOffset(0)] public uint time;
-	[FieldOffset(sizeof(uint))] public ushort bgNum;
-	[FieldOffset(sizeof(uint) + sizeof(ushort))] public BMSInfo.BGAChannel channel;
-    public BGATimeRow(uint t, ushort num, byte ch){
+	[FieldOffset(0)] public ulong time;
+	[FieldOffset(sizeof(ulong))] public ushort bgNum;
+	[FieldOffset(sizeof(ulong) + sizeof(ushort))] public BMSInfo.BGAChannel channel;
+    public BGATimeRow(ulong t, ushort num, byte ch){
         time = t; bgNum = num; channel = (BMSInfo.BGAChannel)ch;
     }
 }
 [StructLayout(LayoutKind.Auto)] public struct BPMTimeRow{
-    public uint time;
+    public ulong time;
     public bool IsBPMXX;
     public string value;
-    public BPMTimeRow(uint t, decimal v, bool ex){
+    public BPMTimeRow(ulong t, decimal v, bool ex){
         try{
             // value = Math.Min(999, Math.Round(
             //     Math.Abs(v) * MainVars.speed,
@@ -59,8 +59,32 @@ using System.Runtime.InteropServices;
                 "G29", NumberFormatInfo.InvariantInfo);
         }catch(OverflowException){
             // value = "999";
-            value = "∞";
+            value = "Infinity";
         }
         time = t; IsBPMXX = ex;
     }
 }
+[StructLayout(LayoutKind.Auto)] public struct StopMeasureRow{
+    public ushort key;
+    public Fraction32 measure;
+    public StopMeasureRow(ushort k, int num, int den){
+        key = k; measure = new Fraction32(num, den);
+    }
+    public StopMeasureRow(ushort k, uint num, uint den){
+        key = k; measure = new Fraction32(num, den);
+    }
+}
+[StructLayout(LayoutKind.Explicit)] public struct StopTimeRow{
+    [FieldOffset(0)] public ulong time;
+    [FieldOffset(sizeof(ulong))] public ulong length;
+    public StopTimeRow(ulong t, ulong l){
+        time = t; length = l;
+    }
+}
+// [StructLayout(LayoutKind.Auto)] public struct NoteMeasureRow{
+//     public Fraction32 fraction;
+//     public ushort track;
+//     public ushort clipNum;
+//     public BMSInfo.NoteChannel channel;
+//     public BMSInfo.NoteType type;
+// }

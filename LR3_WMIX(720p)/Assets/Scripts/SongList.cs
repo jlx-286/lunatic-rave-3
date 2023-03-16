@@ -16,7 +16,7 @@ public class SongList : MonoBehaviour, IPointerClickHandler {
     private string bmsFilename;
     private void Start(){
         loaded = false;
-        if(MainVars.cur_scene_name == "Start"){
+        if(string.CompareOrdinal(MainVars.cur_scene_name, "Start") == 0){
             MainVars.bms_file_path = MainVars.Bms_root_dir;
             bmsFilename = string.Empty;
             isInCus = false;
@@ -40,7 +40,7 @@ public class SongList : MonoBehaviour, IPointerClickHandler {
             Button[] initBtns = initialContent.gameObject.GetComponentsInChildren<Button>();
             for(int i = 0; i < initBtns.Length; i++){
                 Button b = Instantiate(initBtns[i], activeContent.transform);
-                if(b.gameObject.name.StartsWith("custom"))
+                if(b.gameObject.name.StartsWith("custom", StringComparison.Ordinal))
                     b.onClick.AddListener(() => {
                         isInCus = true;
                         loaded = false;
@@ -72,9 +72,9 @@ public class SongList : MonoBehaviour, IPointerClickHandler {
         }
     }
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-    private const int RootDirLen = 3;
+    private const byte RootDirLen = 3;
 #else
-    private const int RootDirLen = 1;
+    private const byte RootDirLen = 1;
 #endif
     public virtual void OnPointerClick(PointerEventData pointerEventData){
         if(pointerEventData.button == PointerEventData.InputButton.Right && isInCus){

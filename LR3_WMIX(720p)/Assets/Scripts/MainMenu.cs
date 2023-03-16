@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
@@ -10,7 +11,7 @@ using UnityEngine.UI;
 public class MainMenu : MonoBehaviour {
     public Button play_btn;
     public Button exit_btn;
-	public static AudioSource[] audioSources;
+	public readonly static AudioSource[] audioSources = Enumerable.Repeat((AudioSource)null, 36 * 36).ToArray();
 	public AudioSource audioSource;
 	private void Start(){
         exit_btn.onClick.AddListener(() => {
@@ -23,8 +24,7 @@ public class MainMenu : MonoBehaviour {
         //play_btn.interactable = LoadConfig();
         play_btn.onClick.AddListener(() => {
             if(LoadConfig()){
-                audioSources = new AudioSource[36 * 36];
-                for(int i = 0; i < 36 * 36; i++){
+                for(ushort i = 0; i < audioSources.Length; i++){
                     audioSources[i] = Instantiate(audioSource, this.gameObject.transform);
                     audioSources[i].name = $"#WAV{i}";
                 }

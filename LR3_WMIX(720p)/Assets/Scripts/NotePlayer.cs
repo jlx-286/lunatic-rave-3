@@ -55,7 +55,7 @@ public class NotePlayer : MonoBehaviour {
         if(BMS_Player.escaped) return;
         if(!BMS_Player.no_key_notes){
             while(BMS_Player.row_key < BMSInfo.note_list_table.Count){
-                if(BMSInfo.note_list_table[BMS_Player.row_key].time <= BMS_Player.playingTimeAsMilliseconds){
+                if(BMSInfo.note_list_table[BMS_Player.row_key].time <= BMS_Player.playingTimeAsNanoseconds){
                     MainMenu.audioSources[BMSInfo.note_list_table[BMS_Player.row_key].clipNum].Play();
                     // str_note = BMS_Reader.note_dataTable.Rows[BMS_Player.row_key][0].ToString();
                     // if(laneDict.ContainsKey(str_note)){

@@ -8,7 +8,7 @@ public class BGMPlayer : MonoBehaviour {
         if(BMS_Player.escaped) return;
         if(!BMS_Player.no_bgm_notes){
             while(BMS_Player.bgm_table_row < BMSInfo.bgm_list_table.Count){
-                if(BMSInfo.bgm_list_table[BMS_Player.bgm_table_row].time <= BMS_Player.playingTimeAsMilliseconds){
+                if(BMSInfo.bgm_list_table[BMS_Player.bgm_table_row].time <= BMS_Player.playingTimeAsNanoseconds){
                     MainMenu.audioSources[BMSInfo.bgm_list_table[BMS_Player.bgm_table_row].clipNum].Play();
                     BMS_Player.bgm_table_row++;
                 }

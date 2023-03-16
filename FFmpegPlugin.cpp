@@ -164,7 +164,7 @@ extern "C" void CopyPixels(void* addr, int width, int height, bool isBitmap, boo
     AVPacket* pkt = NULL;
     struct SwsContext* sws = NULL;
     AVFrame* target = NULL;
-    uint8_t r,g,b,a;
+    // uint8_t r,g,b,a;
     sws = sws_getContext(
         width, height, pcc->pix_fmt,
         width, height, AV_PIX_FMT_RGBA,
@@ -196,10 +196,12 @@ extern "C" void CopyPixels(void* addr, int width, int height, bool isBitmap, boo
                 if(width >= height){
                     for(int h = 0; h < height; h++){
                         for(int w = 0; w < width; w++){
-                            r = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 0);
-                            g = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 1);
-                            b = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 2);
-                            if(r > 4 || g > 4 || b > 4)
+                            // r = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 0);
+                            // g = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 1);
+                            // b = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 2);
+                            if(*(uint8_t*)(target->data[0] + (w + h * width) * 4 + 0) > 4
+                            || *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 1) > 4
+                            || *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 2) > 4)
                                 memcpy(addr + ((width - 1 - h) * width + w) * 4,
                                     target->data[0] + (h * width + w) * 4, 4);
                                 // memcpy(addr + (h * width + w) * 4,
@@ -210,10 +212,12 @@ extern "C" void CopyPixels(void* addr, int width, int height, bool isBitmap, boo
                 else if(width < height){
                     for(int h = 0; h < height; h++){
                         for(int w = 0; w < width; w++){
-                            r = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 0);
-                            g = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 1);
-                            b = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 2);
-                            if(r > 4 || g > 4 || b > 4)
+                            // r = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 0);
+                            // g = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 1);
+                            // b = *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 2);
+                            if(*(uint8_t*)(target->data[0] + (w + h * width) * 4 + 0) > 4
+                            || *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 1) > 4
+                            || *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 2) > 4)
                                 memcpy(addr + (h * height + (height - width) / 2 + w) * 4,
                                     target->data[0] + ((height - 1 - h) * width + w) * 4, 4);
                         }

@@ -72,17 +72,18 @@ public static class BMSInfo {
 	public static ScriptType scriptType = ScriptType.Unknown;
 	public static Difficulty difficulty = Difficulty.Unknown;
 	// public static decimal main_bpm = 130;
-	public static uint totalTimeAsMilliseconds = 0;
+	public static ulong totalTimeAsNanoseconds = 0;
 	// public static bool illegal = false;
     public static string playing_scene_name = string.Empty;
-	public static Texture2D[] textures = Enumerable.Repeat((Texture2D)null, 36*36).ToArray();
+	public static readonly Texture2D[] textures = Enumerable.Repeat((Texture2D)null, 36*36).ToArray();
 	// public static Texture2D backBMP = null;
 #region time table
 	public static List<NoteTimeRow> note_list_table = new List<NoteTimeRow>();
 	public static List<BGMTimeRow> bgm_list_table = new List<BGMTimeRow>();
 	public static List<BGATimeRow> bga_list_table = new List<BGATimeRow>();
 	public static List<BPMTimeRow> bpm_list_table = new List<BPMTimeRow>();
-	public static Dictionary<ushort,uint> time_as_ms_before_track = new Dictionary<ushort, uint>();
+	public static readonly ulong[] track_end_time_as_ns = Enumerable.Repeat(ulong.MaxValue, 1000).ToArray();
+	public static List<StopTimeRow> stop_list_table = new List<StopTimeRow>();
 #endregion
 	public static void CleanUp(){
 		genre = string.Empty;
@@ -97,7 +98,9 @@ public static class BMSInfo {
 		bgm_list_table.Clear();
 		bga_list_table.Clear();
 		bpm_list_table.Clear();
-		time_as_ms_before_track.Clear();
+		for(ushort i = 0; i < track_end_time_as_ns.Length; i++)
+			track_end_time_as_ns[i] = ulong.MaxValue;
+		stop_list_table.Clear();
 		for(ushort i = 0; i < textures.Length; i++)
 			textures[i] = null;
 		// backBMP = null;
@@ -111,8 +114,7 @@ public static class BMSInfo {
 		play_level = 0;
 		scriptType = ScriptType.Unknown;
 		difficulty = Difficulty.Unknown;
-		totalTimeAsMilliseconds = 0;
+		totalTimeAsNanoseconds = 0;
 		playing_scene_name = string.Empty;
-		time_as_ms_before_track[0] = 0;
 	}
 }

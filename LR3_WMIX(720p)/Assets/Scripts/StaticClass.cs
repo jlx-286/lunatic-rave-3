@@ -15,7 +15,6 @@ using Ude;
 using UnityEngine;
 public static class StaticClass{
     public const RegexOptions regexOption = RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
-    public const ushort Base36ArrLen = (ushort)36*36-1;
     private const string PluginName = "FFmpegPlugin";
     [DllImport(PluginName, EntryPoint = "GetVideoSize")] private extern static bool __GetVideoSize(
         string url, out int width, out int height);
@@ -57,14 +56,16 @@ public static class StaticClass{
         // Debug.Log(detector.Charset);
         // Debug.Log(detector.Confidence);
         if(!string.IsNullOrEmpty(detector.Charset)){
-            Encoding encoding = Encoding.GetEncoding(detector.Charset);
-            if(encoding != Shift_JIS && detector.Confidence <= 0.7f && detector.Confidence > 0.6f){
-                return Encoding.GetEncoding("GB18030");
-            }else if(detector.Confidence <= 0.6f){
-                return Shift_JIS;
-            }else{
-                return encoding;
-            }
+            try{
+                Encoding encoding = Encoding.GetEncoding(detector.Charset);
+                if(encoding != Shift_JIS && detector.Confidence <= 0.7f && detector.Confidence > 0.6f){
+                    return Encoding.GetEncoding("GB18030");
+                }else if(detector.Confidence <= 0.6f){
+                    return Shift_JIS;
+                }else{
+                    return encoding;
+                }
+            }catch{ return Shift_JIS; }
         }else{ return Shift_JIS; }
     }
 

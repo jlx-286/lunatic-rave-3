@@ -6,36 +6,34 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 public class BMSPlayer : MonoBehaviour {
     public Text title_text;
-    [HideInInspector] public bool no_key_notes;
-    [HideInInspector] public bool no_bgm_notes;
-    [HideInInspector] public bool no_bgi;
-    [HideInInspector] public bool no_bpm_notes;
-    [HideInInspector] public uint playingTimeAsMilliseconds{ get; internal set; }
-    [HideInInspector] public uint fixedDeltaTimeAsMilliseconds{ get; internal set; }
+    [HideInInspector] public bool no_key_notes { get; internal set; } = false;
+    [HideInInspector] public bool no_bgm_notes { get; internal set; } = false;
+    [HideInInspector] public bool no_bgi { get; internal set; } = false;
+    [HideInInspector] public bool no_bpm_notes { get; internal set; } = false;
+    [HideInInspector] public bool no_stop_notes { get; internal set; } = false;
+    [HideInInspector] public ulong playingTimeAsNanoseconds { get; internal set; } = 0;
+    [HideInInspector] public ulong fixedDeltaTimeAsNanoseconds { get; internal set; }
     public Slider[] sliders;
-    private uint timeLeft;
+    private const ulong ns_per_sec = TimeSpan.TicksPerSecond * 100;
+    private uint timeLeft = (uint)(BMSInfo.totalTimeAsNanoseconds / ns_per_sec) +
+        (uint)(BMSInfo.totalTimeAsNanoseconds % ns_per_sec == 0 ? 0 : 1);
     public Text timeLeftText;
     // private Timer timer;
     // private bool toUpdate = false;
-    [HideInInspector] public bool escaped;
-    [HideInInspector] public int bgm_table_row;
-    [HideInInspector] public int bga_table_row;
-    [HideInInspector] public int row_key;
-    [HideInInspector] public int bpm_table_row;
+    [HideInInspector] public bool escaped { get; internal set; } = false;
+    [HideInInspector] public int bgm_table_row = 0;
+    [HideInInspector] public int bga_table_row = 0;
+    [HideInInspector] public int row_key = 0;
+    [HideInInspector] public int bpm_table_row = 0;
+    [HideInInspector] public int stop_table_row = 0;
     private void Start(){
         MainVars.cur_scene_name = BMSInfo.playing_scene_name;
-        no_key_notes = no_bgm_notes = no_bgi = no_bpm_notes = false;
         title_text.text = BMSInfo.title;
-        escaped = false;
         for(byte a = 0; a < sliders.Length; a++){
-            sliders[a].maxValue = BMSInfo.totalTimeAsMilliseconds;
+            sliders[a].maxValue = BMSInfo.totalTimeAsNanoseconds;
             sliders[a].value = float.Epsilon / 2;
         }
-        bgm_table_row = bga_table_row = row_key = bpm_table_row = 0;
-        playingTimeAsMilliseconds = 0;
-        fixedDeltaTimeAsMilliseconds = (uint)(Time.fixedDeltaTime * 1000);
-        timeLeft = BMSInfo.totalTimeAsMilliseconds / 1000 +
-            (uint)(BMSInfo.totalTimeAsMilliseconds % 1000 == 0 ? 0 : 1);
+        fixedDeltaTimeAsNanoseconds = (ulong)(Time.fixedDeltaTime * ns_per_sec);
         timeLeftText.text = timeLeft.ToString();
         // timer = new Timer(obj => {
         //     if(timeLeft == 0){
@@ -57,13 +55,13 @@ public class BMSPlayer : MonoBehaviour {
             SceneManager.LoadScene("Select", LoadSceneMode.Additive);
             return;
         }
-        if(!no_bgm_notes && !no_key_notes && !no_bgi && !no_bpm_notes){
+        if(!no_bgm_notes && !no_key_notes && !no_bgi && !no_bpm_notes && !no_stop_notes){
             // if(toUpdate){
             //     timeLeftText.text = timeLeft.ToString();
             //     toUpdate = false;
             // }
             for(byte a = 0; a < sliders.Length; a++)
-                sliders[a].value = playingTimeAsMilliseconds;
+                sliders[a].value = playingTimeAsNanoseconds;
             //return;
         }
     }
@@ -76,16 +74,17 @@ public class BMSPlayer : MonoBehaviour {
         //         Debug.Log("last note");
         //     }
         // }
-        if(!no_bgm_notes && !no_key_notes && !no_bgi && !no_bpm_notes){
+        if(!no_bgm_notes && !no_key_notes && !no_bgi && !no_bpm_notes && !no_stop_notes){
             if(row_key >= BMSInfo.note_list_table.Count
                 && bgm_table_row >= BMSInfo.bgm_list_table.Count
                 && bga_table_row >= BMSInfo.bga_list_table.Count
                 && bpm_table_row >= BMSInfo.bpm_list_table.Count
+                // && stop_table_row >= BMSInfo.stop_list_table.Count
             ){
-                no_bgm_notes = no_key_notes = no_bgi = no_bpm_notes = true;
+                no_bgm_notes = no_key_notes = no_bgi = no_bpm_notes = no_stop_notes = true;
                 Debug.Log("last note");
             }
-            playingTimeAsMilliseconds += fixedDeltaTimeAsMilliseconds;
+            playingTimeAsNanoseconds += fixedDeltaTimeAsNanoseconds;
         }
     }
     private void OnDestroy(){

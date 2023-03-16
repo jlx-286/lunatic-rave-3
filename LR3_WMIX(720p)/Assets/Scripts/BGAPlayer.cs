@@ -29,7 +29,7 @@ public class BGAPlayer : MonoBehaviour {
         if(BMS_Player.escaped) return;
         if(!BMS_Player.no_bgi){
             while(BMS_Player.bga_table_row < BMSInfo.bga_list_table.Count){
-                if(BMSInfo.bga_list_table[BMS_Player.bga_table_row].time <= BMS_Player.playingTimeAsMilliseconds){
+                if(BMSInfo.bga_list_table[BMS_Player.bga_table_row].time <= BMS_Player.playingTimeAsNanoseconds){
                     bgi_num = BMSInfo.bga_list_table[BMS_Player.bga_table_row].bgNum;
                     switch(BMSInfo.bga_list_table[BMS_Player.bga_table_row].channel){
                         case BMSInfo.BGAChannel.Base:
