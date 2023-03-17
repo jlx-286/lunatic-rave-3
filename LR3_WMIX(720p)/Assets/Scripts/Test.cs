@@ -32,7 +32,7 @@ public class Test : MonoBehaviour {
     private void Start(){
         //count = 16;
         // Debug.Log((int)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond) & int.MaxValue);
-        const string s = "0.3333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"
+        /*const string s = "0.3333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"
         + "333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"
         // + "333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"
         // + "333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"
@@ -43,24 +43,37 @@ public class Test : MonoBehaviour {
         // + "333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"
         // + "333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"
         // + "333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"
-        ;
-        const ushort count = 20;
-        decimal ld; double d;
+        ;*/
+        const int count = 20000000;
+        Debug.Log(string.IsNullOrWhiteSpace(string.Empty));
+        string s = string.Empty;
+        bool @bool;
         Stopwatch sw = new Stopwatch();
         sw.Restart();
-        for(ushort i = 0; i < count; i++){
-            d = double.Parse(s);
-            d /= 5;
-        }
+        for(int i = 0; i < count; i++)
+            @bool = (s == null || s.Length < 1);
         sw.Stop();
-        Debug.Log(sw.ElapsedTicks);
+        Debug.Log($"IsNullOrEmpty:\n{sw.ElapsedTicks}");
         sw.Restart();
-        for(ushort i = 0; i < count; i++){
-            ld = decimal.Parse(s);
-            ld /= 5;
-        }
+        for(int i = 0; i < count; i++)
+            @bool = (s == null);
         sw.Stop();
-        Debug.Log(sw.ElapsedTicks);
+        Debug.Log($"null:\n{sw.ElapsedTicks}");
+        // sw.Restart();
+        // for(int i = 0; i < count; i++)
+        //     @bool = (s.Length < 1);
+        // sw.Stop();
+        // Debug.Log($"Empty:\n{sw.ElapsedTicks}");
+        sw.Restart();
+        for(int i = 0; i < count; i++)
+            @bool = string.IsNullOrWhiteSpace(s);
+        sw.Stop();
+        Debug.Log($"IsNullOrWhiteSpace:\n{sw.ElapsedTicks}");
+        sw.Restart();
+        for(int i = 0; i < count; i++)
+            @bool = File.Exists(s);
+        sw.Stop();
+        Debug.Log($"File.Exists:\n{sw.ElapsedTicks}");
         /*AudioClip clip = null;
         int channels, frequency, length, lengthSamples;
         float[] samples = StaticClass.AudioToSamples(Application.dataPath + "/~Media~/Angel Dust.mp3", out channels, out frequency);
@@ -103,6 +116,7 @@ public class Test : MonoBehaviour {
         //}
     }*/
     private void OnApplicationQuit(){
+        StaticClass.rng.Dispose();
         FluidManager.CleanUp();
         Debug.Log("quit");
     }
