@@ -11,11 +11,12 @@ extern "C" {
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
 // #include <libavfilter/avfilter.h>
+// #include <libavdevice/avdevice.h>
 #include <libswresample/swresample.h>
 #include <libswscale/swscale.h>
 };
 // g++ -O3 -fPIC -shared -Wall -o FFmpegPlugin.so FFmpegPlugin.cpp -lavcodec -lavformat -lavutil -lswresample -lswscale
-// g++ -O3 -shared -Wall -I"./include" -L"./lib" -o FFmpegPlugin.dll FFmpegPlugin.cpp -lavcodec -lavformat -lavutil -lswresample -lswscale rem -fPIC
+// g++ -O3 -shared -Wall -I"./ffmpeg~/include" -L"./ffmpeg~/lib" -o FFmpegPlugin.dll FFmpegPlugin.cpp -lavcodec -lavformat -lavutil -lswresample -lswscale
 AVCodecContext* openCodecContext(AVFormatContext* fc, int32_t* pStreamIndex, enum AVMediaType type){
     if(fc == NULL) return NULL;
     if(avformat_find_stream_info(fc, NULL) < 0 || fc == NULL)

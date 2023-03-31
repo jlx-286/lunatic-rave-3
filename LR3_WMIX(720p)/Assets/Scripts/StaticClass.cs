@@ -13,18 +13,17 @@ using System.Text.RegularExpressions;
 // using System.Threading.Tasks;
 using Ude;
 using UnityEngine;
-public static class StaticClass{
+public unsafe static class StaticClass{
     public const RegexOptions regexOption = RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
     private const string PluginName = "FFmpegPlugin";
     [DllImport(PluginName, EntryPoint = "GetVideoSize")] private extern static bool __GetVideoSize(
         string url, out int width, out int height);
     [DllImport(PluginName)] private extern static bool GetAudioInfo(
         string url, out int channels, out int frequency, out ulong length);
-    [DllImport(PluginName)] private extern static unsafe void CopyAudioSamples(
-        float* addr);
+    [DllImport(PluginName)] private extern static void CopyAudioSamples(float* addr);
     [DllImport(PluginName)] private extern static bool GetPixelsInfo(
         string url, out int width, out int height, out bool isBitmap);
-    [DllImport(PluginName)] private extern static unsafe void CopyPixels(
+    [DllImport(PluginName)] private extern static void CopyPixels(
         void* addr, int width, int height, bool isBitmap, bool strech = false);
 /*
     /// <summary>
@@ -105,10 +104,9 @@ public static class StaticClass{
             ulong length = (ulong)max;
             length *= length;
             if(length <= int.MaxValue) color32s = new Color32[length];
-            unsafe{fixed(void* p = color32s)
+            fixed(void* p = color32s)
                 CopyPixels(p, width, height, isBitmap
                 || Regex.IsMatch(path, @"\.bmp$", regexOption));
-            }
             width = height = max;
         }
         return color32s;
@@ -120,9 +118,8 @@ public static class StaticClass{
         bool isBitmap;
         if(GetPixelsInfo(path, out width, out height, out isBitmap)){
             color32s = new Color32[width * height];
-            unsafe{fixed(void* p = color32s)
+            fixed(void* p = color32s)
                 CopyPixels(p, width, height, false, true);
-            }
         }
         return color32s;
     }
@@ -137,7 +134,7 @@ public static class StaticClass{
         if(GetAudioInfo(path, out channels, out frequency, out length) && length <= int.MaxValue)
             result = new float[length];
         else Debug.LogWarning(path + ":Invalid data or too long data");
-        unsafe{fixed(float* p = result) CopyAudioSamples(p); }
+        fixed(float* p = result) CopyAudioSamples(p);
         /*if(result == null){
             try{
                 channels = FluidManager.channels;
@@ -264,14 +261,4 @@ public static class StaticClass{
     public static IEnumerable<T> Distinct<T>(
         this IEnumerable<T> source, Func<T, T, bool> comparer)
         where T : struct => source.Distinct(new EqualityComparer<T>(comparer));
-    /*public unsafe static uint TryGetGCD(int a, int b){
-        uint aa,bb;
-        if(a == int.MinValue) aa = *(uint*)&a;
-        else if(a < 0) aa = (uint)Math.Abs(a);
-        else aa = (uint)a;
-        if(b == int.MinValue) bb = *(uint*)&b;
-        else if(b < 0) bb = (uint)Math.Abs(b);
-        else bb = (uint)b;
-		return gcd(aa, bb);
-	}*/
 }

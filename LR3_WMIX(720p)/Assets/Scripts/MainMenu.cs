@@ -11,7 +11,7 @@ using UnityEngine.UI;
 public class MainMenu : MonoBehaviour {
     public Button play_btn;
     public Button exit_btn;
-	public readonly static AudioSource[] audioSources = Enumerable.Repeat((AudioSource)null, 36 * 36).ToArray();
+	public readonly static AudioSource[] audioSources = Enumerable.Repeat<AudioSource>(null, 36 * 36).ToArray();
 	public AudioSource audioSource;
 	private void Start(){
         exit_btn.onClick.AddListener(() => {

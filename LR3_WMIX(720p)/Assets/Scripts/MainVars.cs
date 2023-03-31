@@ -27,8 +27,8 @@ public class MainVars : MonoBehaviour {
     public static AudioLowPassFilter lowPassFilter;
     public static AudioReverbFilter reverbFilter;
     private void Start(){
-        mixer.SetFloat("freq", Mathf.Pow(2f, freq / 12f));
-        mixer.SetFloat("pitch", Mathf.Pow(2f, pitch / 12f));
+        mixer.SetFloat("freq", 1);
+        mixer.SetFloat("pitch", 1);
         chorusFilter = this.gameObject.GetComponent<AudioChorusFilter>();
         distortionFilter = this.gameObject.GetComponent<AudioDistortionFilter>();
         echoFilter = this.gameObject.GetComponent<AudioEchoFilter>();
@@ -59,7 +59,7 @@ public class MainVars : MonoBehaviour {
         VLCPlayer.VLCRelease();
         BMSInfo.CleanUp();
         Resources.UnloadUnusedAssets();
-        AssetBundle.UnloadAllAssetBundles(true);
+        // AssetBundle.UnloadAllAssetBundles(true);
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, false);
     }
 }

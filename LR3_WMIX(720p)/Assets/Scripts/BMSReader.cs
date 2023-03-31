@@ -19,16 +19,16 @@ using Random = System.Random;
 public class BMSReader : MonoBehaviour{
     private decimal curr_bpm;
     private Dictionary<ushort, decimal> exbpm_dict = new Dictionary<ushort, decimal>();
-    private readonly decimal[] beats_tracks = Enumerable.Repeat(decimal.One, 1000).ToArray();
+    private readonly decimal[] beats_tracks = Enumerable.Repeat(1m, 1000).ToArray();
     private readonly bool[] lnobj = Enumerable.Repeat(false, 36*36-1).ToArray();
-    private readonly string[] wav_names = Enumerable.Repeat((string)null, 36*36).ToArray();
-    private readonly string[] bmp_names = Enumerable.Repeat((string)null, 36*36).ToArray();
+    private readonly string[] wav_names = Enumerable.Repeat<string>(null, 36*36).ToArray();
+    private readonly string[] bmp_names = Enumerable.Repeat<string>(null, 36*36).ToArray();
     private Dictionary<ushort, decimal> stop_dict = new Dictionary<ushort, decimal>();
-    private readonly List<StopMeasureRow>[] stop_measure_list = Enumerable.Repeat((List<StopMeasureRow>)null, 1000).ToArray();
+    private readonly List<StopMeasureRow>[] stop_measure_list = Enumerable.Repeat<List<StopMeasureRow>>(null, 1000).ToArray();
     private Thread thread;
     [HideInInspector] public string bms_directory;
     [HideInInspector] public string bms_file_name;
-    private readonly List<BPMMeasureRow>[] bpm_index_lists = Enumerable.Repeat((List<BPMMeasureRow>)null, 1000).ToArray();
+    private readonly List<BPMMeasureRow>[] bpm_index_lists = Enumerable.Repeat<List<BPMMeasureRow>>(null, 1000).ToArray();
     private List<BPMMeasureRow> temp_bpm_index;
     private bool isDone = false;
     private ushort total_medias_count = 0;
@@ -119,10 +119,10 @@ public class BMSReader : MonoBehaviour{
     private ulong trackOffset_ns = 0;
     private ulong stopLen = 0;
     private int stopIndex = 0;
-    private readonly decimal[] track_end_bpms = Enumerable.Repeat(decimal.Zero, 1000).ToArray();
+    private readonly decimal[] track_end_bpms = Enumerable.Repeat(0m, 1000).ToArray();
     #endregion
     private void Start(){
-        thread = new Thread(ReadScript);
+        thread = new Thread(ReadScript){ IsBackground = true };
         thread.Start();
         StartCoroutine(DequeueLoop());
     }
@@ -304,21 +304,26 @@ public class BMSReader : MonoBehaviour{
                 else if(Regex.IsMatch(file_lines[j], @"^#STAGEFILE\s+", StaticClass.regexOption)){
                     file_lines[j] = file_lines[j].Substring(11).TrimStart();
                     Debug.Log(file_lines[j]);
-                    #if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX
+#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX
                     file_lines[j] = Regex.Match(file_names.ToString(), file_lines[j].Replace(".", @"\.")
                     .Replace("$", @"\$").Replace("^", @"\^").Replace("{", @"\{").Replace("[", @"\[")
                     .Replace("(", @"\(").Replace("|", @"\|").Replace(")", @"\)").Replace("*", @"\*")
                     .Replace("+", @"\+").Replace("?", @"\?").Replace("\t", @"\s").Replace(" ", @"\s")
                     + @"\n", StaticClass.regexOption).Value.TrimEnd();
-                    #endif
+#endif
                     int width, height;
                     Color32[] color32s = StaticClass.GetStageImage(bms_directory + file_lines[j], out width, out height);
-                    if(color32s != null && color32s.Length > 0 && width * height > 0){
+                    if(color32s != null && color32s.Length > 0 && width > 0 && height > 0){
                         unityActions.Enqueue(()=>{
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
                             Texture2D t2d = new Texture2D(width, height, TextureFormat.RGBA32, false);
                             t2d.SetPixels32(color32s);
                             t2d.Apply(false);
                             stageFile.texture = t2d;
+#else
+                            stageFile.texture = GL_libs.Texture2DFromGL(color32s,
+                                width, height, ref BMSInfo.stageFilePtr);
+#endif
                         });
                     }
                     file_lines[j] = null;
@@ -610,16 +615,21 @@ public class BMSReader : MonoBehaviour{
                     Color32[] color32s = StaticClass.GetTextureInfo(bms_directory + bmp_names[i], out width, out height);
                     if(color32s != null && color32s.Length > 0 && width > 0 && height > 0){
                         unityActions.Enqueue(() => {
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
                             Texture2D texture2D = new Texture2D(width, height, TextureFormat.RGBA32, false);
                             texture2D.SetPixels32(color32s);
                             texture2D.Apply(false);
                             BMSInfo.textures[a] = texture2D;
+#else
+                            BMSInfo.textures[a] = GL_libs.Texture2DFromGL(color32s,
+                                width, height, ref BMSInfo.texture_names[a]);
+#endif
                         });
                     }
                 }
-                bmp_names[a] = null;
+                bmp_names[i] = null;
+                loaded_medias_count++;
                 unityActions.Enqueue(() => {
-                    loaded_medias_count++;
                     progress.text = $"Loaded/Total:{loaded_medias_count}/{total_medias_count}";
                     slider.value = loaded_medias_count;
                 });
@@ -644,9 +654,9 @@ public class BMSReader : MonoBehaviour{
                         if(clip.length > 60f) illegal = true;
                     });
                 }
-                wav_names[a] = null;
+                wav_names[i] = null;
+                loaded_medias_count++;
                 unityActions.Enqueue(() => {
-                    loaded_medias_count++;
                     progress.text = $"Loaded/Total:{loaded_medias_count}/{total_medias_count}";
                     slider.value = loaded_medias_count;
                 });

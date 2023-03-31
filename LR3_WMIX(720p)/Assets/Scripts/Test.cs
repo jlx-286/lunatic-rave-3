@@ -85,12 +85,12 @@ public class Test : MonoBehaviour {
             //Debug.Log(samples.Length);
         }
         audioSource.clip = clip;
-        rawImage.texture = Texture2D.blackTexture;
+        rawImage.texture = Texture2D.blackTexture;*/
         play_b.onClick.AddListener(() => {
-            audioSource.Play();
-            Debug.Log(audioSource.isPlaying);
-            // DestroyImmediate(gm);
-        });*/
+            // audioSource.Play();
+            // Debug.Log(audioSource.isPlaying);
+            DestroyImmediate(gm);
+        });
     }
     
     // Update is called once per frame
@@ -118,6 +118,10 @@ public class Test : MonoBehaviour {
     private void OnApplicationQuit(){
         StaticClass.rng.Dispose();
         FluidManager.CleanUp();
+        VLCPlayer.VLCRelease();
+        Resources.UnloadUnusedAssets();
+        // AssetBundle.UnloadAllAssetBundles(true);
+        GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, false);
         Debug.Log("quit");
     }
 }

@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Runtime.InteropServices;
 using UnityEngine;
-public static class VLCPlayer{
+public unsafe static class VLCPlayer{
 #if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX
     private const string PluginName = "libvlc";
     // private const string PluginName = "libvlc5";
@@ -32,24 +32,21 @@ public static class VLCPlayer{
     [DllImport(PluginName)] private extern static int libvlc_media_player_play(
         UIntPtr player);
     #region libvlc_video_set_callbacks
-    private unsafe delegate UIntPtr Lock_cb(void* opaque, void** planes);
-    private unsafe delegate void Unlock_cb(void* opaque, void* picture, void** planes);
-    private unsafe delegate void Display_cb(void* opaque, void* picture);
+    private delegate void* Lock_cb(void* opaque, void** planes);
+    private delegate void Unlock_cb(void* opaque, void* picture, void** planes);
+    private delegate void Display_cb(void* opaque, void* picture);
     [DllImport(PluginName, CallingConvention = CallingConvention.StdCall)]
-    private extern static unsafe void libvlc_video_set_callbacks(
-        UIntPtr player, Lock_cb lock_cb, Unlock_cb unlock_cb, Display_cb display_cb, void* data);
-    public static unsafe UIntPtr PlayerNew(UIntPtr media, string chroma, uint width,
-    uint height, uint pitch, void* data, long ms = 0){
-        if(media == UIntPtr.Zero || width < 1 || height < 1 || pitch < 1) return UIntPtr.Zero;
+    private extern static void libvlc_video_set_callbacks(UIntPtr player,
+        Lock_cb lock_cb, Unlock_cb unlock_cb, Display_cb display_cb, void* data);
+    public static UIntPtr PlayerNew(UIntPtr media, uint width, uint height, void* data, long ms = 0){
+        if(media == UIntPtr.Zero || width < 1 || height < 1) return UIntPtr.Zero;
         UIntPtr player = libvlc_media_player_new_from_media(media);
         if(player != UIntPtr.Zero){
-            libvlc_video_set_format(player, chroma, width, height, pitch);
+            libvlc_video_set_format(player, "RGBA", width, height, width * 4);
             libvlc_video_set_callbacks(player, (opaque, planes)=>{
                 *planes = opaque;
-                return UIntPtr.Zero;
-            },(opaque, picture, planes)=>{
-                opaque = *planes;
-            },null,data);
+                return null;
+            },null,null,data);
             if(ms > 0) libvlc_media_player_set_time(player, ms);
             libvlc_media_player_play(player);
         }
@@ -108,32 +105,43 @@ public static class VLCPlayer{
     [DllImport(PluginName, EntryPoint = "InstNew")] private extern static UIntPtr libvlc_new(
         int argc, string[] args);
     [DllImport(PluginName)] public extern static UIntPtr MediaNew(UIntPtr instance, string path);
-    [DllImport(PluginName)] public extern static unsafe UIntPtr PlayerNew(UIntPtr media, string chroma,
-        uint width, uint height, uint pitch, void* data, long ms = 0);
+    [DllImport(PluginName)] public extern static UIntPtr PlayerNew(
+        UIntPtr media, uint width, uint height, void* data, long ms = 0);
     [DllImport(PluginName)] public extern static void PlayerFree(ref UIntPtr player);
     [DllImport(PluginName)] private extern static void MediaFree(UIntPtr media);
     [DllImport(PluginName)] private extern static void InstFree(ref UIntPtr instance);
     [DllImport(PluginName)] public extern static bool PlayerPlaying(UIntPtr player);
 #endif
-    public static UIntPtr InstNew(string[] args){
-        return args == null ? libvlc_new(0, null) : libvlc_new(args.Length, args);
-    }
+    public static UIntPtr InstNew(string[] args) => args == null
+        ? libvlc_new(0, null) : libvlc_new(args.Length, args);
     public static UIntPtr instance;
-    public static UIntPtr[] medias = Enumerable.Repeat(UIntPtr.Zero, 36*36).ToArray();
-    [StructLayout(LayoutKind.Explicit)]
-    public struct VideoSize{
+    public static readonly UIntPtr[] medias = Enumerable.Repeat(UIntPtr.Zero, 36*36).ToArray();
+    [StructLayout(LayoutKind.Explicit)] public struct VideoSize{
         [FieldOffset(0)] public int width;
         [FieldOffset(sizeof(int))] public int height;
         public VideoSize(int w, int h){ width = w; height = h; }
     }
-    public static VideoSize[] media_sizes = new VideoSize[36*36];
-    public static Texture2D[] media_textures = Enumerable.Repeat((Texture2D)null, 4).ToArray();
-    public static Color32[][] color32s = new Color32[4][];
-    public static UIntPtr[] players = Enumerable.Repeat(UIntPtr.Zero, 4).ToArray();
+    public static readonly VideoSize[] media_sizes = new VideoSize[36*36];
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+    public static readonly Texture2D[] media_textures = Enumerable.Repeat<Texture2D>(null, 4).ToArray();
+#else
+    public static readonly uint[] texture_names = new uint[]{0,0,0,0};
+#endif
+    public static readonly Color32[][] color32s = Enumerable.Repeat<Color32[]>(null, 4).ToArray();
+    public static readonly UIntPtr[] players = Enumerable.Repeat(UIntPtr.Zero, 4).ToArray();
     public static void VLCRelease(){
+#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
+        // GL_libs.BindTexture(0);
+        fixed(uint* p = texture_names)
+            GL_libs.glDeleteTextures(texture_names.Length, p);
+#endif
         for(byte p = 0; p < players.Length; p++){
             PlayerFree(ref players[p]);
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
             media_textures[p] = null;
+#else
+            texture_names[p] = 0;
+#endif
             color32s[p] = null;
         }
         for(ushort num = 0; num < medias.Length; num++){

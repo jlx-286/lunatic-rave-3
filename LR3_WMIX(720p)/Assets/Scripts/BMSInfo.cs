@@ -75,7 +75,11 @@ public static class BMSInfo {
 	public static ulong totalTimeAsNanoseconds = 0;
 	// public static bool illegal = false;
     public static string playing_scene_name = string.Empty;
-	public static readonly Texture2D[] textures = Enumerable.Repeat((Texture2D)null, 36*36).ToArray();
+	public static readonly Texture2D[] textures = Enumerable.Repeat<Texture2D>(null, 36*36).ToArray();
+#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
+	public static readonly uint[] texture_names = Enumerable.Repeat<uint>(0, 36*36).ToArray();
+	public static uint stageFilePtr;
+#endif
 	// public static Texture2D backBMP = null;
 #region time table
 	public static List<NoteTimeRow> note_list_table = new List<NoteTimeRow>();
@@ -85,7 +89,7 @@ public static class BMSInfo {
 	public static readonly ulong[] track_end_time_as_ns = Enumerable.Repeat(ulong.MaxValue, 1000).ToArray();
 	public static List<StopTimeRow> stop_list_table = new List<StopTimeRow>();
 #endregion
-	public static void CleanUp(){
+	public unsafe static void CleanUp(){
 		genre = string.Empty;
 		bpm = string.Empty;
 		title = string.Empty;
@@ -101,8 +105,21 @@ public static class BMSInfo {
 		for(ushort i = 0; i < track_end_time_as_ns.Length; i++)
 			track_end_time_as_ns[i] = ulong.MaxValue;
 		stop_list_table.Clear();
-		for(ushort i = 0; i < textures.Length; i++)
+#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
+		fixed(uint* p = texture_names)
+			GL_libs.glDeleteTextures(texture_names.Length, p);
+#endif
+		for(ushort i = 0; i < textures.Length; i++){
 			textures[i] = null;
+#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
+			texture_names[i] = 0;
+#endif
+		}
+#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
+		fixed(uint* p = &stageFilePtr)
+			GL_libs.glDeleteTextures(1, p);
+		stageFilePtr = 0;
+#endif
 		// backBMP = null;
 	}
 	public static void Init(){

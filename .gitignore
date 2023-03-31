@@ -83,7 +83,9 @@ crashlytics-build.properties
 /test/
 .vscode
 /*/[Aa]ssets/**/.*
-/*/[Aa]ssets/**/~*~
+/*/[Aa]ssets/**/*~
 /*/[Aa]ssets/**/cvs
+/*/[Aa]ssets/**/TextMesh Pro
+/*/[Aa]ssets/**/TextMesh Pro.meta
 # /*/[Aa]ssets/**/[Pp]lugins/**/*.meta
 # /*/[Aa]ssets/**/[Ss]cripts/**/*.meta
