@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,16 +11,19 @@ public class BGAPlayer : MonoBehaviour {
     private Image[] images;
     private Timer timer;
     private bool toDisable = false;
-#if !(UNITY_EDITOR_WIN || UNITY_EDITOR_WIN)
+#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
     private Texture2D t2d;
-    private readonly ushort[] bgi_nums = new ushort[]{0,0,0,0};
 #endif
+    private readonly ushort[] bgi_nums = new ushort[]{0,0,0,0};
+    private readonly bool[] playing = Enumerable.Repeat(false, 4).ToArray();
 	private void Start(){
-        // Color32[] c = new Color32[1]{new Color32(0, 0, 0, 0)};
-        // for(byte i = 0; i < VLCPlayer.media_textures.Length; i++){
-        //     VLCPlayer.media_textures[i] = new Texture2D(1, 1, TextureFormat.RGBA32, false);
-        //     // VLCPlayer.media_textures[i].SetPixels32(c);
-        // }
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.pauseStateChanged += _ => {
+            int do_pause = (int)_ ^ 1;
+            for(byte num = 0; num < bgi_nums.Length; num++)
+                VLCPlayer.PlayerSetPause(bgi_nums[num], do_pause);
+        };
+#endif
         timer = new Timer(obj => {
             toDisable = true;
             timer.Change(Timeout.Infinite, Timeout.Infinite);
@@ -60,20 +64,28 @@ public class BGAPlayer : MonoBehaviour {
         }
     }
     private unsafe void LateUpdate(){
-        for(byte num = 0; num < VLCPlayer.players.Length; num++){
-            if(VLCPlayer.players[num] != UIntPtr.Zero && VLCPlayer.PlayerPlaying(VLCPlayer.players[num])){
+        for(byte num = 0; num < bgi_nums.Length; num++){
+            // if(VLCPlayer.players[bgi_nums[num]] != UIntPtr.Zero && VLCPlayer.PlayerPlaying(bgi_nums[num])){
+            if(playing[num]){
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-                VLCPlayer.media_textures[num].SetPixels32(VLCPlayer.color32s[num]);
+                VLCPlayer.media_textures[num].SetPixels32(VLCPlayer.color32s[bgi_nums[num]]);
                 VLCPlayer.media_textures[num].Apply(false);
 #else
                 GL_libs.BindTexture(VLCPlayer.texture_names[num]);
-                fixed(void* p = VLCPlayer.color32s[num])
+                fixed(void* p = VLCPlayer.color32s[bgi_nums[num]])
                     GL_libs.TexSubImage2D(VLCPlayer.media_sizes[bgi_nums[num]].width,
                         VLCPlayer.media_sizes[bgi_nums[num]].height, p);
 #endif
             }
         }
     }
+#if !UNITY_EDITOR
+    private void OnApplicationPause(bool pauseStatus){
+        int do_pause = pauseStatus ? 1 : 0;
+        for(byte num = 0; num < bgi_nums.Length; num++)
+            VLCPlayer.PlayerSetPause(bgi_nums[num], do_pause);
+    }
+#endif
     private void OnDestroy(){
         timer.Dispose();
         timer = null;
@@ -84,93 +96,47 @@ public class BGAPlayer : MonoBehaviour {
         //         poors[i].SetActive(true);
         //     timer.Change(1000, 0);
         // }
-        if(VLCPlayer.medias[bgi_num] != UIntPtr.Zero){
-            VLCPlayer.PlayerFree(ref VLCPlayer.players[ii]);
-            try{
-#if !(UNITY_EDITOR_WIN || UNITY_EDITOR_WIN)
-                bgi_nums[ii] = bgi_num;
+        VLCPlayer.PlayerStop(bgi_nums[ii]);
+        playing[ii] = false;
+        bgi_nums[ii] = bgi_num;
+        if(VLCPlayer.players[bgi_num] != UIntPtr.Zero){
+            // try{
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+                VLCPlayer.media_textures[ii] = new Texture2D(
+                    VLCPlayer.media_sizes[bgi_num].width,
+                    VLCPlayer.media_sizes[bgi_num].height,
+                    TextureFormat.RGBA32, false){
+                    filterMode = FilterMode.Point };
+#else
                 fixed(uint* p = VLCPlayer.texture_names){
                     GL_libs.glDeleteTextures(1, p + ii);
                     GL_libs.glGenTextures(1, p + ii);
                 }
                 GL_libs.BindTexture(VLCPlayer.texture_names[ii]);
+                fixed(Color32* p = VLCPlayer.color32s[bgi_num])
+                    GL_libs.TexImage2D(VLCPlayer.media_sizes[bgi_num].width,
+                        VLCPlayer.media_sizes[bgi_num].height, p);
+                t2d = Texture2D.CreateExternalTexture(
+                    VLCPlayer.media_sizes[bgi_num].width,
+                    VLCPlayer.media_sizes[bgi_num].height,
+                    TextureFormat.RGBA32, false, false,
+                    (IntPtr)VLCPlayer.texture_names[ii]);
 #endif
-                if(VLCPlayer.media_sizes[bgi_num].width <= VLCPlayer.media_sizes[bgi_num].height){
-                    VLCPlayer.color32s[ii] = new Color32[
-                        VLCPlayer.media_sizes[bgi_num].width * VLCPlayer.media_sizes[bgi_num].height];
+                for(byte i = ii; i < rawImages.Length; i += 4)
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-                    VLCPlayer.media_textures[ii] = new Texture2D(
-                        VLCPlayer.media_sizes[bgi_num].width,
-                        VLCPlayer.media_sizes[bgi_num].height,
-                        TextureFormat.RGBA32, false){
-                        filterMode = FilterMode.Point };
+                    rawImages[i].texture = VLCPlayer.media_textures[ii];
 #else
-                    fixed(Color32* p = VLCPlayer.color32s[ii])
-                        GL_libs.TexImage2D(VLCPlayer.media_sizes[bgi_num].width,
-                            VLCPlayer.media_sizes[bgi_num].height, p);
-                    t2d = Texture2D.CreateExternalTexture(
-                        VLCPlayer.media_sizes[bgi_num].width,
-                        VLCPlayer.media_sizes[bgi_num].height,
-                        TextureFormat.RGBA32, false, false,
-                        (IntPtr)VLCPlayer.texture_names[ii]);
+                    rawImages[i].texture = t2d;
 #endif
-                    for(byte i = ii; i < rawImages.Length; i += 4)
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-                        rawImages[i].texture = VLCPlayer.media_textures[ii];
-#else
-                        rawImages[i].texture = t2d;
-#endif
-                    fixed(void* p = VLCPlayer.color32s[ii])
-                        VLCPlayer.players[ii] = VLCPlayer.PlayerNew(VLCPlayer.medias[bgi_num],
-                            (uint)VLCPlayer.media_sizes[bgi_num].width,
-                            (uint)VLCPlayer.media_sizes[bgi_num].height, p
-                            // , (long)(1000 * 60 * 2 / BMS_Reader.start_bpm)
-                        );
-                }
-                else{
-                    VLCPlayer.color32s[ii] = new Color32[
-                        VLCPlayer.media_sizes[bgi_num].width * VLCPlayer.media_sizes[bgi_num].width];
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-                    VLCPlayer.media_textures[ii] = new Texture2D(
-                        VLCPlayer.media_sizes[bgi_num].width,
-                        VLCPlayer.media_sizes[bgi_num].width,
-                        TextureFormat.RGBA32, false){
-                        filterMode = FilterMode.Point };
-#else
-                    fixed(Color32* p = VLCPlayer.color32s[ii])
-                        GL_libs.TexImage2D(VLCPlayer.media_sizes[bgi_num].width,
-                            VLCPlayer.media_sizes[bgi_num].width, p);
-                    t2d = Texture2D.CreateExternalTexture(
-                        VLCPlayer.media_sizes[bgi_num].width,
-                        VLCPlayer.media_sizes[bgi_num].width,
-                        TextureFormat.RGBA32, false, false,
-                        (IntPtr)VLCPlayer.texture_names[ii]);
-#endif
-                    for(byte i = ii; i < rawImages.Length; i += 4)
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-                        rawImages[i].texture = VLCPlayer.media_textures[ii];
-#else
-                        rawImages[i].texture = t2d;
-#endif
-                    fixed(Color32* p = VLCPlayer.color32s[ii]){
-                        VLCPlayer.players[ii] = VLCPlayer.PlayerNew(VLCPlayer.medias[bgi_num],
-                            (uint)VLCPlayer.media_sizes[bgi_num].width,
-                            (uint)VLCPlayer.media_sizes[bgi_num].height,
-                            p + (VLCPlayer.media_sizes[bgi_num].width - 
-                            VLCPlayer.media_sizes[bgi_num].height) / 2
-                            * VLCPlayer.media_sizes[bgi_num].width
-                            // , (long)(1000 * 60 * 2 / BMS_Reader.start_bpm)
-                        );
-                    }
-                    VLCPlayer.media_sizes[bgi_num].height = VLCPlayer.media_sizes[bgi_num].width;
-                }
-            }
-            catch(Exception e){ 
-                Debug.LogWarning(e.Message);
-            }
+                VLCPlayer.PlayerPlay(bgi_num);
+                while(!VLCPlayer.PlayerPlaying(bgi_num));
+                playing[ii] = true;
+            // }
+            // catch(Exception e){ 
+            //     Debug.LogWarning(e.Message);
+            // }
         }
-        else if(VLCPlayer.medias[bgi_num] == UIntPtr.Zero){
-            VLCPlayer.PlayerFree(ref VLCPlayer.players[ii]);
+        else if(VLCPlayer.players[bgi_num] == UIntPtr.Zero){
             if(BMSInfo.textures[bgi_num] != null){
                 if(ii == 3) for(byte i = 0; i < poors.Length; i++)
                     images[i].enabled = true;

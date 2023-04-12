@@ -128,11 +128,13 @@ public class BMSReader : MonoBehaviour{
     }
     private void OnDestroy(){
         if(thread != null){
-            thread.Abort();
+            try{ thread.Abort(); }catch{}
+            while(thread.IsAlive);
             thread = null;
         }
         StopAllCoroutines();
         CleanUp();
+        StaticClass.FFmpegCleanUp();
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, false);
     }
     private const ulong ns_per_min = TimeSpan.TicksPerMinute * 100;
@@ -302,15 +304,15 @@ public class BMSReader : MonoBehaviour{
                     file_lines[j] = null;
                 }
                 else if(Regex.IsMatch(file_lines[j], @"^#STAGEFILE\s+", StaticClass.regexOption)){
-                    file_lines[j] = file_lines[j].Substring(11).TrimStart();
-                    Debug.Log(file_lines[j]);
-#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX
+                    file_lines[j] = file_lines[j].Substring(11).TrimEnd('.').Trim();
+                    file_lines[j] = file_lines[j].Substring(0, file_lines[j].LastIndexOf('.'));
+                    file_lines[j] = file_lines[j].Replace('\\', '/');
                     file_lines[j] = Regex.Match(file_names.ToString(), file_lines[j].Replace(".", @"\.")
                     .Replace("$", @"\$").Replace("^", @"\^").Replace("{", @"\{").Replace("[", @"\[")
                     .Replace("(", @"\(").Replace("|", @"\|").Replace(")", @"\)").Replace("*", @"\*")
                     .Replace("+", @"\+").Replace("?", @"\?").Replace("\t", @"\s").Replace(" ", @"\s")
-                    + @"\n", StaticClass.regexOption).Value.TrimEnd();
-#endif
+                    + @"\.(bmp|png|jpg|jpeg|gif|mag|wmf|emf|cur|ico|tga|dds|dib|tiff|webp|pbm|pgm|ppm|xcf|pcx|iff|ilbm|pxr|svg|psd)\n"
+                    , StaticClass.regexOption).Value.TrimEnd();
                     int width, height;
                     Color32[] color32s = StaticClass.GetStageImage(bms_directory + file_lines[j], out width, out height);
                     if(color32s != null && color32s.Length > 0 && width > 0 && height > 0){
@@ -329,11 +331,18 @@ public class BMSReader : MonoBehaviour{
                     file_lines[j] = null;
                 }
                 else if(Regex.IsMatch(file_lines[j], @"^#BACKBMP\s+", StaticClass.regexOption)){
-                    // file_lines[j] = file_lines[j].Substring(9).TrimStart();
-                    // Debug.Log(file_lines[j]);
+                    // file_lines[j] = file_lines[j].Substring(9).TrimEnd('.').Trim();
+                    // file_lines[j] = file_lines[j].Substring(0, file_lines[j].LastIndexOf('.'));
+                    // file_lines[j] = file_lines[j].Replace('\\', '/');
+                    // file_lines[j] = Regex.Match(file_names.ToString(), file_lines[j].Replace(".", @"\.")
+                    // .Replace("$", @"\$").Replace("^", @"\^").Replace("{", @"\{").Replace("[", @"\[")
+                    // .Replace("(", @"\(").Replace("|", @"\|").Replace(")", @"\)").Replace("*", @"\*")
+                    // .Replace("+", @"\+").Replace("?", @"\?").Replace("\t", @"\s").Replace(" ", @"\s")
+                    // + @"\.(bmp|png|jpg|jpeg|gif|mag|wmf|emf|cur|ico|tga|dds|dib|tiff|webp|pbm|pgm|ppm|xcf|pcx|iff|ilbm|pxr|svg|psd)\n"
+                    // , StaticClass.regexOption).Value.TrimEnd();
                     // int width, height;
                     // Color32[] color32s = StaticClass.GetStageImage(bms_directory + file_lines[j], out width, out height);
-                    // if(color32s != null && color32s.Length > 0 && width * height > 0){
+                    // if(color32s != null && color32s.Length > 0 && width > 0 && height > 0){
                     //     unityActions.Enqueue(()=>{
                     //         Texture2D t2d = new Texture2D(width, height, TextureFormat.RGBA32, false);
                     //         t2d.SetPixels32(color32s);
@@ -407,15 +416,18 @@ public class BMSReader : MonoBehaviour{
                 ){ file_lines[j] = null; }
                 #endregion
                 else{
-                    if(Regex.IsMatch(file_lines[j], @"^#\d{3}[\d\w]{2}:[\d\w\.]{2,}", StaticClass.regexOption)){
+                    if(Regex.IsMatch(file_lines[j], @"^#\d{3}02:", StaticClass.regexOption)){
+                        if(decimal.TryParse(file_lines[j].Substring(7), out ld) && ld != 0){
+                            track = Convert.ToUInt16(file_lines[j].Substring(1, 3));
+                            if(max_tracks < track) max_tracks = track;
+                            beats_tracks[track] = Math.Abs(ld);
+                        }
+                        file_lines[j] = null;
+                    }
+                    else if(Regex.IsMatch(file_lines[j], @"^#\d{3}[\d\w]{2}:[\d\w]{2,}", StaticClass.regexOption)){
                         track = Convert.ToUInt16(file_lines[j].Substring(1, 3));
                         if(max_tracks < track) max_tracks = track;
-                        if(Regex.IsMatch(file_lines[j], @"^#\d{3}02:", StaticClass.regexOption)){
-                            if(decimal.TryParse(file_lines[j].Substring(7), out ld) && ld != 0)
-                                beats_tracks[track] = Math.Abs(ld);
-                            file_lines[j] = null;
-                        }
-                        else if(Regex.IsMatch(file_lines[j], @"^#\d{3}03:[\dA-F]{2,}", StaticClass.regexOption)){// bpm index
+                        if(Regex.IsMatch(file_lines[j], @"^#\d{3}03:[\dA-F]{2,}", StaticClass.regexOption)){// bpm index
                             message = file_lines[j].Substring(7);
                             if(bpm_index_lists[track] == null) bpm_index_lists[track] = new List<BPMMeasureRow>();
                             for(int i = 0; i < message.Length; i += 2){
@@ -589,14 +601,7 @@ public class BMSReader : MonoBehaviour{
 #else
                     tmp_path = tmp_path.Replace('\\', '/');
 #endif
-                    if(File.Exists(tmp_path) && VLCPlayer.instance != UIntPtr.Zero){
-                        int width, height;
-                        VLCPlayer.medias[i] = VLCPlayer.MediaNew(VLCPlayer.instance, tmp_path);
-                        if(VLCPlayer.medias[i] != UIntPtr.Zero && StaticClass.GetVideoSize(tmp_path, out width, out height)){
-                            VLCPlayer.media_sizes[i] = new VLCPlayer.VideoSize(width, height);
-                        }
-                        else VLCPlayer.PlayerFree(ref VLCPlayer.medias[i]);
-                    }
+                    if(!VLCPlayer.PlayerNew(tmp_path, i)) VLCPlayer.VideoFree(i);
                 }
                 else if(Regex.IsMatch(Path.GetExtension(bmp_names[i]),
                     @"^\.(bmp|png|jpg|jpeg|gif|mag|wmf|emf|cur|ico|tga|dds|dib|tiff|webp|pbm|pgm|ppm|xcf|pcx|iff|ilbm|pxr|svg|psd)$",
@@ -1296,7 +1301,7 @@ public class BMSReader : MonoBehaviour{
             // Debug.Log(BMSInfo.bga_list_table.Count);
             GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
         }
-        if((VLCPlayer.medias[0] != UIntPtr.Zero || BMSInfo.textures[0] != null) &&
+        if((VLCPlayer.players[0] != UIntPtr.Zero || BMSInfo.textures[0] != null) &&
             !BMSInfo.bga_list_table.Any(v => (v.channel == BMSInfo.BGAChannel.Poor) && (v.time == 0))){
             BMSInfo.bga_list_table.Insert(0, new BGATimeRow(0, 0, (byte)BMSInfo.BGAChannel.Poor));
         }
@@ -1402,9 +1407,11 @@ public class BMSReader : MonoBehaviour{
             file_names.Clear();
             file_names = null;
         }
-        for(int i = 0; i < file_lines.Length; i++)
-            file_lines[i] = null;
-        file_lines = null;
+        if(file_lines != null){
+            for(int i = 0; i < file_lines.Length; i++)
+                file_lines[i] = null;
+            file_lines = null;
+        }
         for(ushort i = 0; i < wav_names.Length; i++)
             wav_names[i] = bmp_names[i] = null;
     }

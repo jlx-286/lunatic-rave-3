@@ -16,7 +16,7 @@ using UnityEngine;
 public unsafe static class StaticClass{
     public const RegexOptions regexOption = RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
     private const string PluginName = "FFmpegPlugin";
-    [DllImport(PluginName, EntryPoint = "GetVideoSize")] private extern static bool __GetVideoSize(
+    [DllImport(PluginName, EntryPoint = "GetVideoSize")] private extern static void __GetVideoSize(
         string url, out int width, out int height);
     [DllImport(PluginName)] private extern static bool GetAudioInfo(
         string url, out int channels, out int frequency, out ulong length);
@@ -25,6 +25,7 @@ public unsafe static class StaticClass{
         string url, out int width, out int height, out bool isBitmap);
     [DllImport(PluginName)] private extern static void CopyPixels(
         void* addr, int width, int height, bool isBitmap, bool strech = false);
+    [DllImport(PluginName, EntryPoint = "CleanUp")] public extern static void FFmpegCleanUp();
 /*
     /// <summary>
     /// seconds
@@ -153,9 +154,8 @@ public unsafe static class StaticClass{
             width = height = 0;
             return false;
         }
-        if(!__GetVideoSize(path, out width, out height) || width < 1 || height < 1)
-            return false;
-        return true;
+        __GetVideoSize(path, out width, out height);
+        return (width > 0 && height > 0);
     }
     public static bool TryParseDecimal(string s, out decimal m){
         m = decimal.Zero;
