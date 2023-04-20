@@ -9,7 +9,7 @@ public unsafe static class GL_libs{
 #else
     private const string GL_NAME = "GLESv2";
 #endif
-    private const ushort GL_TEXTURE_2D = 0x0DE1, GL_RGBA = 0x1908, GL_UNSIGNED_BYTE = 0x1401;
+    private const ushort GL_TEXTURE_2D = 0x0DE1, GL_RGBA = 0x1908, GL_RGB = 0x1907, GL_UNSIGNED_BYTE = 0x1401;
     [DllImport(GL_NAME)] private extern static void glBindTexture(uint target, uint texture);
     public static void BindTexture(uint texture) => glBindTexture(GL_TEXTURE_2D, texture);
 	[DllImport(GL_NAME)] private extern static void glTexImage2D(uint target, int level,
@@ -22,6 +22,8 @@ public unsafe static class GL_libs{
     //     int x, int y, int width, int height, uint format, uint type, IntPtr pixels);
     public static void TexSubImage2D(int width, int height, void* data) => glTexSubImage2D(
         GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    public static void TexSubImageRGB(int y, int width, int height, void* data) => glTexSubImage2D(
+        GL_TEXTURE_2D, 0, 0, y, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
     // public static void TexSubImage2D(int width, int height, IntPtr data) => glTexSubImage2D(
     //     GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
     [DllImport(GL_NAME)] public extern static void glDeleteTextures(int count, uint* textures);
@@ -39,6 +41,19 @@ public unsafe static class GL_libs{
         return t2d;
         // return Texture2D.CreateExternalTexture(width, height,
         //     TextureFormat.RGBA32, false, false, (IntPtr)texture_name);
+    }
+    public static Texture2D NewRGBTex(byte[] color24s, int width, int height, ref uint texture_name){
+        fixed(uint* tn = &texture_name) glDeleteTextures(1, tn);
+        texture_name = 0;
+        fixed(uint* tn = &texture_name) glGenTextures(1, tn);
+        if(texture_name == 0) return null;
+        BindTexture(texture_name);
+        fixed(void* p = color24s) glTexImage2D(GL_TEXTURE_2D, 0,
+            GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, p);
+        Texture2D t2d = Texture2D.CreateExternalTexture(width, height,
+            TextureFormat.RGB24, false, false, (IntPtr)texture_name);
+        t2d.filterMode = FilterMode.Point;
+        return t2d;
     }
 }
 #endif

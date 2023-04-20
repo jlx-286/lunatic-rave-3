@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Linq;
 using System.Runtime.InteropServices;
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+#endif
 public unsafe static class VLCPlayer{
     private enum State{
         [Obsolete("Deprecated value. Check the libvlc_MediaPlayerBuffering" +
@@ -22,12 +26,13 @@ public unsafe static class VLCPlayer{
     public static UIntPtr instance;
     private static readonly UIntPtr[] medias = Enumerable.Repeat(UIntPtr.Zero, 36*36).ToArray();
     public static readonly VideoSize[] media_sizes = new VideoSize[36*36];
-    public static readonly Color32[][] color32s = Enumerable.Repeat<Color32[]>(null, 36*36).ToArray();
     public static readonly UIntPtr[] players = Enumerable.Repeat(UIntPtr.Zero, 36*36).ToArray();
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-    public static readonly Texture2D[] media_textures = Enumerable.Repeat<Texture2D>(null, 4).ToArray();
+    [DllImport("ucrtbase")] private extern static void* memset(void* src, int val, UIntPtr count);
 #else
-    public static readonly uint[] texture_names = new uint[]{0,0,0,0};
+    public static readonly uint[] offsetYs = Enumerable.Repeat<uint>(0, 36*36).ToArray();
+    public static readonly byte[][] tex_pixels = Enumerable.Repeat<byte[]>(null, 36*36).ToArray();
+    public static readonly byte*[] addrs = new byte*[36*36];
 #endif
     [DllImport(PluginName)] private extern static UIntPtr libvlc_new(
         int argc, string[] args);// return instance
@@ -77,29 +82,66 @@ public unsafe static class VLCPlayer{
             }
             return false;
         }
-        libvlc_video_set_format(players[num], "RGBA", media_sizes[num].uwidth,
-            media_sizes[num].uheight, media_sizes[num].uwidth * 4);
+        libvlc_video_set_format(players[num], "RV24", media_sizes[num].uwidth,
+            media_sizes[num].uheight, media_sizes[num].uwidth * 3);
+#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
         if(media_sizes[num].uwidth <= media_sizes[num].uheight){
-            color32s[num] = new Color32[media_sizes[num].uwidth * media_sizes[num].uheight];
-            fixed(Color32* data = color32s[num])
-                libvlc_video_set_callbacks(players[num], (opaque, planes)=>{
-                    *planes = opaque;
-                    return null;
-                }, null, null, data);
+            tex_pixels[num] = new byte[3 * media_sizes[num].uwidth
+                * media_sizes[num].uheight];
+            offsetYs[num] = 0;
+            fixed(byte* ptr = tex_pixels[num]) addrs[num] = ptr;
         }else{// if(media_sizes[num].uwidth > media_sizes[num].uheight)
-            color32s[num] = new Color32[media_sizes[num].uwidth * media_sizes[num].uwidth];
-            fixed(Color32* data = color32s[num])
-                libvlc_video_set_callbacks(players[num], (opaque, planes)=>{
-                    *planes = opaque;
-                    return null;
-                }, null, null, data + (media_sizes[num].uwidth -
-                    media_sizes[num].uheight) / 2 * media_sizes[num].uwidth);
-            media_sizes[num].uheight = media_sizes[num].uwidth;
+            tex_pixels[num] = new byte[3 * media_sizes[num].uwidth
+                * media_sizes[num].uwidth];
+            offsetYs[num] = (media_sizes[num].uwidth -
+                media_sizes[num].uheight) / 2;
+            fixed(byte* ptr = tex_pixels[num])
+                addrs[num] = ptr + offsetYs[num] * media_sizes[num].uwidth * 3;
         }
+        libvlc_video_set_callbacks(players[num], (opaque, planes)=>{
+            *planes = opaque; return null; }, null, null, addrs[num]);
         libvlc_media_player_play(players[num]);
         while(libvlc_media_player_get_state(players[num]) < State.Playing);
         libvlc_media_player_set_pause(players[num], 1);
+#endif
         return true;
+    }
+    public static void NewVideoTex(ushort num){
+        if(players[num] == UIntPtr.Zero) return;
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+        byte* ptr = null;
+        NativeArray<byte> arr;
+        if(media_sizes[num].uwidth <= media_sizes[num].uheight){
+            BMSInfo.textures[num] = new Texture2D(media_sizes[num].width,
+                media_sizes[num].height, TextureFormat.RGB24, false){
+                filterMode = FilterMode.Point };
+            arr = BMSInfo.textures[num].GetRawTextureData<byte>();
+            ptr = (byte*)arr.GetUnsafePtr();// GetUnsafeReadOnlyPtr());
+        }else{// if(media_sizes[num].uwidth > media_sizes[num].uheight)
+            BMSInfo.textures[num] = new Texture2D(media_sizes[num].width,
+                media_sizes[num].width, TextureFormat.RGB24, false){
+                filterMode = FilterMode.Point };
+            arr = BMSInfo.textures[num].GetRawTextureData<byte>();
+            ptr = (byte*)arr.GetUnsafePtr();// GetUnsafeReadOnlyPtr());
+            memset(ptr, 0, (UIntPtr)arr.Length);
+            ptr += (media_sizes[num].uwidth - media_sizes[num].uheight)
+                / 2 * media_sizes[num].uwidth * 3;
+            // media_sizes[num].uheight = media_sizes[num].uwidth;
+        }
+        libvlc_video_set_callbacks(players[num], (opaque, planes)=>{
+            *planes = opaque; return null; }, null, null, ptr);
+        libvlc_media_player_play(players[num]);
+        while(libvlc_media_player_get_state(players[num]) < State.Playing);
+        libvlc_media_player_set_pause(players[num], 1);
+#else
+        if(media_sizes[num].uwidth <= media_sizes[num].uheight){
+            BMSInfo.textures[num] = GL_libs.NewRGBTex(tex_pixels[num],
+                media_sizes[num].width, media_sizes[num].height, ref BMSInfo.texture_names[num]);
+        }else{
+            BMSInfo.textures[num] = GL_libs.NewRGBTex(tex_pixels[num],
+                media_sizes[num].width, media_sizes[num].width, ref BMSInfo.texture_names[num]);
+        }
+#endif
     }
     public static bool PlayerPlaying(ushort num) =>
         libvlc_media_player_get_state(players[num]) == State.Playing;
@@ -145,7 +187,11 @@ public unsafe static class VLCPlayer{
             libvlc_media_release(medias[num]);
             medias[num] = UIntPtr.Zero;
         }
-        color32s[num] = null;
+#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
+        tex_pixels[num] = null;
+        offsetYs[num] = 0;
+        addrs[num] = null;
+#endif
     }
     public static UIntPtr InstNew(string[] args) => args == null
         ? libvlc_new(0, null) : libvlc_new(args.Length, args);
@@ -155,17 +201,6 @@ public unsafe static class VLCPlayer{
     //     libvlc_new(args.Length, args));
     // }
     public static void VLCRelease(){
-#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
-        // GL_libs.BindTexture(0);
-        fixed(uint* p = texture_names)
-            GL_libs.glDeleteTextures(texture_names.Length, p);
-#endif
-        for(byte p = 0; p < 4; p++)
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-            media_textures[p] = null;
-#else
-            texture_names[p] = 0;
-#endif
         for(ushort num = 0; num < medias.Length; num++)
             VideoFree(num);
         if(instance != UIntPtr.Zero){

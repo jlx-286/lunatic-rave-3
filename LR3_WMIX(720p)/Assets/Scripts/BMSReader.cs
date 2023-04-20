@@ -602,6 +602,7 @@ public class BMSReader : MonoBehaviour{
                     tmp_path = tmp_path.Replace('\\', '/');
 #endif
                     if(!VLCPlayer.PlayerNew(tmp_path, i)) VLCPlayer.VideoFree(i);
+                    else unityActions.Enqueue(()=>{ VLCPlayer.NewVideoTex(a); });
                 }
                 else if(Regex.IsMatch(Path.GetExtension(bmp_names[i]),
                     @"^\.(bmp|png|jpg|jpeg|gif|mag|wmf|emf|cur|ico|tga|dds|dib|tiff|webp|pbm|pgm|ppm|xcf|pcx|iff|ilbm|pxr|svg|psd)$",

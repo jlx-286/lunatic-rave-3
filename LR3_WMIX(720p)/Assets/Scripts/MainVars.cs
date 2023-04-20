@@ -57,6 +57,7 @@ public class MainVars : MonoBehaviour {
         StaticClass.rng.Dispose();
         FluidManager.CleanUp();
         VLCPlayer.VLCRelease();
+        StaticClass.FFmpegCleanUp();
         BMSInfo.CleanUp();
         Resources.UnloadUnusedAssets();
         // AssetBundle.UnloadAllAssetBundles(true);
