@@ -12,7 +12,6 @@ public class BGAPlayer : MonoBehaviour {
     private Timer timer;
     private bool toDisable = false;
     private readonly ushort[] bgi_nums = new ushort[]{0,0,0,0};
-    private readonly bool[] playing = Enumerable.Repeat(false, 4).ToArray();
 	private void Start(){
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.pauseStateChanged += _ => {
@@ -24,7 +23,7 @@ public class BGAPlayer : MonoBehaviour {
         images = new Image[poors.Length];
         for(byte i = 0; i < poors.Length; i++)
             images[i] = poors[i].GetComponent<Image>();
-        if(BMSInfo.bga_list_table.Any(v => v.channel == BMSInfo.BGAChannel.Poor)){
+        if(BMSInfo.bga_list_table.Any(v => v.channel == BGAChannel.Poor)){
             timer = new Timer(obj => {
                 toDisable = true;
                 timer.Change(Timeout.Infinite, Timeout.Infinite);
@@ -46,16 +45,16 @@ public class BGAPlayer : MonoBehaviour {
                 if(BMSInfo.bga_list_table[BMS_Player.bga_table_row].time <= BMS_Player.playingTimeAsNanoseconds){
                     bgi_num = BMSInfo.bga_list_table[BMS_Player.bga_table_row].bgNum;
                     switch(BMSInfo.bga_list_table[BMS_Player.bga_table_row].channel){
-                        case BMSInfo.BGAChannel.Base:
+                        case BGAChannel.Base:
                             ChannelCase(0);
                             break;
-                        case BMSInfo.BGAChannel.Layer1:
+                        case BGAChannel.Layer1:
                             ChannelCase(1);
                             break;
-                        case BMSInfo.BGAChannel.Layer2:
+                        case BGAChannel.Layer2:
                             ChannelCase(2);
                             break;
-                        case BMSInfo.BGAChannel.Poor:
+                        case BGAChannel.Poor:
                             ChannelCase(3);
                             break;
                     }
@@ -71,8 +70,13 @@ public class BGAPlayer : MonoBehaviour {
     }
     private unsafe void LateUpdate(){
         for(byte num = 0; num < bgi_nums.Length; num++){
-            // if(VLCPlayer.players[bgi_nums[num]] != UIntPtr.Zero && VLCPlayer.PlayerPlaying(bgi_nums[num])){
-            if(playing[num]){
+            if(VLCPlayer.playing[bgi_nums[num]]){
+                if(VLCPlayer.toStop[bgi_nums[num]]){
+                    // Debug.Log("to stop");
+                    VLCPlayer.ClearPixels(bgi_nums[num]);
+                    VLCPlayer.toStop[bgi_nums[num]] = false;
+                    VLCPlayer.playing[bgi_nums[num]] = false;
+                }
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
                 BMSInfo.textures[bgi_nums[num]].Apply(false);
 #else
@@ -103,13 +107,10 @@ public class BGAPlayer : MonoBehaviour {
         //     timer.Change(1000, 0);
         // }
         VLCPlayer.PlayerStop(bgi_nums[ii]);
-        playing[ii] = false;
         bgi_nums[ii] = bgi_num;
-        if(VLCPlayer.players[bgi_num] != UIntPtr.Zero){
-            VLCPlayer.PlayerPlay(bgi_num);
-            while(!VLCPlayer.PlayerPlaying(bgi_num));
-            playing[ii] = true;
-        }
+        VLCPlayer.PlayerPlay(bgi_num);
+        if(BMSInfo.textures[bgi_num] == null)
+            BMSInfo.textures[bgi_num] = Texture2D.blackTexture;
         for(byte i = ii; i < rawImages.Length; i += 4)
             rawImages[i].texture = BMSInfo.textures[bgi_num];
     }

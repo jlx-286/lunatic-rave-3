@@ -1,17 +1,32 @@
 ﻿using System;
 using System.Linq;
 using System.Runtime.InteropServices;
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+// #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
-#endif
+// #endif
 public unsafe static class VLCPlayer{
     private enum State{
         [Obsolete("Deprecated value. Check the libvlc_MediaPlayerBuffering" +
         " event to know the buffering state of a libvlc_media_player", false)]
         Buffering = 2, Playing, Paused, Stopped,
         Ended, Error, NothingSpecial = 0, Opening,
+    };
+    private enum libvlc_event_e : int{
+        libvlc_MediaPlayerNothingSpecial = 257,
+        libvlc_MediaPlayerOpening,
+        libvlc_MediaPlayerBuffering,
+        libvlc_MediaPlayerPlaying,
+        libvlc_MediaPlayerPaused,
+        libvlc_MediaPlayerStopped,
+        libvlc_MediaPlayerEndReached = 265,
+        libvlc_MediaPlayerEncounteredError,
+        libvlc_MediaPlayerTimeChanged,
+        libvlc_MediaPlayerPositionChanged,
+        libvlc_MediaPlayerSeekableChanged,
+        libvlc_MediaPlayerPausableChanged,
+        libvlc_MediaPlayerLengthChanged = 273,
     };
     [StructLayout(LayoutKind.Explicit)] public struct VideoSize{
         [FieldOffset(0)] public int width;
@@ -22,18 +37,37 @@ public unsafe static class VLCPlayer{
     private delegate void* Lock_cb(void* opaque, void** planes);
     private delegate void Unlock_cb(void* opaque, void* picture, void** planes);
     private delegate void Display_cb(void* opaque, void* picture);
+    private delegate void libvlc_callback_t(UIntPtr @event, void* p_data);
     private const string PluginName = "libvlc";
     public static UIntPtr instance;
     private static readonly UIntPtr[] medias = Enumerable.Repeat(UIntPtr.Zero, 36*36).ToArray();
     public static readonly VideoSize[] media_sizes = new VideoSize[36*36];
     public static readonly UIntPtr[] players = Enumerable.Repeat(UIntPtr.Zero, 36*36).ToArray();
+    public static readonly UIntPtr[] ev_mgs = Enumerable.Repeat(UIntPtr.Zero, 36*36).ToArray();
+    public static readonly bool[] playing = Enumerable.Repeat(false, 36*36).ToArray();
+    public static readonly bool[] toStop = Enumerable.Repeat(false, 36*36).ToArray();
+    private static readonly libvlc_callback_t endFunc = (e, data)=>{
+        *(bool*)data = true; Debug.Log("to end"); };
+    private static readonly libvlc_callback_t playFunc = (e, data)=>{
+        *(bool*)data = true; };
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-    [DllImport("ucrtbase")] private extern static void* memset(void* src, int val, UIntPtr count);
+    [DllImport("ucrtbase")]
 #else
     public static readonly uint[] offsetYs = Enumerable.Repeat<uint>(0, 36*36).ToArray();
     public static readonly byte[][] tex_pixels = Enumerable.Repeat<byte[]>(null, 36*36).ToArray();
     public static readonly byte*[] addrs = new byte*[36*36];
+    [DllImport("libavcodec")]
 #endif
+    private extern static void* memset(void* src, int val, UIntPtr count);
+    public static void ClearPixels(ushort num){
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+        NativeArray<byte> arr = BMSInfo.textures[num].GetRawTextureData<byte>();
+        memset(arr.GetUnsafePtr(), 0, (UIntPtr)arr.Length);
+#else
+        fixed(void* p = tex_pixels[num])
+            memset(p, 0, (UIntPtr)tex_pixels[num].LongLength);
+#endif
+    }
     [DllImport(PluginName)] private extern static UIntPtr libvlc_new(
         int argc, string[] args);// return instance
     [DllImport(PluginName)] private extern static void libvlc_release(
@@ -67,21 +101,29 @@ public unsafe static class VLCPlayer{
         UIntPtr player);
     [DllImport(PluginName)] private extern static void libvlc_media_player_release(
         UIntPtr player);
+    [DllImport(PluginName)] private extern static UIntPtr libvlc_media_player_event_manager(
+        UIntPtr player);// return libvlc_event_manager_t*
+    [DllImport(PluginName, CallingConvention = CallingConvention.StdCall)]
+    private extern static int libvlc_event_attach(UIntPtr evmn,
+        int eventType, libvlc_callback_t c, void* userData);
+    [DllImport(PluginName, CallingConvention = CallingConvention.StdCall)]
+    private extern static void libvlc_event_detach(UIntPtr evmn,
+        int eventType, libvlc_callback_t c, void* userData);
     public static bool PlayerNew(string path, ushort num){
         if(instance == UIntPtr.Zero || !StaticClass.GetVideoSize(
             path, out media_sizes[num].width, out media_sizes[num].height))
             return false;
-        medias[num] = libvlc_media_new_path(instance, path);
-        if(medias[num] == UIntPtr.Zero) return false;
+        if(medias[num] == UIntPtr.Zero) medias[num] = libvlc_media_new_path(instance, path);
+        if(medias[num] == UIntPtr.Zero) goto cleanup;
         libvlc_media_parse(medias[num]);
-        players[num] = libvlc_media_player_new_from_media(medias[num]);
-        if(players[num] == UIntPtr.Zero){
-            if(medias[num] != UIntPtr.Zero){
-                libvlc_media_release(medias[num]);
-                medias[num] = UIntPtr.Zero;
-            }
-            return false;
-        }
+        if(players[num] == UIntPtr.Zero) players[num] = libvlc_media_player_new_from_media(medias[num]);
+        if(players[num] == UIntPtr.Zero) goto cleanup;
+        if(ev_mgs[num] == UIntPtr.Zero) ev_mgs[num] = libvlc_media_player_event_manager(players[num]);
+        if(ev_mgs[num] == UIntPtr.Zero) goto cleanup;
+        fixed(bool* p = toStop)
+            if(libvlc_event_attach(ev_mgs[num],
+                (int)libvlc_event_e.libvlc_MediaPlayerEndReached,
+                endFunc, p + num) != 0) goto cleanup;
         libvlc_video_set_format(players[num], "RV24", media_sizes[num].uwidth,
             media_sizes[num].uheight, media_sizes[num].uwidth * 3);
 #if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
@@ -103,8 +145,15 @@ public unsafe static class VLCPlayer{
         libvlc_media_player_play(players[num]);
         while(libvlc_media_player_get_state(players[num]) < State.Playing);
         libvlc_media_player_set_pause(players[num], 1);
+        fixed(bool* p = playing)
+            if(libvlc_event_attach(ev_mgs[num],
+                (int)libvlc_event_e.libvlc_MediaPlayerPlaying,
+                playFunc, p + num) != 0) goto cleanup;
 #endif
         return true;
+        cleanup:
+        VideoFree(num);
+        return false;
     }
     public static void NewVideoTex(ushort num){
         if(players[num] == UIntPtr.Zero) return;
@@ -143,8 +192,8 @@ public unsafe static class VLCPlayer{
         }
 #endif
     }
-    public static bool PlayerPlaying(ushort num) =>
-        libvlc_media_player_get_state(players[num]) == State.Playing;
+    // public static bool PlayerPlaying(ushort num) =>
+    //     libvlc_media_player_get_state(players[num]) == State.Playing;
         // num >= players.Length ? false : PlayerPlaying(players[num]);
     // public static bool PlayerPlaying(UIntPtr player){
     //     if(player == UIntPtr.Zero) return false;
@@ -171,6 +220,7 @@ public unsafe static class VLCPlayer{
     }
 #endif
     public static void PlayerStop(ushort num){
+        playing[num] = false;
         if(players[num] != UIntPtr.Zero){
             // libvlc_media_player_stop(players[num]);
             libvlc_media_player_set_pause(players[num], 1);
@@ -178,6 +228,17 @@ public unsafe static class VLCPlayer{
     }
     public static void VideoFree(ushort num){
         // if(num >= players.Length) return;
+        if(ev_mgs[num] != UIntPtr.Zero){
+            fixed(bool* p = toStop)
+                libvlc_event_detach(ev_mgs[num],
+                    (int)libvlc_event_e.libvlc_MediaPlayerEndReached,
+                    endFunc, p + num);
+            fixed(bool* p = playing)
+                libvlc_event_detach(ev_mgs[num],
+                    (int)libvlc_event_e.libvlc_MediaPlayerPlaying,
+                    playFunc, p + num);
+            ev_mgs[num] = UIntPtr.Zero;
+        }
         if(players[num] != UIntPtr.Zero){
             libvlc_media_player_stop(players[num]);
             libvlc_media_player_release(players[num]);
@@ -187,6 +248,7 @@ public unsafe static class VLCPlayer{
             libvlc_media_release(medias[num]);
             medias[num] = UIntPtr.Zero;
         }
+        playing[num] = toStop[num] = false;
 #if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
         tex_pixels[num] = null;
         offsetYs[num] = 0;

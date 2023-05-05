@@ -1,21 +1,36 @@
 ﻿using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 public class NotePlayer : MonoBehaviour {
     public BMSPlayer BMS_Player;
-    // private string str_note = string.Empty;
-    public GameObject[] lanes;
-    private byte[] laneDict = Enumerable.Repeat(byte.MaxValue, byte.MaxValue).ToArray();
-    private enum KeyState : byte{
-        Free = 0,
-        Down = 1,
-        Up = 2,
-        Hold = 3
-    }
+    private byte laneNum = byte.MaxValue;
+    public RectTransform[] lanes;
+    [HideInInspector] public readonly byte[] laneDict =
+        Enumerable.Repeat(byte.MaxValue, byte.MaxValue).ToArray();
+    private ushort[] clipNums;
+    public Text[] judges;
+    private ulong[] judge_nums;
+    public Text score;
+    private ulong score_num = 0;
+    public Text combo;
+    private ulong combo_nums = 0;
+    private bool toUpdateScore = false;
+    // public Text[] gauge_texts;
+    // private decimal[] gauge_vals;
+    public Text gauge_text;
+    private decimal gauge_val = 20;
+    public HorizontalLayoutGroup gauge_bars;
+    private Image[] gaugeBars;
+    private decimal inc = 0;
+    private byte prev_bars = 10, now_bars = 10;
     private KeyState[] laneKeyStates;
-    private void Start(){
+    private void OnEnable(){
         laneKeyStates = Enumerable.Repeat(KeyState.Free, lanes.Length).ToArray();
+        clipNums = Enumerable.Repeat(ushort.MaxValue, lanes.Length).ToArray();
+        judge_nums = Enumerable.Repeat<ulong>(0, judges.Length).ToArray();
+        gaugeBars = gauge_bars.GetComponentsInChildren<Image>(true);
         switch(BMSInfo.scriptType){
-            case BMSInfo.ScriptType.BMS:
+            case ScriptType.BMS:
                 laneDict[0x11] = laneDict[0x51] = 1;// laneDict[0xD1] = 1;
                 laneDict[0x12] = laneDict[0x52] = 2;// laneDict[0xD2] = 2;
                 laneDict[0x13] = laneDict[0x53] = 3;// laneDict[0xD3] = 3;
@@ -33,7 +48,7 @@ public class NotePlayer : MonoBehaviour {
                 laneDict[0x28] = laneDict[0x68] = 14;// laneDict[0xE8] = 14;
                 laneDict[0x29] = laneDict[0x69] = 15;// laneDict[0xE9] = 15;
                 break;
-            case BMSInfo.ScriptType.PMS:
+            case ScriptType.PMS:
                 laneDict[0x11] = laneDict[0x51] = 0;// laneDict[0xD1] = 0;
                 laneDict[0x12] = laneDict[0x52] = 1;// laneDict[0xD2] = 1;
                 laneDict[0x13] = laneDict[0x53] = 2;// laneDict[0xD3] = 2;
@@ -56,19 +71,65 @@ public class NotePlayer : MonoBehaviour {
         if(!BMS_Player.no_key_notes){
             while(BMS_Player.row_key < BMSInfo.note_list_table.Count){
                 if(BMSInfo.note_list_table[BMS_Player.row_key].time <= BMS_Player.playingTimeAsNanoseconds){
-                    MainMenu.audioSources[BMSInfo.note_list_table[BMS_Player.row_key].clipNum].Play();
-                    // str_note = BMS_Reader.note_dataTable.Rows[BMS_Player.row_key][0].ToString();
-                    // if(laneDict.ContainsKey(str_note)){
-                    //     //channel = laneDict[str_note];
-                    //     //if(channel >= 0 && channel < 16){
-                    //     //}
-                    // }//else{ channel = -1; }
+                    laneNum = laneDict[(byte)BMSInfo.note_list_table[BMS_Player.row_key].channel];
+                    switch(BMSInfo.note_list_table[BMS_Player.row_key].noteType){
+                        case NoteType.Longnote:
+                            if(laneKeyStates[laneNum] == KeyState.Free){
+                                laneKeyStates[laneNum] = KeyState.Hold;
+                                clipNums[laneNum] = BMSInfo.note_list_table[BMS_Player.row_key].clipNum;
+                                MainMenu.audioSources[clipNums[laneNum]].Play();
+                            }
+                            else if(laneKeyStates[laneNum] == KeyState.Hold){
+                                laneKeyStates[laneNum] = KeyState.Free;
+                                if(clipNums[laneNum] != BMSInfo.note_list_table[BMS_Player.row_key].clipNum){
+                                    clipNums[laneNum] = BMSInfo.note_list_table[BMS_Player.row_key].clipNum;
+                                    MainMenu.audioSources[clipNums[laneNum]].Play();
+                                }
+                            }
+                            toUpdateScore = true;
+                            judge_nums[(byte)NoteJudge.Perfect]++; score_num += 2; combo_nums++;
+                            inc += BMSInfo.incr;
+                            break;
+                        case NoteType.Default:
+                            laneKeyStates[laneNum] = KeyState.Free;
+                            clipNums[laneNum] = BMSInfo.note_list_table[BMS_Player.row_key].clipNum;
+                            MainMenu.audioSources[clipNums[laneNum]].Play();
+                            toUpdateScore = true;
+                            judge_nums[(byte)NoteJudge.Perfect]++; score_num += 2; combo_nums++;
+                            inc += BMSInfo.incr;
+                            break;
+                        default: break;
+                    }
                     if(BMS_Player.row_key >= BMSInfo.note_list_table.Count - 10){
                         Debug.Log("near note end");
                     }
                     BMS_Player.row_key++;
                 }
                 else break;
+            }
+            if(toUpdateScore){
+                judges[(byte)NoteJudge.Perfect].text = judge_nums[(byte)NoteJudge.Perfect].ToString();
+                score.text = score_num.ToString(); combo.text = combo_nums.ToString();
+                if((gauge_val < 100 && inc > 0) ||
+                    (gauge_val > 0.1m && inc < 0)){
+                    gauge_val += inc;
+                    if(gauge_val > 100) gauge_val = 100;
+                    else if(gauge_val < 0.1m) gauge_val = 0.1m;
+                    now_bars = (byte)gauge_val; now_bars /= 2;
+                    if(prev_bars != now_bars){
+                        if(now_bars > prev_bars){
+                            for(byte i = prev_bars; i < now_bars; i++)
+                                gaugeBars[i].enabled = true;
+                        }else{
+                            for(byte i = prev_bars; i > now_bars; i--)
+                                gaugeBars[i - 1].enabled = false;
+                        }
+                        prev_bars = now_bars;
+                    }
+                    gauge_text.text = gauge_val.GaugeToString();
+                }
+                toUpdateScore = false;
+                inc = 0;
             }
         }
     }

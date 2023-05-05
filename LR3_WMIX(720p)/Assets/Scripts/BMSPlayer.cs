@@ -14,6 +14,9 @@ public class BMSPlayer : MonoBehaviour {
     [HideInInspector] public ulong playingTimeAsNanoseconds { get; internal set; } = 0;
     [HideInInspector] public ulong fixedDeltaTimeAsNanoseconds { get; internal set; }
     public Slider[] sliders;
+    public Sprite[] diffs;
+    public Image diff;
+    public Text level;
     private const ulong ns_per_sec = TimeSpan.TicksPerSecond * 100;
     private uint timeLeft = (uint)(BMSInfo.totalTimeAsNanoseconds / ns_per_sec) +
         (uint)(BMSInfo.totalTimeAsNanoseconds % ns_per_sec == 0 ? 0 : 1);
@@ -32,6 +35,14 @@ public class BMSPlayer : MonoBehaviour {
         for(byte a = 0; a < sliders.Length; a++){
             sliders[a].maxValue = BMSInfo.totalTimeAsNanoseconds;
             sliders[a].value = float.Epsilon / 2;
+        }
+        diff.sprite = diffs[(byte)BMSInfo.difficulty];
+        if(BMSInfo.difficulty == Difficulty.Unknown){
+            // level.text = string.Empty;
+            level.enabled = false;
+        }else{
+            level.text = BMSInfo.play_level.ToString();
+            level.color = MainVars.levelColor32s[(byte)BMSInfo.difficulty];
         }
         fixedDeltaTimeAsNanoseconds = (ulong)(Time.fixedDeltaTime * ns_per_sec);
         timeLeftText.text = timeLeft.ToString();

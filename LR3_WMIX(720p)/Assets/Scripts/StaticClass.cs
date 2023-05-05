@@ -157,9 +157,16 @@ public unsafe static class StaticClass{
         __GetVideoSize(path, out width, out height);
         return (width > 0 && height > 0);
     }
+    public static string GaugeToString(this in decimal m){
+        if(m >= 100) return "100.0";
+        else if(m < 0.1m) return "0.0";
+        decimal r = decimal.Round(m, 1);
+        if(r > m) r -= 0.1m;
+        return r.ToString("F1");
+    }
     public static bool TryParseDecimal(string s, out decimal m){
         m = decimal.Zero;
-        if(string.IsNullOrEmpty(s) || string.IsNullOrWhiteSpace(s)) return false;
+        if(string.IsNullOrWhiteSpace(s)) return false;
         s = s.Trim();
         bool res = false;
         BigInteger bigInteger;
@@ -199,12 +206,6 @@ public unsafe static class StaticClass{
     }
     public static readonly RandomNumberGenerator rng = RandomNumberGenerator.Create();
     public static BigInteger NextBigInteger(this System.Random random, BigInteger max){
-        // string match = Regex.Match(s, @"^\s*\+?0*\d+").Value;
-        // if(string.IsNullOrEmpty(match)) return 0;
-        // BigInteger max = BigInteger.Parse(match, NumberStyles.AllowLeadingSign
-        //     | NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite
-        //     | NumberStyles.Integer | NumberStyles.Number
-        //     , NumberFormatInfo.InvariantInfo);
         if(max < 1) return 0;
         if(max == 1) return 1;
         byte[] src = max.ToByteArray();

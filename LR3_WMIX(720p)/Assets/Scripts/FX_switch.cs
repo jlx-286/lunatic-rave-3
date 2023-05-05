@@ -9,14 +9,8 @@ public class FX_switch : MonoBehaviour {
     public Sprite[] sprites;
     private Image image;
     [HideInInspector] public enum ToggleName : byte{
-        Echo = 1,
-        Delay = 1,
-        LowPass = 2,
-        HighPass = 3,
-        Distortion = 4,
-        Chorus = 5,
-        Reverb = 6,
-        Flanger = 7,
+        Echo = 1, Delay = 1, LowPass = 2, HighPass = 3,
+        Distortion = 4, Chorus = 5, Reverb = 6, //Flanger = 7,
     }
     public ToggleName toggleName;
     private void Start(){

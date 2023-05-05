@@ -22,12 +22,12 @@ using System.Runtime.InteropServices;
 }
 [StructLayout(LayoutKind.Explicit)] public struct NoteTimeRow{
 	[FieldOffset(0)] public ulong time;
-	[FieldOffset(sizeof(ulong))] public BMSInfo.NoteChannel channel;
-	[FieldOffset(sizeof(ulong) + sizeof(BMSInfo.NoteChannel))]
+	[FieldOffset(sizeof(ulong))] public NoteChannel channel;
+	[FieldOffset(sizeof(ulong) + sizeof(NoteChannel))]
 	public ushort clipNum;
-	[FieldOffset(sizeof(ulong) + sizeof(BMSInfo.NoteChannel) + sizeof(ushort))]
-	public BMSInfo.NoteType noteType;
-    public NoteTimeRow(ulong t, BMSInfo.NoteChannel ch, ushort num, BMSInfo.NoteType tp){
+	[FieldOffset(sizeof(ulong) + sizeof(NoteChannel) + sizeof(ushort))]
+	public NoteType noteType;
+    public NoteTimeRow(ulong t, NoteChannel ch, ushort num, NoteType tp){
         time = t; channel = ch; clipNum = num; noteType = tp;
     }
 }
@@ -41,9 +41,9 @@ using System.Runtime.InteropServices;
 [StructLayout(LayoutKind.Explicit)] public struct BGATimeRow{
 	[FieldOffset(0)] public ulong time;
 	[FieldOffset(sizeof(ulong))] public ushort bgNum;
-	[FieldOffset(sizeof(ulong) + sizeof(ushort))] public BMSInfo.BGAChannel channel;
+	[FieldOffset(sizeof(ulong) + sizeof(ushort))] public BGAChannel channel;
     public BGATimeRow(ulong t, ushort num, byte ch){
-        time = t; bgNum = num; channel = (BMSInfo.BGAChannel)ch;
+        time = t; bgNum = num; channel = (BGAChannel)ch;
     }
 }
 [StructLayout(LayoutKind.Auto)] public struct BPMTimeRow{
@@ -85,6 +85,6 @@ using System.Runtime.InteropServices;
 //     public Fraction32 fraction;
 //     public ushort track;
 //     public ushort clipNum;
-//     public BMSInfo.NoteChannel channel;
-//     public BMSInfo.NoteType type;
+//     public NoteChannel channel;
+//     public NoteType type;
 // }
