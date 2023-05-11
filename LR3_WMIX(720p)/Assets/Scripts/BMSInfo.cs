@@ -1,11 +1,13 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 /// <summary>
 /// also supports PMS files
 /// </summary>
 public static class BMSInfo {
-	public static decimal start_bpm;
+	// public static bool illegal = false;
+	// public static decimal main_bpm = 130;
 	public static decimal min_bpm;
 	public static decimal max_bpm;
 #region BMS header field
@@ -16,23 +18,27 @@ public static class BMSInfo {
 	public static string artist = string.Empty;
 	public static List<string> sub_artist = new List<string>();
 	public static List<string> comment = new List<string>();
-#endregion
+	public static decimal start_bpm;
 	public static decimal total;
 	public static byte play_level;
+	public static Difficulty difficulty = Difficulty.Unknown;
+	public static byte judge_rank;
+#endregion
 	public static decimal incr;
     public static ushort max_tracks = 0;
 	public static ScriptType scriptType = ScriptType.Unknown;
-	public static Difficulty difficulty = Difficulty.Unknown;
-	// public static decimal main_bpm = 130;
+	// public static readonly byte[] LaneMap = 
+	// 	Enumerable.Repeat(byte.MaxValue, byte.MaxValue).ToArray();
 	public static ulong totalTimeAsNanoseconds = 0;
-	// public static bool illegal = false;
     public static string playing_scene_name = string.Empty;
+#region medias
 	public static readonly Texture2D[] textures = Enumerable.Repeat<Texture2D>(null, 36*36).ToArray();
 #if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
 	public static readonly uint[] texture_names = Enumerable.Repeat<uint>(0, 36*36).ToArray();
 	public static uint stageFilePtr;
 #endif
 	// public static Texture2D backBMP = null;
+#endregion
 #region time table
 	public static List<NoteTimeRow> note_list_table = new List<NoteTimeRow>();
 	public static List<BGMTimeRow> bgm_list_table = new List<BGMTimeRow>();
@@ -54,20 +60,16 @@ public static class BMSInfo {
 		bgm_list_table.Clear();
 		bga_list_table.Clear();
 		bpm_list_table.Clear();
-		for(ushort i = 0; i < track_end_time_as_ns.Length; i++)
-			track_end_time_as_ns[i] = ulong.MaxValue;
 		stop_list_table.Clear();
+		fixed(void* p = track_end_time_as_ns)
+			StaticClass.memset(p, -1, (IntPtr)(track_end_time_as_ns.LongLength * sizeof(ulong)));
 #if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
 		fixed(uint* p = texture_names)
 			GL_libs.glDeleteTextures(texture_names.Length, p);
 #endif
-		for(ushort i = 0; i < textures.Length; i++){
-			textures[i] = null;
+		Array.Clear(textures, 0, textures.Length);
 #if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
-			texture_names[i] = 0;
-#endif
-		}
-#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
+		Array.Clear(texture_names, 0, texture_names.Length);
 		fixed(uint* p = &stageFilePtr)
 			GL_libs.glDeleteTextures(1, p);
 		stageFilePtr = 0;
@@ -76,6 +78,7 @@ public static class BMSInfo {
 	}
 	public static void Init(){
 		CleanUp();
+		judge_rank = 2;
 		max_tracks = 0;
 		start_bpm = 130;
 		min_bpm = decimal.MaxValue;

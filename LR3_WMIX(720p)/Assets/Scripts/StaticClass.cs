@@ -39,6 +39,15 @@ public unsafe static class StaticClass{
     // public static readonly double OverFlowTime = 2 * 3600 + 20 * 60;
 #endif
 */
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+    [DllImport("ucrtbase")] public extern static void* memset(void* src, int val, UIntPtr count);
+    [DllImport("ucrtbase")] public extern static void* memset(void* src, int val, IntPtr count);
+#else
+    [DllImport("libavcodec")] public extern static void* memset(void* src, int val, UIntPtr count);
+    [DllImport("libavcodec")] public extern static void* memset(void* src, int val, IntPtr count);
+#endif
+    private static readonly Encoding Shift_JIS = Encoding.GetEncoding("shift_jis");
+    private static readonly Encoding GB18030 = Encoding.GetEncoding("GB18030");
     /// <summary>
     /// using Ude;
     /// </summary>
@@ -52,21 +61,16 @@ public unsafe static class StaticClass{
             fileStream.Flush();
             // fileStream.Close();
         }
-        Encoding Shift_JIS = Encoding.GetEncoding("shift_jis");
-        // Debug.Log(detector.Charset);
-        // Debug.Log(detector.Confidence);
-        if(!string.IsNullOrEmpty(detector.Charset)){
+        if(!string.IsNullOrWhiteSpace(detector.Charset)){
             try{
                 Encoding encoding = Encoding.GetEncoding(detector.Charset);
-                if(encoding != Shift_JIS && detector.Confidence <= 0.7f && detector.Confidence > 0.6f){
-                    return Encoding.GetEncoding("GB18030");
-                }else if(detector.Confidence <= 0.6f){
-                    return Shift_JIS;
-                }else{
-                    return encoding;
-                }
+                if(encoding != Shift_JIS && detector.Confidence <= 0.7f
+                    && detector.Confidence > 0.6f) return GB18030;
+                else if(detector.Confidence <= 0.6f) return Shift_JIS;
+                else return encoding;
             }catch{ return Shift_JIS; }
-        }else{ return Shift_JIS; }
+        }
+        else return Shift_JIS;
     }
 
     /// <summary>

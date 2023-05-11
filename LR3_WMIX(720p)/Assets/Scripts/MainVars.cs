@@ -4,7 +4,7 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.UI;
-public class MainVars : MonoBehaviour {
+public class MainVars : MonoBehaviour{// Game Manager
     public static string Bms_root_dir;
     public static string bms_file_path = string.Empty;
     //public static string currPath;
@@ -27,6 +27,14 @@ public class MainVars : MonoBehaviour {
     public static AudioLowPassFilter lowPassFilter;
     public static AudioReverbFilter reverbFilter;
     public static short GreenNumber = 573;
+    public static readonly ushort[,] JudgeWindows = {
+        //{PG,GR,GD,BD,PR}
+        { 8,24, 40,200,1000},//v.hard
+        {15,30, 60,200,1000},//hard
+        {18,40,100,200,1000},//normal
+        {21,60,120,200,1000},//easy
+        {26,75,150,200,1000},//v.easy
+    };
     /*public static decimal[,] Increases = {
         //{EP,Miss,BD,GD,GR,PG}
         {-1.6m,-4.8m,-3.2m, 0.6m, 1.2m, 1.2m},// assist

@@ -13,7 +13,7 @@ public enum PlayerType : byte{
 public enum Difficulty : byte{
     Unknown = 0, Beginner = 1, Easy = 1,
     Light = 1, Normal = 2, Hyper = 3,
-    Hard = 3, Another = 4, Insane = 5,
+    Another = 4, Insane = 5, // Hard = 3,
     Leggendaria = 5, BlackAnother = 5,
 }
 #endregion
@@ -39,8 +39,9 @@ public enum BGAChannel : byte{
 #endregion
 #region BMS player
 public enum NoteType : byte{
-    Default = 0, Landmine = 1, Longnote = 2,
-    //HCN, LongnoteDown, LongnoteUp,
+    Default = 0, Landmine, 
+    LongnoteStart, LongnoteEnd,
+    LNChannel, LNOBJ, Longnote,// HCN,
 }
 public enum NoteChannel : byte{
     BMS_P1_Key1 = 0x11, BMS_P1_Key2 = 0x12, BMS_P1_Key3 = 0x13, BMS_P1_Key4 = 0x14,
@@ -57,8 +58,9 @@ public enum NoteChannel : byte{
 public enum GaugeType : byte{
     Assisted = 0, AssistedEasy = 0, Easy = 1,
     Normal = 2, Off = 2, Groove = 2,
-    Hard = 3, EXHard = 4, Hazard = 5, PAttack = 6, 
-    Grade = 7, EX_Grade = 8, EXHARD_Grade = 9,
+    Hard = 3, Survival = 3, EXHard = 4,
+    Hazard = 5, Death = 5, PAttack = 6, 
+    Grade = 7, EX_Grade = 8, EXHard_Grade = 9,
     Course = 10,
     [Obsolete("LR2 only?", false)] GAttack = 11,
 }
@@ -72,7 +74,7 @@ public enum NoteJudge : byte{
 public enum KeyState : byte{
     Free = 0, Hold = 3, // Down = 1, Up = 2,
 }
-public enum NoteImg : byte{
+/*public enum NoteImg : byte{
     white = 0, gray = 0, blue = 1, black = 1,
     whiteStart = 2, grayStart = 2,
     whiteCenter = 3, grayCenter = 3,
@@ -82,5 +84,5 @@ public enum NoteImg : byte{
     blueEnd = 7, blackEnd = 7,
     red, redStart, redCenter, redEnd,
     Count
-}
+}*/
 #endregion

@@ -29,7 +29,7 @@ public class BMSPlayer : MonoBehaviour {
     [HideInInspector] public int row_key = 0;
     [HideInInspector] public int bpm_table_row = 0;
     [HideInInspector] public int stop_table_row = 0;
-    private void Start(){
+    private void OnEnable(){
         MainVars.cur_scene_name = BMSInfo.playing_scene_name;
         title_text.text = BMSInfo.title;
         for(byte a = 0; a < sliders.Length; a++){

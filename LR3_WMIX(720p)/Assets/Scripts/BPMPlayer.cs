@@ -9,7 +9,7 @@ public class BPMPlayer : MonoBehaviour{
     public Text now;
     public GameObject min;
     public Text min_val;
-    private void Start(){
+    private void OnEnable(){
         now.text = (BMSInfo.start_bpm * MainVars.speed).ToString("G29");
         Debug.Log(now.text);
         if(BMSInfo.min_bpm < BMSInfo.max_bpm){

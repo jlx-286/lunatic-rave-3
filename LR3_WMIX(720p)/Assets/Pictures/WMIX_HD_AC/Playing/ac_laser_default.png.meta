@@ -2,10 +2,10 @@ fileFormatVersion: 2
 guid: d0234d216b0e41f47875a3bfcbace002
 TextureImporter:
   fileIDToRecycleName:
-    21300000: ac_laser_default_0
+    21300000: scratch
     21300002: ac_laser_default_1
-    21300004: ac_laser_default_2
-    21300006: ac_laser_default_3
+    21300004: white
+    21300006: black
   externalObjects: {}
   serializedVersion: 7
   mipmaps:
@@ -110,14 +110,14 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: ac_laser_default_0
+      name: scratch
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 30.5
+        width: 60
         height: 482
-      alignment: 0
+      alignment: 6
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
@@ -130,27 +130,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ac_laser_default_1
-      rect:
-        serializedVersion: 2
-        x: 30
-        y: 0
-        width: 30
-        height: 482
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: a2aba41c09a30b64f8e5d388ca3915fe
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: ac_laser_default_2
+      name: white
       rect:
         serializedVersion: 2
         x: 61
@@ -158,7 +138,7 @@ TextureImporter:
         width: 34
         height: 482
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -170,7 +150,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ac_laser_default_3
+      name: black
       rect:
         serializedVersion: 2
         x: 96
@@ -178,7 +158,7 @@ TextureImporter:
         width: 26
         height: 482
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []

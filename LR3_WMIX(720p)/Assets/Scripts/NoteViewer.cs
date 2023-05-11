@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 public class NoteViewer : MonoBehaviour{
     public NotePlayer notePlayer;
-    public RectMask2D mask;
+    public RectTransform mask;
     [HideInInspector] public float downSpeed = float.NaN;// height per ms
     private BMSPlayer BMS_Player;
     private byte laneNum = byte.MaxValue;
@@ -15,7 +15,7 @@ public class NoteViewer : MonoBehaviour{
     private LinkedList<Image>[] lanes_notes;
     private int v_note_id = 0;
     private KeyState[] laneKeyStates;
-    private RectTransform rtr;
+    // private List<RectTransform> pageLanes = new List<RectTransform>(18);
     private const uint ns_per_ms = 1000000u;
     [HideInInspector] public ulong offset;
     [HideInInspector] public float maskHeight;
@@ -26,11 +26,10 @@ public class NoteViewer : MonoBehaviour{
         BMS_Player = notePlayer.BMS_Player;
         laneKeyStates = Enumerable.Repeat(KeyState.Free, notePlayer.lanes.Length).ToArray();
         lanes_notes = new LinkedList<Image>[notePlayer.lanes.Length];
-        downSpeed = mask.rectTransform.rect.height;
-        downSpeed /= MainVars.GreenNumber;
+        downSpeed = mask.rect.height / MainVars.GreenNumber;
         // MainVars.GreenNumber = 573;
-        offset = (ulong)ns_per_ms * (ushort)MainVars.GreenNumber;
-        maskHeight = mask.rectTransform.rect.height + 21;
+        offset = (ulong)MainVars.GreenNumber * ns_per_ms;
+        maskHeight = mask.rect.height + 21;
         yTime = Time.fixedDeltaTime * -1000;
         for(int i = 0; i < lanes_notes.Length; i++)
             lanes_notes[i] = new LinkedList<Image>();
@@ -56,6 +55,10 @@ public class NoteViewer : MonoBehaviour{
                 noteImgsLane[1] = noteImgsLane[3] = noteImgsLane[5] = noteImgsLane[7] = 1;
                 break;
         }
+    }
+    private void OnDestroy(){
+        for(int i = 0; i < lanes_notes.Length; i++)
+            lanes_notes[i].Clear();
     }
     private void FixedUpdate(){
         if(BMS_Player.escaped) return;

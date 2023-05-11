@@ -50,22 +50,17 @@ public unsafe static class VLCPlayer{
         *(bool*)data = true; Debug.Log("to end"); };
     private static readonly libvlc_callback_t playFunc = (e, data)=>{
         *(bool*)data = true; };
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-    [DllImport("ucrtbase")]
-#else
+#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
     public static readonly uint[] offsetYs = Enumerable.Repeat<uint>(0, 36*36).ToArray();
     public static readonly byte[][] tex_pixels = Enumerable.Repeat<byte[]>(null, 36*36).ToArray();
     public static readonly byte*[] addrs = new byte*[36*36];
-    [DllImport("libavcodec")]
 #endif
-    private extern static void* memset(void* src, int val, UIntPtr count);
     public static void ClearPixels(ushort num){
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
         NativeArray<byte> arr = BMSInfo.textures[num].GetRawTextureData<byte>();
-        memset(arr.GetUnsafePtr(), 0, (UIntPtr)arr.Length);
+        StaticClass.memset(arr.GetUnsafePtr(), 0, (IntPtr)arr.Length);
 #else
-        fixed(void* p = tex_pixels[num])
-            memset(p, 0, (UIntPtr)tex_pixels[num].LongLength);
+        Array.Clear(tex_pixels, 0, tex_pixels.Length);
 #endif
     }
     [DllImport(PluginName)] private extern static UIntPtr libvlc_new(
@@ -172,7 +167,7 @@ public unsafe static class VLCPlayer{
                 filterMode = FilterMode.Point };
             arr = BMSInfo.textures[num].GetRawTextureData<byte>();
             ptr = (byte*)arr.GetUnsafePtr();// GetUnsafeReadOnlyPtr());
-            memset(ptr, 0, (UIntPtr)arr.Length);
+            StaticClass.memset(ptr, 0, (IntPtr)arr.Length);
             ptr += (media_sizes[num].uwidth - media_sizes[num].uheight)
                 / 2 * media_sizes[num].uwidth * 3;
             // media_sizes[num].uheight = media_sizes[num].uwidth;
@@ -182,6 +177,10 @@ public unsafe static class VLCPlayer{
         libvlc_media_player_play(players[num]);
         while(libvlc_media_player_get_state(players[num]) < State.Playing);
         libvlc_media_player_set_pause(players[num], 1);
+        fixed(bool* p = playing)
+            libvlc_event_attach(ev_mgs[num],
+                (int)libvlc_event_e.libvlc_MediaPlayerPlaying,
+                playFunc, p + num);
 #else
         if(media_sizes[num].uwidth <= media_sizes[num].uheight){
             BMSInfo.textures[num] = GL_libs.NewRGBTex(tex_pixels[num],

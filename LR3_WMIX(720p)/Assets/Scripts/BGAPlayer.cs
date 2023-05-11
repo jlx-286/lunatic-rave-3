@@ -12,7 +12,7 @@ public class BGAPlayer : MonoBehaviour {
     private Timer timer;
     private bool toDisable = false;
     private readonly ushort[] bgi_nums = new ushort[]{0,0,0,0};
-	private void Start(){
+	private void OnEnable(){
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.pauseStateChanged += _ => {
             int do_pause = (int)_ ^ 1;

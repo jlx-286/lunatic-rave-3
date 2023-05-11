@@ -337,6 +337,12 @@ public class BMSReader : MonoBehaviour{
                     // }
                     file_lines[j] = null;
                 }
+                else if(Regex.IsMatch(file_lines[j], @"^#RANK\s", StaticClass.regexOption)){
+                    file_lines[j] = file_lines[j].Substring(6).TrimStart();
+                    if(!byte.TryParse(file_lines[j], out BMSInfo.judge_rank)
+                        || BMSInfo.judge_rank > 4) BMSInfo.judge_rank = 2;
+                    file_lines[j] = null;
+                }
                 else if(Regex.IsMatch(file_lines[j], @"^#LNMODE\s+\d", StaticClass.regexOption)){
                     file_lines[j] = null;
                 }
