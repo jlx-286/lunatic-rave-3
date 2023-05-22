@@ -1,9 +1,15 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using UnityEngine;
 public class KeyLaser : MonoBehaviour{
     private KeyCode[] keyCodes;
     private bool[] pressed;
     public Canvas[] keys;
-    // private void OnEnable(){}
+    private byte[] keyLanes;
+    public NotePlayer notePlayer;
+    private byte lanesCount;
+    // private int[] audio_key_nums;
+    // private ushort[] clipNums;
+    // private ulong[] judgeWindow;
     private void Start(){
         if(BMSInfo.scriptType == ScriptType.BMS){
             keyCodes = new KeyCode[]{
@@ -16,19 +22,50 @@ public class KeyLaser : MonoBehaviour{
                 KeyCode.Semicolon, KeyCode.Slash,
                 // KeyCode.LeftBracket, KeyCode.RightBracket,
             };
+            keyLanes = new byte[]{
+                0, 0,
+                1, 2, 3, 4, 5, 6, 7,
+                9, 10, 11, 12, 13, 14, 15,
+                8, 8,
+            };
+            if(BMSInfo.playerType == PlayerType.Keys5 || BMSInfo.playerType == PlayerType.Keys7)
+                lanesCount = 8;
+            else lanesCount = 16;
         }else if(BMSInfo.scriptType == ScriptType.PMS){
             keyCodes = new KeyCode[]{
                 KeyCode.C, KeyCode.F, KeyCode.V, KeyCode.G, KeyCode.B,
                 KeyCode.H, KeyCode.N, KeyCode.J, KeyCode.M,
                 // KeyCode.T, KeyCode.Y,
             };
+            keyLanes = new byte[]{0, 1, 2, 3, 4, 5, 6, 7, 8};
+            lanesCount = 9;
         }
         pressed = new bool[keyCodes.Length];
+        /*audio_key_nums = Enumerable.Repeat(0, BMSInfo.note_list_lanes.Length).ToArray();
+        clipNums = Enumerable.Repeat<ushort>(36*36, audio_key_nums.Length).ToArray();
+        for(int i = 0; i < BMSInfo.note_list_lanes.Length; i++){
+            if(BMSInfo.note_list_lanes[i] != null && BMSInfo.note_list_lanes[i].Count > 0)
+                clipNums[i] = BMSInfo.note_list_lanes[i][0].clipNum;
+        }
+        judgeWindow = new ulong[MainVars.JudgeWindows[BMSInfo.judge_rank].Length];
+        for(int i = 0; i < judgeWindow.Length; i++)
+            judgeWindow[i] = 1000000ul * MainVars.JudgeWindows[BMSInfo.judge_rank][i];*/
     }
     private void FixedUpdate(){
+        /*for(int i = 0; i < BMSInfo.note_list_lanes.Length; i++){
+            while(BMSInfo.note_list_lanes[i] != null && BMSInfo.note_list_lanes[i].Count > 0 && audio_key_nums[i] < BMSInfo.note_list_lanes[i].Count){
+                if(BMSInfo.note_list_lanes[i][audio_key_nums[i]].time <= notePlayer.BMS_Player.playingTimeAsNanoseconds + judgeWindow[4]){
+                    clipNums[i] = BMSInfo.note_list_lanes[i][audio_key_nums[i]].clipNum;
+                    audio_key_nums[i]++;
+                }else{
+                    // audio_key_nums[i]++;
+                    break;
+                }
+            }
+        }*/
         for(int i = 0; i < keyCodes.Length; i++){
             if(!pressed[i] && Input.GetKey(keyCodes[i])){
-                // Debug.Log($"down:{keyCodes[i]}");
+                // MainMenu.audioSources[clipNums[keyLanes[i] % lanesCount]].Play();
                 pressed[i] = keys[i].enabled = true;
             }else if(pressed[i] && !Input.GetKey(keyCodes[i])){
                 // Debug.Log($"up:{keyCodes[i]}");

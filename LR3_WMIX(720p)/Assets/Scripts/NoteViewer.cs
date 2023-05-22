@@ -7,22 +7,20 @@ public class NoteViewer : MonoBehaviour{
     public RectTransform mask;
     [HideInInspector] public float downSpeed = float.NaN;// height per ms
     private BMSPlayer BMS_Player;
-    private byte laneNum = byte.MaxValue;
     private Image[] NoteForms;
     private Image[] LNStartForms;
     private Image[] LNEndForms;
     private Image[] LNCenterForms;
     private LinkedList<Image>[] lanes_notes;
-    private int v_note_id = 0;
+    private int[] v_note_ids;
     private KeyState[] laneKeyStates;
-    // private List<RectTransform> pageLanes = new List<RectTransform>(18);
     private const uint ns_per_ms = 1000000u;
     [HideInInspector] public ulong offset;
     [HideInInspector] public float maskHeight;
     // private bool no_key_notes = false;
     [HideInInspector] public float yTime;
     private readonly byte[] noteImgsLane = Enumerable.Repeat(byte.MaxValue, byte.MaxValue).ToArray();
-    private void OnEnable(){
+    private void Awake(){
         BMS_Player = notePlayer.BMS_Player;
         laneKeyStates = Enumerable.Repeat(KeyState.Free, notePlayer.lanes.Length).ToArray();
         lanes_notes = new LinkedList<Image>[notePlayer.lanes.Length];
@@ -31,8 +29,6 @@ public class NoteViewer : MonoBehaviour{
         offset = (ulong)MainVars.GreenNumber * ns_per_ms;
         maskHeight = mask.rect.height + 21;
         yTime = Time.fixedDeltaTime * -1000;
-        for(int i = 0; i < lanes_notes.Length; i++)
-            lanes_notes[i] = new LinkedList<Image>();
         switch(BMSInfo.scriptType){
             case ScriptType.BMS:
                 NoteForms = MainVars.BMSNoteForms;
@@ -55,6 +51,16 @@ public class NoteViewer : MonoBehaviour{
                 noteImgsLane[1] = noteImgsLane[3] = noteImgsLane[5] = noteImgsLane[7] = 1;
                 break;
         }
+        v_note_ids = Enumerable.Repeat(0, lanes_notes.Length).ToArray();
+        for(int i = 0; i < lanes_notes.Length; i++){
+            lanes_notes[i] = new LinkedList<Image>();
+            while(v_note_ids[i] < BMSInfo.note_list_lanes[i].Count && BMSInfo.note_list_lanes[i][v_note_ids[i]].time <= offset){
+                lanes_notes[i].AddLast(Instantiate<Image>(NoteForms[noteImgsLane[i]], notePlayer.lanes[i], false));
+                lanes_notes[i].Last.Value.rectTransform.Translate(0,
+                    ((offset - BMSInfo.note_list_lanes[i][v_note_ids[i]].time) / offset) * -mask.rect.height, 0);
+                v_note_ids[i]++;
+            }
+        }
     }
     private void OnDestroy(){
         for(int i = 0; i < lanes_notes.Length; i++)
@@ -62,45 +68,44 @@ public class NoteViewer : MonoBehaviour{
     }
     private void FixedUpdate(){
         if(BMS_Player.escaped) return;
-        while(v_note_id < BMSInfo.note_list_table.Count && BMSInfo.note_list_table[v_note_id].time <= BMS_Player.playingTimeAsNanoseconds + offset){
-            laneNum = notePlayer.laneDict[(byte)BMSInfo.note_list_table[v_note_id].channel];
-            lanes_notes[laneNum].AddLast(Instantiate<Image>(NoteForms[noteImgsLane[laneNum]], notePlayer.lanes[laneNum], false));
-            /*switch(BMSInfo.note_list_table[v_note_id].noteType){
-                case NoteType.Longnote:
-                    if(laneKeyStates[laneNum] == KeyState.Free){
-                        laneKeyStates[laneNum] = KeyState.Hold;
-                        lanes_notes[laneNum].AddLast(Instantiate<Image>(
-                            LNCenterForms[noteImgsLane[laneNum]],
-                            notePlayer.lanes[laneNum], false));
-                        lanes_notes[laneNum].AddLast(Instantiate<Image>(
-                            LNStartForms[noteImgsLane[laneNum]],
-                            notePlayer.lanes[laneNum], false));
-                    }
-                    else if(laneKeyStates[laneNum] == KeyState.Hold){
-                        laneKeyStates[laneNum] = KeyState.Free;
-                        lanes_notes[laneNum].AddLast(Instantiate<Image>(
-                            LNEndForms[noteImgsLane[laneNum]],
-                            notePlayer.lanes[laneNum], false));
-                    }
-                    break;
-                case NoteType.Default:
-                    if(laneKeyStates[laneNum] == KeyState.Free){
-                        lanes_notes[laneNum].AddLast(Instantiate<Image>(
-                            NoteForms[noteImgsLane[laneNum]],
-                            notePlayer.lanes[laneNum], false));
-                    }
-                    else if(laneKeyStates[laneNum] == KeyState.Hold){
-                        laneKeyStates[laneNum] = KeyState.Free;
-                        lanes_notes[laneNum].AddLast(Instantiate<Image>(
-                            LNEndForms[noteImgsLane[laneNum]],
-                            notePlayer.lanes[laneNum], false));
-                    }
-                    break;
-                default: break;
-            }*/
-            v_note_id++;
-        }
         for(int i = 0; i < lanes_notes.Length; i++){
+            while(v_note_ids[i] < BMSInfo.note_list_lanes[i].Count && BMSInfo.note_list_lanes[i][v_note_ids[i]].time <= BMS_Player.playingTimeAsNanoseconds + offset){
+                lanes_notes[i].AddLast(Instantiate<Image>(NoteForms[noteImgsLane[i]], notePlayer.lanes[i], false));
+                /*switch(BMSInfo.note_list_lanes[i][v_note_ids[i]].noteType){
+                    case NoteType.Longnote:
+                        if(laneKeyStates[i] == KeyState.Free){
+                            laneKeyStates[i] = KeyState.Hold;
+                            lanes_notes[i].AddLast(Instantiate<Image>(
+                                LNCenterForms[noteImgsLane[i]],
+                                notePlayer.lanes[i], false));
+                            lanes_notes[i].AddLast(Instantiate<Image>(
+                                LNStartForms[noteImgsLane[i]],
+                                notePlayer.lanes[i], false));
+                        }
+                        else if(laneKeyStates[i] == KeyState.Hold){
+                            laneKeyStates[i] = KeyState.Free;
+                            lanes_notes[i].AddLast(Instantiate<Image>(
+                                LNEndForms[noteImgsLane[i]],
+                                notePlayer.lanes[i], false));
+                        }
+                        break;
+                    case NoteType.Default:
+                        if(laneKeyStates[i] == KeyState.Free){
+                            lanes_notes[i].AddLast(Instantiate<Image>(
+                                NoteForms[noteImgsLane[i]],
+                                notePlayer.lanes[i], false));
+                        }
+                        else if(laneKeyStates[i] == KeyState.Hold){
+                            laneKeyStates[i] = KeyState.Free;
+                            lanes_notes[i].AddLast(Instantiate<Image>(
+                                LNEndForms[noteImgsLane[i]],
+                                notePlayer.lanes[i], false));
+                        }
+                        break;
+                    default: break;
+                }*/
+                v_note_ids[i]++;
+            }
             for(LinkedListNode<Image> note = lanes_notes[i].Last; note != null; note = note.Previous){
                 /*if(laneKeyStates[i] == KeyState.Hold && note == lanes_notes[i].Last){
                     note.Value.rectTransform.Translate(0, yTime * downSpeed, 0);

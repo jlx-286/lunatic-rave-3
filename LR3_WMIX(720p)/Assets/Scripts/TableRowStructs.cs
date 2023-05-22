@@ -22,13 +22,10 @@ using System.Runtime.InteropServices;
 }
 [StructLayout(LayoutKind.Explicit)] public struct NoteTimeRow{
 	[FieldOffset(0)] public ulong time;
-	[FieldOffset(sizeof(ulong))] public NoteChannel channel;
-	[FieldOffset(sizeof(ulong) + sizeof(NoteChannel))]
-	public ushort clipNum;
-	[FieldOffset(sizeof(ulong) + sizeof(NoteChannel) + sizeof(ushort))]
-	public NoteType noteType;
-    public NoteTimeRow(ulong t, NoteChannel ch, ushort num, NoteType tp){
-        time = t; channel = ch; clipNum = num; noteType = tp;
+	[FieldOffset(sizeof(ulong))] public ushort clipNum;
+	[FieldOffset(sizeof(ulong) + sizeof(ushort))] public NoteType noteType;
+    public NoteTimeRow(ulong t, ushort num, NoteType tp){
+        time = t; clipNum = num; noteType = tp;
     }
 }
 [StructLayout(LayoutKind.Explicit)] public struct BGMTimeRow{

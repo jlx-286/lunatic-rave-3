@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.UI;
@@ -27,13 +27,13 @@ public class MainVars : MonoBehaviour{// Game Manager
     public static AudioLowPassFilter lowPassFilter;
     public static AudioReverbFilter reverbFilter;
     public static short GreenNumber = 573;
-    public static readonly ushort[,] JudgeWindows = {
+    public static readonly ushort[][] JudgeWindows = new ushort[][]{
         //{PG,GR,GD,BD,PR}
-        { 8,24, 40,200,1000},//v.hard
-        {15,30, 60,200,1000},//hard
-        {18,40,100,200,1000},//normal
-        {21,60,120,200,1000},//easy
-        {26,75,150,200,1000},//v.easy
+        new ushort[]{ 8,24, 40,200,1000},//v.hard
+        new ushort[]{15,30, 60,200,1000},//hard
+        new ushort[]{18,40,100,200,1000},//normal
+        new ushort[]{21,60,120,200,1000},//easy
+        new ushort[]{26,75,150,200,1000},//v.easy
     };
     /*public static decimal[,] Increases = {
         //{EP,Miss,BD,GD,GR,PG}
@@ -77,6 +77,7 @@ public class MainVars : MonoBehaviour{// Game Manager
     public static Image[] pMSLNStartForms;
     public static Image[] pMSLNCenterForms;
     public static Image[] pMSLNEndForms;
+    public static RandomNumberGenerator rng = null;
     private void Start(){
         MeterForm = meter_form;
         BMSNoteForms = bms_note_forms;
@@ -97,7 +98,8 @@ public class MainVars : MonoBehaviour{// Game Manager
         reverbFilter = this.gameObject.GetComponent<AudioReverbFilter>();
         // FluidManager.Init(Application.streamingAssetsPath + "/FluidR3_GM.sf2");
         // FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 1000d, 3d);
-        FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 2.8d);
+        // FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 2.8d);
+        rng = RandomNumberGenerator.Create();
     }
 	/*private void Update(){
         if(Time.realtimeSinceStartup >= StaticClass.OverFlowTime
@@ -114,8 +116,8 @@ public class MainVars : MonoBehaviour{// Game Manager
         }
     }*/
     private void OnApplicationQuit(){
-        StaticClass.rng.Dispose();
-        FluidManager.CleanUp();
+        rng.Dispose();
+        // FluidManager.CleanUp();
         VLCPlayer.VLCRelease();
         StaticClass.FFmpegCleanUp();
         BMSInfo.CleanUp();

@@ -43,7 +43,7 @@ public enum NoteType : byte{
     LongnoteStart, LongnoteEnd,
     LNChannel, LNOBJ, Longnote,// HCN,
 }
-public enum NoteChannel : byte{
+/*public enum NoteChannel : byte{
     BMS_P1_Key1 = 0x11, BMS_P1_Key2 = 0x12, BMS_P1_Key3 = 0x13, BMS_P1_Key4 = 0x14,
     BMS_P1_Key5 = 0x15, BMS_P1_Scratch = 0x16, BMS_P1_Key6 = 0x18, BMS_P1_Key7 = 0x19,
     BMS_P1_Pedal = 0x17, BMS_P1_FreeZone = 0x17, BMS_P2_Pedal = 0x27, BMS_P2_FreeZone = 0x17,
@@ -54,7 +54,7 @@ public enum NoteChannel : byte{
     PMS_P1_Key6 = 0x18, PMS_P1_Key7 = 0x19, PMS_P1_Key8 = 0x16, PMS_P1_Key9 = 0x17,
     PMS_P2_Key1 = 0x21, PMS_P2_Key2 = 0x22, PMS_P2_Key3 = 0x23, PMS_P2_Key4 = 0x24, PMS_P2_Key5 = 0x25,
     PMS_P2_Key6 = 0x28, PMS_P2_Key7 = 0x29, PMS_P2_Key8 = 0x26, PMS_P2_Key9 = 0x27,
-}
+}*/
 public enum GaugeType : byte{
     Assisted = 0, AssistedEasy = 0, Easy = 1,
     Normal = 2, Off = 2, Groove = 2,

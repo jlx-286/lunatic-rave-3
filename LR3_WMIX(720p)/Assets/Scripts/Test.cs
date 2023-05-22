@@ -16,7 +16,7 @@ public unsafe class Test : MonoBehaviour {
     public Button play_b;
     public AudioSource audioSource;
     public RawImage rawImage;
-    public GameObject gm;
+    public TestThread gm;
     // private IntPtr player;
     // private int offset = 0;
     //private byte count;
@@ -31,7 +31,7 @@ public unsafe class Test : MonoBehaviour {
 // #if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
 //     private uint tex_name = 0;
 // #endif
-    private string TruncateGauge(decimal m){
+    /*private string TruncateGauge(decimal m){
         if(m >= 100) return "100.0";
         else if(m < 0.1m) return "0.0";
         return (decimal.Truncate(m * 10) / 10).ToString("F1");
@@ -78,7 +78,7 @@ public unsafe class Test : MonoBehaviour {
     }
     private void OnEnable() {
         Debug.Log("OnEnable");
-    }
+    }*/
     // Start is called before the first frame update
     private void Start(){
         //count = 16;
@@ -95,7 +95,8 @@ public unsafe class Test : MonoBehaviour {
         // + "333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"
         // + "333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"
         ;*/
-        const int count = 400000;
+        // const int count = 400000;
+        gm.Init();
         /*const int width = 16, height = 16;
         Texture2D t2d = Texture2D.blackTexture;
         void* ptr = null;
@@ -112,7 +113,7 @@ public unsafe class Test : MonoBehaviour {
         t2d = Texture2D.CreateExternalTexture(width, height,
             TextureFormat.RGBA32, false, false, (IntPtr)tex_name);
         t2d.filterMode = FilterMode.Point;*/
-        Stopwatch sw = new Stopwatch();
+        /*Stopwatch sw = new Stopwatch();
         string s;
         const decimal m = 99.99m;
         // Debug.Log(Gauge(m));
@@ -140,7 +141,7 @@ public unsafe class Test : MonoBehaviour {
         for(int i = 0; i < count; i++)
             s = TruncateGauge(m);
         sw.Stop();
-        Debug.Log(sw.ElapsedTicks);
+        Debug.Log(sw.ElapsedTicks);*/
         /*sw.Restart();
         for(int i = 0; i < count; i++){
             GL_libs.BindTexture(tex_name);
@@ -247,8 +248,8 @@ public unsafe class Test : MonoBehaviour {
         //}
     }*/
     private void OnApplicationQuit(){
-        StaticClass.rng.Dispose();
-        FluidManager.CleanUp();
+        // StaticClass.rng.Dispose();
+        // FluidManager.CleanUp();
         VLCPlayer.VLCRelease();
 // #if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
 //         fixed(uint* p = &tex_name)

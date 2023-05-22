@@ -208,7 +208,6 @@ public unsafe static class StaticClass{
         }
         return res;
     }
-    public static readonly RandomNumberGenerator rng = RandomNumberGenerator.Create();
     public static BigInteger NextBigInteger(this System.Random random, BigInteger max){
         if(max < 1) return 0;
         if(max == 1) return 1;

@@ -60,7 +60,8 @@ public unsafe static class VLCPlayer{
         NativeArray<byte> arr = BMSInfo.textures[num].GetRawTextureData<byte>();
         StaticClass.memset(arr.GetUnsafePtr(), 0, (IntPtr)arr.Length);
 #else
-        Array.Clear(tex_pixels, 0, tex_pixels.Length);
+        fixed(void* p = tex_pixels[num])
+            StaticClass.memset(p, 0, (IntPtr)tex_pixels[num].LongLength);
 #endif
     }
     [DllImport(PluginName)] private extern static UIntPtr libvlc_new(

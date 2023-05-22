@@ -26,10 +26,10 @@ public class BMSPlayer : MonoBehaviour {
     [HideInInspector] public bool escaped { get; internal set; } = false;
     [HideInInspector] public int bgm_table_row = 0;
     [HideInInspector] public int bga_table_row = 0;
-    [HideInInspector] public int row_key = 0;
+    [HideInInspector] public ulong row_key = 0;
     [HideInInspector] public int bpm_table_row = 0;
     [HideInInspector] public int stop_table_row = 0;
-    private void OnEnable(){
+    private void Awake(){
         MainVars.cur_scene_name = BMSInfo.playing_scene_name;
         title_text.text = BMSInfo.title;
         for(byte a = 0; a < sliders.Length; a++){
@@ -56,6 +56,8 @@ public class BMSPlayer : MonoBehaviour {
         //     // Debug.Log(timeLeft);
         //     toUpdate = true;
         // }, null, 0, 1000);
+    }
+    private void Start(){
         StartCoroutine(SetTimeLeft());
     }
     private void Update(){
@@ -86,7 +88,7 @@ public class BMSPlayer : MonoBehaviour {
         //     }
         // }
         if(!no_bgm_notes && !no_key_notes && !no_bgi && !no_bpm_notes && !no_stop_notes){
-            if(row_key >= BMSInfo.note_list_table.Count
+            if(row_key >= BMSInfo.note_count
                 && bgm_table_row >= BMSInfo.bgm_list_table.Count
                 && bga_table_row >= BMSInfo.bga_list_table.Count
                 && bpm_table_row >= BMSInfo.bpm_list_table.Count

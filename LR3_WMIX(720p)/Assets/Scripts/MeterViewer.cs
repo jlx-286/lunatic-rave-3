@@ -10,7 +10,7 @@ public class MeterViewer : MonoBehaviour{
     private ushort m_count = 0;
     private BMSPlayer BMS_Player;
     private const uint ns_per_ms = 1000000u;
-    private void OnEnable(){
+    private void Awake(){
         BMS_Player = viewer.notePlayer.BMS_Player;
         meter_form = Instantiate<Image>(MainVars.MeterForm, this.GetComponent<RectTransform>());
         meter_form.rectTransform.sizeDelta = new Vector2(position.rect.width,

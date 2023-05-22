@@ -55,7 +55,7 @@ public class BMSReader : MonoBehaviour{
     private Fraction32 fraction32;
     private NoteType noteType;
     private ChannelType channelType;
-    private PlayerType playerType = PlayerType.Keys5;
+    private readonly byte[] laneMap = Enumerable.Repeat(byte.MaxValue, byte.MaxValue).ToArray();
     private ChannelEnum channelEnum = ChannelEnum.Default;
     private string[] file_lines = null;
     string message = string.Empty;
@@ -168,7 +168,7 @@ public class BMSReader : MonoBehaviour{
                         random_nums.Pop();
                     }
                     BigInteger.TryParse(file_lines[j].Substring(7).TrimStart(), out k);
-                    if(k > 0) random_nums.Push(StaticClass.rng.NextBigInteger(k));
+                    if(k > 0) random_nums.Push(MainVars.rng.NextBigInteger(k));
                     else random_nums.Push(0);
                     ifs_count.Push(0);
                     file_lines[j] = null;
@@ -1283,7 +1283,7 @@ public class BMSReader : MonoBehaviour{
                 }
                 else if(hex_digits == 0){
                     // u = StaticClass.Convert36To10(file_lines[j].Substring(4, 2));
-                    Debug.Log(file_lines[j].Substring(4, 2));
+                    // Debug.Log(file_lines[j].Substring(4, 2));
                 }
             }
         }
@@ -1303,7 +1303,7 @@ public class BMSReader : MonoBehaviour{
             }
         }
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
-        Debug.Log("sorting");
+        // Debug.Log("sorting");
         if(BMSInfo.bgm_list_table.Count > 1){
             // Debug.Log(BMSInfo.bgm_list_table.Count);
             // BMSInfo.bgm_list_table = BMSInfo.bgm_list_table.Distinct((a, b) => a.time == b.time && a.clipNum == b.clipNum).ToList();
@@ -1338,24 +1338,27 @@ public class BMSReader : MonoBehaviour{
         }
         if(BMSInfo.bga_list_table.Count > 0 && BMSInfo.totalTimeAsNanoseconds < BMSInfo.bga_list_table.Last().time)
             BMSInfo.totalTimeAsNanoseconds = BMSInfo.bga_list_table.Last().time;
-        if(BMSInfo.note_list_table.Count > 1){
-            // Debug.Log(BMSInfo.note_list_table.Count);
-            // BMSInfo.note_list_table = BMSInfo.note_list_table.Distinct((a, b) => a.time == b.time && a.channel == b.channel).ToList();
-            BMSInfo.note_list_table.Sort((x, y) => {
-                if(x.time != y.time)
-                    return x.time.CompareTo(y.time);
-                if(x.channel != y.channel)
-                    return x.channel.CompareTo(y.channel);
-                return 0;
-            });
-            // BMSInfo.note_list_table = BMSInfo.note_list_table.GroupBy(v => new {v.time, v.channel}).Select(v => v.First()).ToList();
-            Debug.Log(BMSInfo.note_list_table.Count);
-            BMSInfo.incr = BMSInfo.total / BMSInfo.note_list_table.Count(v =>
-                v.noteType == NoteType.Default || v.noteType == NoteType.Longnote);
-            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
+        // Debug.Log(BMSInfo.note_count);
+        for(int i = 0; i < BMSInfo.note_list_lanes.Length; i++){
+            if(BMSInfo.note_list_lanes[i].Count > 1){
+                // BMSInfo.note_list_lanes[i] = BMSInfo.note_list_lanes[i].Distinct((a, b) => a.time == b.time && a.channel == b.channel).ToList();
+                BMSInfo.note_list_lanes[i].Sort((x, y)=>{
+                    if(x.time != y.time)
+                        return x.time.CompareTo(y.time);
+                    return 0;
+                });
+                // BMSInfo.note_list_lanes[i] = BMSInfo.note_list_lanes[i].GroupBy(v => new {v.time, v.channel}).Select(v => v.First()).ToList();
+            }
+            if(BMSInfo.note_list_lanes[i].Count > 0){
+                BMSInfo.totalTimeAsNanoseconds = Math.Max(BMSInfo.
+                    totalTimeAsNanoseconds, BMSInfo.note_list_lanes[i].Last().time);
+                BMSInfo.note_count += (uint)BMSInfo.note_list_lanes[i].Count(v =>
+                    v.noteType == NoteType.Default || v.noteType == NoteType.Longnote);
+            }
         }
-        if(BMSInfo.note_list_table.Count > 0 && BMSInfo.totalTimeAsNanoseconds < BMSInfo.note_list_table.Last().time)
-            BMSInfo.totalTimeAsNanoseconds = BMSInfo.note_list_table.Last().time;
+        // Debug.Log(BMSInfo.note_count);
+        BMSInfo.incr = BMSInfo.total / BMSInfo.note_count;
+        GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
         if(BMSInfo.bpm_list_table.Count > 1){
             // Debug.Log(BMSInfo.bpm_list_table.Count);
             // BMSInfo.bpm_list_table = BMSInfo.bpm_list_table.Distinct((a, b) => a.time == b.time).ToList();
@@ -1449,6 +1452,25 @@ public class BMSReader : MonoBehaviour{
             wav_names[i] = bmp_names[i] = null;
     }
     private void BMS_region(){
+        laneMap[0x11] = laneMap[0x51] = laneMap[0xD1] = 1;
+        laneMap[0x12] = laneMap[0x52] = laneMap[0xD2] = 2;
+        laneMap[0x13] = laneMap[0x53] = laneMap[0xD3] = 3;
+        laneMap[0x14] = laneMap[0x54] = laneMap[0xD4] = 4;
+        laneMap[0x15] = laneMap[0x55] = laneMap[0xD5] = 5;
+        laneMap[0x16] = laneMap[0x56] = laneMap[0xD6] = 0;
+        laneMap[0x18] = laneMap[0x58] = laneMap[0xD8] = 6;
+        laneMap[0x19] = laneMap[0x59] = laneMap[0xD9] = 7;
+        laneMap[0x21] = laneMap[0x61] = laneMap[0xE1] = 9;
+        laneMap[0x22] = laneMap[0x62] = laneMap[0xE2] = 10;
+        laneMap[0x23] = laneMap[0x63] = laneMap[0xE3] = 11;
+        laneMap[0x24] = laneMap[0x64] = laneMap[0xE4] = 12;
+        laneMap[0x25] = laneMap[0x65] = laneMap[0xE5] = 13;
+        laneMap[0x26] = laneMap[0x66] = laneMap[0xE6] = 8;
+        laneMap[0x28] = laneMap[0x68] = laneMap[0xE8] = 14;
+        laneMap[0x29] = laneMap[0x69] = laneMap[0xE9] = 15;
+        BMSInfo.note_list_lanes = new List<NoteTimeRow>[16];
+        for(int i = 0; i < 16; i++)
+            BMSInfo.note_list_lanes[i] = new List<NoteTimeRow>();
         for(int j = 0; j < file_lines.Length; j++){
             if(file_lines[j] == null) continue;
             if(Regex.IsMatch(file_lines[j], @"^#\d{3}[\d\w]{2}:[\d\w]{2,}", StaticClass.regexOption)){
@@ -1499,8 +1521,8 @@ public class BMSReader : MonoBehaviour{
                                         }
                                     }
                                 }
-                                BMSInfo.note_list_table.Add(new NoteTimeRow(track == 0 ? trackOffset_ns + stopLen :
-                                    BMSInfo.track_end_time_as_ns[track - 1] + trackOffset_ns + stopLen, (NoteChannel)hex_digits, u, noteType));
+                                BMSInfo.note_list_lanes[laneMap[hex_digits]].Add(new NoteTimeRow(track == 0 ? trackOffset_ns + stopLen :
+                                    BMSInfo.track_end_time_as_ns[track - 1] + trackOffset_ns + stopLen, u, noteType));
                             }
                         }
                     }
@@ -1552,8 +1574,8 @@ public class BMSReader : MonoBehaviour{
                                     }
                                 }
                                 //curr_bpm = temp_bpm_index[0].BPM;
-                                BMSInfo.note_list_table.Add(new NoteTimeRow(track == 0 ? trackOffset_ns + stopLen :
-                                    BMSInfo.track_end_time_as_ns[track - 1] + trackOffset_ns + stopLen, (NoteChannel)hex_digits, u, noteType));
+                                BMSInfo.note_list_lanes[laneMap[hex_digits]].Add(new NoteTimeRow(track == 0 ? trackOffset_ns + stopLen :
+                                    BMSInfo.track_end_time_as_ns[track - 1] + trackOffset_ns + stopLen, u, noteType));
                             }
                         }
                     }
@@ -1585,8 +1607,8 @@ public class BMSReader : MonoBehaviour{
                                             }
                                         }
                                     }
-                                    BMSInfo.note_list_table.Add(new NoteTimeRow(track == 0 ? trackOffset_ns + stopLen :
-                                        BMSInfo.track_end_time_as_ns[track - 1] + trackOffset_ns + stopLen, (NoteChannel)hex_digits, u, noteType));
+                                    BMSInfo.note_list_lanes[laneMap[hex_digits]].Add(new NoteTimeRow(track == 0 ? trackOffset_ns + stopLen :
+                                        BMSInfo.track_end_time_as_ns[track - 1] + trackOffset_ns + stopLen, u, noteType));
                                 }
                                 else{
                                     trackOffset_ns = ConvertOffset(track, curr_bpm, temp_bpm_index[0].measure);
@@ -1608,8 +1630,8 @@ public class BMSReader : MonoBehaviour{
                                                     stopIndex++;
                                                 }
                                             }
-                                            BMSInfo.note_list_table.Add(new NoteTimeRow(track == 0 ? trackOffset_ns + stopLen :
-                                                BMSInfo.track_end_time_as_ns[track - 1] + trackOffset_ns + stopLen, (NoteChannel)hex_digits, u, noteType));
+                                            BMSInfo.note_list_lanes[laneMap[hex_digits]].Add(new NoteTimeRow(track == 0 ? trackOffset_ns + stopLen :
+                                                BMSInfo.track_end_time_as_ns[track - 1] + trackOffset_ns + stopLen, u, noteType));
                                             break;
                                         }
                                         trackOffset_ns += ConvertOffset(track, curr_bpm,
@@ -1632,8 +1654,8 @@ public class BMSReader : MonoBehaviour{
                                                 stopIndex++;
                                             }
                                         }
-                                        BMSInfo.note_list_table.Add(new NoteTimeRow(track == 0 ? trackOffset_ns + stopLen :
-                                            BMSInfo.track_end_time_as_ns[track - 1] + trackOffset_ns + stopLen, (NoteChannel)hex_digits, u, noteType));
+                                        BMSInfo.note_list_lanes[laneMap[hex_digits]].Add(new NoteTimeRow(track == 0 ? trackOffset_ns + stopLen :
+                                            BMSInfo.track_end_time_as_ns[track - 1] + trackOffset_ns + stopLen, u, noteType));
                                     }
                                 }
                             }
@@ -1658,29 +1680,45 @@ public class BMSReader : MonoBehaviour{
             file_lines[j] = null;
         }
         if((channelEnum & ChannelEnum.Has_2P_7) == ChannelEnum.Has_2P_7){
-            playerType = PlayerType.Keys14;
+            BMSInfo.playerType = PlayerType.Keys14;
             BMSInfo.playing_scene_name = "14k_Play";
         }
         else if((channelEnum & ChannelEnum.Has_2P_5) == ChannelEnum.Has_2P_5){
             if((channelEnum & ChannelEnum.Has_1P_7) == ChannelEnum.Has_1P_7){
-                playerType = PlayerType.Keys14;
+                BMSInfo.playerType = PlayerType.Keys14;
                 BMSInfo.playing_scene_name = "14k_Play";
             }
             else{
-                playerType = PlayerType.Keys10;
+                BMSInfo.playerType = PlayerType.Keys10;
                 BMSInfo.playing_scene_name = "14k_Play";
             }
         }
         else if((channelEnum & ChannelEnum.Has_1P_7) == ChannelEnum.Has_1P_7){
-            playerType = PlayerType.Keys7;
+            BMSInfo.playerType = PlayerType.Keys7;
             BMSInfo.playing_scene_name = "7k_1P_Play";
         }
         else{
-            playerType = PlayerType.Keys5;
+            BMSInfo.playerType = PlayerType.Keys5;
             BMSInfo.playing_scene_name = "7k_1P_Play";
         }
     }
     private void PMS_region(){
+        laneMap[0x11] = laneMap[0x51] = laneMap[0xD1] = 0;
+        laneMap[0x12] = laneMap[0x52] = laneMap[0xD2] = 1;
+        laneMap[0x13] = laneMap[0x53] = laneMap[0xD3] = 2;
+        laneMap[0x14] = laneMap[0x54] = laneMap[0xD4] = 3;
+        laneMap[0x15] = laneMap[0x55] = laneMap[0xD5] = 4;
+        laneMap[0x16] = laneMap[0x56] = laneMap[0xD6] = 5;
+        laneMap[0x17] = laneMap[0x57] = laneMap[0xD7] = 6;
+        laneMap[0x18] = laneMap[0x58] = laneMap[0xD8] = 7;
+        laneMap[0x19] = laneMap[0x59] = laneMap[0xD9] = 8;
+        laneMap[0x22] = laneMap[0x62] = laneMap[0xE2] = 5;
+        laneMap[0x23] = laneMap[0x63] = laneMap[0xE3] = 6;
+        laneMap[0x24] = laneMap[0x64] = laneMap[0xE4] = 7;
+        laneMap[0x25] = laneMap[0x65] = laneMap[0xE5] = 8;
+        BMSInfo.note_list_lanes = new List<NoteTimeRow>[9];
+        for(int i = 0; i < 9; i++)
+            BMSInfo.note_list_lanes[i] = new List<NoteTimeRow>();
         for(int j = 0; j < file_lines.Length; j++){
             if(file_lines[j] == null) continue;
             if(Regex.IsMatch(file_lines[j], @"^#\d{3}[\d\w]{2}:[\d\w]{2,}", StaticClass.regexOption)){
@@ -1731,8 +1769,8 @@ public class BMSReader : MonoBehaviour{
                                         }
                                     }
                                 }
-                                BMSInfo.note_list_table.Add(new NoteTimeRow(track == 0 ? trackOffset_ns + stopLen :
-                                    BMSInfo.track_end_time_as_ns[track - 1] + trackOffset_ns + stopLen, (NoteChannel)hex_digits, u, noteType));
+                                BMSInfo.note_list_lanes[laneMap[hex_digits]].Add(new NoteTimeRow(track == 0 ? trackOffset_ns + stopLen :
+                                    BMSInfo.track_end_time_as_ns[track - 1] + trackOffset_ns + stopLen, u, noteType));
                             }
                         }
                     }
@@ -1784,8 +1822,8 @@ public class BMSReader : MonoBehaviour{
                                     }
                                 }
                                 //curr_bpm = temp_bpm_index[0].BPM;
-                                BMSInfo.note_list_table.Add(new NoteTimeRow(track == 0 ? trackOffset_ns + stopLen :
-                                    BMSInfo.track_end_time_as_ns[track - 1] + trackOffset_ns + stopLen, (NoteChannel)hex_digits, u, noteType));
+                                BMSInfo.note_list_lanes[laneMap[hex_digits]].Add(new NoteTimeRow(track == 0 ? trackOffset_ns + stopLen :
+                                    BMSInfo.track_end_time_as_ns[track - 1] + trackOffset_ns + stopLen, u, noteType));
                             }
                         }
                     }
@@ -1817,8 +1855,8 @@ public class BMSReader : MonoBehaviour{
                                             }
                                         }
                                     }
-                                    BMSInfo.note_list_table.Add(new NoteTimeRow(track == 0 ? trackOffset_ns + stopLen :
-                                        BMSInfo.track_end_time_as_ns[track - 1] + trackOffset_ns + stopLen, (NoteChannel)hex_digits, u, noteType));
+                                    BMSInfo.note_list_lanes[laneMap[hex_digits]].Add(new NoteTimeRow(track == 0 ? trackOffset_ns + stopLen :
+                                        BMSInfo.track_end_time_as_ns[track - 1] + trackOffset_ns + stopLen, u, noteType));
                                 }
                                 else{
                                     trackOffset_ns = ConvertOffset(track, curr_bpm, temp_bpm_index[0].measure);
@@ -1840,8 +1878,8 @@ public class BMSReader : MonoBehaviour{
                                                     stopIndex++;
                                                 }
                                             }
-                                            BMSInfo.note_list_table.Add(new NoteTimeRow(track == 0 ? trackOffset_ns + stopLen :
-                                                BMSInfo.track_end_time_as_ns[track - 1] + trackOffset_ns + stopLen, (NoteChannel)hex_digits, u, noteType));
+                                            BMSInfo.note_list_lanes[laneMap[hex_digits]].Add(new NoteTimeRow(track == 0 ? trackOffset_ns + stopLen :
+                                                BMSInfo.track_end_time_as_ns[track - 1] + trackOffset_ns + stopLen, u, noteType));
                                             break;
                                         }
                                         trackOffset_ns += ConvertOffset(track, curr_bpm,
@@ -1864,8 +1902,8 @@ public class BMSReader : MonoBehaviour{
                                                 stopIndex++;
                                             }
                                         }
-                                        BMSInfo.note_list_table.Add(new NoteTimeRow(track == 0 ? trackOffset_ns + stopLen :
-                                            BMSInfo.track_end_time_as_ns[track - 1] + trackOffset_ns + stopLen, (NoteChannel)hex_digits, u, noteType));
+                                        BMSInfo.note_list_lanes[laneMap[hex_digits]].Add(new NoteTimeRow(track == 0 ? trackOffset_ns + stopLen :
+                                            BMSInfo.track_end_time_as_ns[track - 1] + trackOffset_ns + stopLen, u, noteType));
                                     }
                                 }
                             }
@@ -1890,17 +1928,17 @@ public class BMSReader : MonoBehaviour{
             file_lines[j] = null;
         }
         if((channelEnum & ChannelEnum.BME_DP) == ChannelEnum.BME_DP)
-            playerType = PlayerType.BME_DP;
+            BMSInfo.playerType = PlayerType.BME_DP;
         else if((channelEnum & ChannelEnum.BME_SP) == ChannelEnum.BME_SP){
             if((channelEnum & ChannelEnum.PMS_DP) == ChannelEnum.PMS_DP)
-                playerType = PlayerType.BME_DP;
+                BMSInfo.playerType = PlayerType.BME_DP;
             else{
-                playerType = PlayerType.BME_SP;
+                BMSInfo.playerType = PlayerType.BME_SP;
                 BMSInfo.playing_scene_name = "9k_wide_play";
             }
         }
         else{
-            playerType = PlayerType.BMS_DP;
+            BMSInfo.playerType = PlayerType.BMS_DP;
             BMSInfo.playing_scene_name = "9k_wide_play";
         }
     }
