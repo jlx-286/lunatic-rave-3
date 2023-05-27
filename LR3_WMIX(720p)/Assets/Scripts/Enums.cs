@@ -41,7 +41,7 @@ public enum BGAChannel : byte{
 public enum NoteType : byte{
     Default = 0, Landmine, 
     LongnoteStart, LongnoteEnd,
-    LNChannel, LNOBJ, Longnote,// HCN,
+    LNChannel, LNOBJ,// Longnote, HCN,
 }
 /*public enum NoteChannel : byte{
     BMS_P1_Key1 = 0x11, BMS_P1_Key2 = 0x12, BMS_P1_Key3 = 0x13, BMS_P1_Key4 = 0x14,
@@ -70,9 +70,6 @@ public enum NoteJudge : byte{
     GR = 4, Great = 4, GD = 3, Good = 3,
     BD = 2, Bad = 2, Miss = 1,// combo break// PR = 1, Poor = 1,
     ExcessivePoor = 0,// 空Poor = 0, 空P = 0,
-}
-public enum KeyState : byte{
-    Free = 0, Hold = 3, // Down = 1, Up = 2,
 }
 /*public enum NoteImg : byte{
     white = 0, gray = 0, blue = 1, black = 1,

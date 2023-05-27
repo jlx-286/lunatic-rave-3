@@ -1340,21 +1340,55 @@ public class BMSReader : MonoBehaviour{
             BMSInfo.totalTimeAsNanoseconds = BMSInfo.bga_list_table.Last().time;
         // Debug.Log(BMSInfo.note_count);
         for(int i = 0; i < BMSInfo.note_list_lanes.Length; i++){
+            if(BMSInfo.note_list_lanes[i].Count < 1) continue;
             if(BMSInfo.note_list_lanes[i].Count > 1){
-                // BMSInfo.note_list_lanes[i] = BMSInfo.note_list_lanes[i].Distinct((a, b) => a.time == b.time && a.channel == b.channel).ToList();
+                // BMSInfo.note_list_lanes[i] = BMSInfo.note_list_lanes[i].Distinct((a, b) => a.time == b.time).ToList();
                 BMSInfo.note_list_lanes[i].Sort((x, y)=>{
                     if(x.time != y.time)
                         return x.time.CompareTo(y.time);
+                    if(x.noteType != y.noteType)
+                        return ((byte)x.noteType).CompareTo((byte)y.noteType);
                     return 0;
                 });
-                // BMSInfo.note_list_lanes[i] = BMSInfo.note_list_lanes[i].GroupBy(v => new {v.time, v.channel}).Select(v => v.First()).ToList();
+                BMSInfo.note_list_lanes[i] = BMSInfo.note_list_lanes[i].GroupBy(v => v.time).Select(v => v.First()).ToList();
+                for(int ii = 0; ii < BMSInfo.note_list_lanes[i].Count - 1; ii++){
+                    if(
+                        (
+                            BMSInfo.note_list_lanes[i][ii + 1].noteType == NoteType.LNOBJ && (
+                                BMSInfo.note_list_lanes[i][ii].noteType == NoteType.Default ||
+                                BMSInfo.note_list_lanes[i][ii].noteType == NoteType.LNOBJ ||
+                                BMSInfo.note_list_lanes[i][ii].noteType == NoteType.LNChannel
+                            )
+                        ) || (
+                            BMSInfo.note_list_lanes[i][ii].noteType == NoteType.LNChannel && (
+                                BMSInfo.note_list_lanes[i][ii + 1].noteType == NoteType.LNChannel ||
+                                BMSInfo.note_list_lanes[i][ii + 1].noteType == NoteType.LNOBJ ||
+                                BMSInfo.note_list_lanes[i][ii + 1].noteType == NoteType.Default
+                            )
+                        )
+                    ){
+                        BMSInfo.note_list_lanes[i][ii] = new NoteTimeRow(){
+                            time = BMSInfo.note_list_lanes[i][ii].time,
+                            clipNum = BMSInfo.note_list_lanes[i][ii].clipNum,
+                            noteType = NoteType.LongnoteStart,
+                        };
+                        ii++;
+                        BMSInfo.note_list_lanes[i][ii] = new NoteTimeRow(){
+                            time = BMSInfo.note_list_lanes[i][ii].time,
+                            clipNum = BMSInfo.note_list_lanes[i][ii].clipNum,
+                            noteType = NoteType.LongnoteEnd,
+                        };
+                    }
+                }
             }
-            if(BMSInfo.note_list_lanes[i].Count > 0){
-                BMSInfo.totalTimeAsNanoseconds = Math.Max(BMSInfo.
-                    totalTimeAsNanoseconds, BMSInfo.note_list_lanes[i].Last().time);
-                BMSInfo.note_count += (uint)BMSInfo.note_list_lanes[i].Count(v =>
-                    v.noteType == NoteType.Default || v.noteType == NoteType.Longnote);
+            NoteTimeRow t = BMSInfo.note_list_lanes[i].Last();
+            if(t.noteType == NoteType.LNOBJ || t.noteType == NoteType.LNChannel){
+                t.noteType = NoteType.Default;
+                BMSInfo.note_list_lanes[i][BMSInfo.note_list_lanes[i].Count  - 1] = t;
             }
+            BMSInfo.totalTimeAsNanoseconds = Math.Max(BMSInfo.totalTimeAsNanoseconds, t.time);
+            BMSInfo.note_count += (uint)BMSInfo.note_list_lanes[i].Count(v =>
+                v.noteType == NoteType.Default || v.noteType == NoteType.LongnoteStart || v.noteType == NoteType.LongnoteEnd);
         }
         // Debug.Log(BMSInfo.note_count);
         BMSInfo.incr = BMSInfo.total / BMSInfo.note_count;
@@ -1483,7 +1517,7 @@ public class BMSReader : MonoBehaviour{
                         continue;
                     }
                     else if(Regex.IsMatch(channel, @"^[56][1-9]$", StaticClass.regexOption)){
-                        noteType = NoteType.Longnote;
+                        noteType = NoteType.LNChannel;
                         channelType = ChannelType.Longnote;
                     }
                     else if(Regex.IsMatch(channel, @"^[12][1-9]$", StaticClass.regexOption)){
@@ -1507,7 +1541,7 @@ public class BMSReader : MonoBehaviour{
                                 else if(Regex.IsMatch(channel, @"^[26E][89]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.Has_2P_7;
                                 if(channelType == ChannelType.Default && lnobj[u - 1])
-                                    noteType = NoteType.Longnote;
+                                    noteType = NoteType.LNOBJ;
                                 else if(channelType == ChannelType.Default && !lnobj[u - 1])
                                     noteType = NoteType.Default;
                                 fraction32 = new Fraction32(i / 2, message.Length / 2);
@@ -1537,7 +1571,7 @@ public class BMSReader : MonoBehaviour{
                                 else if(Regex.IsMatch(channel, @"^[26E][89]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.Has_2P_7;
                                 if(channelType == ChannelType.Default && lnobj[u - 1])
-                                    noteType = NoteType.Longnote;
+                                    noteType = NoteType.LNOBJ;
                                 else if(channelType == ChannelType.Default && !lnobj[u - 1])
                                     noteType = NoteType.Default;
                                 stopLen = 0; stopIndex = 0;
@@ -1590,7 +1624,7 @@ public class BMSReader : MonoBehaviour{
                                 else if(Regex.IsMatch(channel, @"^[26E][89]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.Has_2P_7;
                                 if(channelType == ChannelType.Default && lnobj[u - 1])
-                                    noteType = NoteType.Longnote;
+                                    noteType = NoteType.LNOBJ;
                                 else if(channelType == ChannelType.Default && !lnobj[u - 1])
                                     noteType = NoteType.Default;
                                 trackOffset_ns = stopLen = 0; stopIndex = 0;
@@ -1731,7 +1765,7 @@ public class BMSReader : MonoBehaviour{
                         continue;
                     }
                     else if(Regex.IsMatch(channel, @"^[56][1-9]$", StaticClass.regexOption)){
-                        noteType = NoteType.Longnote;
+                        noteType = NoteType.LNChannel;
                         channelType = ChannelType.Longnote;
                     }
                     else if(Regex.IsMatch(channel, @"^[12][1-9]$", StaticClass.regexOption)){
@@ -1755,7 +1789,7 @@ public class BMSReader : MonoBehaviour{
                                 else if(Regex.IsMatch(channel, @"^[26E][16-9]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.BME_DP;
                                 if(channelType == ChannelType.Default && lnobj[u - 1])
-                                    noteType = NoteType.Longnote;
+                                    noteType = NoteType.LNOBJ;
                                 else if(channelType == ChannelType.Default && !lnobj[u - 1])
                                     noteType = NoteType.Default;
                                 fraction32 = new Fraction32(i / 2, message.Length / 2);
@@ -1785,7 +1819,7 @@ public class BMSReader : MonoBehaviour{
                                 else if(Regex.IsMatch(channel, @"^[26E][16-9]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.BME_DP;
                                 if(channelType == ChannelType.Default && lnobj[u - 1])
-                                    noteType = NoteType.Longnote;
+                                    noteType = NoteType.LNOBJ;
                                 else if(channelType == ChannelType.Default && !lnobj[u - 1])
                                     noteType = NoteType.Default;
                                 stopLen = 0; stopIndex = 0;
@@ -1838,7 +1872,7 @@ public class BMSReader : MonoBehaviour{
                                 else if(Regex.IsMatch(channel, @"^[26E][16-9]$", StaticClass.regexOption))
                                     channelEnum |= ChannelEnum.BME_DP;
                                 if(channelType == ChannelType.Default && lnobj[u - 1])
-                                    noteType = NoteType.Longnote;
+                                    noteType = NoteType.LNOBJ;
                                 else if(channelType == ChannelType.Default && !lnobj[u - 1])
                                     noteType = NoteType.Default;
                                 trackOffset_ns = stopLen = 0; stopIndex = 0;

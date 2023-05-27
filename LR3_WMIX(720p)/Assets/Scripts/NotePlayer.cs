@@ -21,13 +21,13 @@ public class NotePlayer : MonoBehaviour {
     private Image[] gaugeBars;
     private decimal inc = 0;
     private byte prev_bars = 10, now_bars = 10;
-    private KeyState[] laneKeyStates;
+    // private bool[] inLN;
     private void Awake(){
-        laneKeyStates = Enumerable.Repeat(KeyState.Free, lanes.Length).ToArray();
+        // inLN = Enumerable.Repeat(false, lanes.Length).ToArray();
         clipNums = Enumerable.Repeat<ushort>(36*36, lanes.Length).ToArray();
         judge_nums = Enumerable.Repeat<ulong>(0, judges.Length).ToArray();
         gaugeBars = gauge_bars.GetComponentsInChildren<Image>(true);
-        note_nums = Enumerable.Repeat(0, laneKeyStates.Length).ToArray();
+        note_nums = Enumerable.Repeat(0, lanes.Length).ToArray();
     }
 	//private void Update(){}
     private void FixedUpdate(){
@@ -37,25 +37,26 @@ public class NotePlayer : MonoBehaviour {
                 while(note_nums[i] < BMSInfo.note_list_lanes[i].Count){
                     if(BMSInfo.note_list_lanes[i][note_nums[i]].time <= BMS_Player.playingTimeAsNanoseconds){
                         switch(BMSInfo.note_list_lanes[i][note_nums[i]].noteType){
-                            case NoteType.Longnote:
-                                if(laneKeyStates[i] == KeyState.Free){
-                                    laneKeyStates[i] = KeyState.Hold;
-                                    clipNums[i] = BMSInfo.note_list_lanes[i][note_nums[i]].clipNum;
-                                    MainMenu.audioSources[clipNums[i]].Play();
-                                }
-                                else if(laneKeyStates[i] == KeyState.Hold){
-                                    laneKeyStates[i] = KeyState.Free;
-                                    if(clipNums[i] != BMSInfo.note_list_lanes[i][note_nums[i]].clipNum){
-                                        clipNums[i] = BMSInfo.note_list_lanes[i][note_nums[i]].clipNum;
-                                        MainMenu.audioSources[clipNums[i]].Play();
-                                    }
+                            case NoteType.LongnoteStart:
+                                // inLN[i] = true;
+                                clipNums[i] = BMSInfo.note_list_lanes[i][note_nums[i]].clipNum;
+                                MainMenu.audioSources[clipNums[i]].Play();
+                                toUpdateScore = true;
+                                judge_nums[(byte)NoteJudge.Perfect]++; score_num += 2; combo_nums++;
+                                inc += BMSInfo.incr;
+                                break;
+                            case NoteType.LongnoteEnd:
+                                // inLN[i] = false;
+                                if(clipNums[i] != BMSInfo.note_list_lanes[i][note_nums[i]].clipNum){
+                                    MainMenu.audioSources[BMSInfo.note_list_lanes[i][note_nums[i]].clipNum].Play();
+                                    // clipNums[i] = BMSInfo.note_list_lanes[i][note_nums[i]].clipNum;
                                 }
                                 toUpdateScore = true;
                                 judge_nums[(byte)NoteJudge.Perfect]++; score_num += 2; combo_nums++;
                                 inc += BMSInfo.incr;
                                 break;
                             case NoteType.Default:
-                                laneKeyStates[i] = KeyState.Free;
+                                // inLN[i] = false;
                                 clipNums[i] = BMSInfo.note_list_lanes[i][note_nums[i]].clipNum;
                                 MainMenu.audioSources[clipNums[i]].Play();
                                 toUpdateScore = true;
