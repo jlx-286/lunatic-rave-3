@@ -32,7 +32,20 @@ public class MainMenu : MonoBehaviour {
             }
         });
 	}
-	//private void Update(){}
+	/*private void Update(){
+        if(Time.realtimeSinceStartup >= StaticClass.OverFlowTime
+            || Time.unscaledTime >= StaticClass.OverFlowTime
+            || Time.fixedUnscaledTime >= StaticClass.OverFlowTime
+            || Time.time >= StaticClass.OverFlowTime
+            || Time.fixedTime >= StaticClass.OverFlowTime
+        ){
+#if UNITY_EDITOR
+            EditorApplication.isPlaying = false;
+#elif UNITY_STANDALONE
+            Application.Quit();
+#endif
+        }
+    }*/
     private bool LoadConfig(){
         string configPath = Application.dataPath + "/config.json";
         if(!File.Exists(configPath)) return false;
@@ -57,5 +70,16 @@ public class MainMenu : MonoBehaviour {
         if(!Directory.Exists(MainVars.Bms_root_dir)) return false;
         MainVars.bms_file_path = MainVars.Bms_root_dir;
         return true;
+    }
+    private void OnApplicationQuit(){
+        MainVars.rng.Dispose();
+        // FluidManager.CleanUp();
+        VLCPlayer.VLCRelease();
+        StaticClass.FFmpegCleanUp();
+        BMSInfo.CleanUp();
+        Resources.UnloadUnusedAssets();
+        // AssetBundle.UnloadAllAssetBundles(true);
+        GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, false);
+        Debug.Log("quit");
     }
 }

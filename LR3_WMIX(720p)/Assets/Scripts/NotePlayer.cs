@@ -1,4 +1,7 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 public class NotePlayer : MonoBehaviour {
@@ -21,6 +24,12 @@ public class NotePlayer : MonoBehaviour {
     private Image[] gaugeBars;
     private decimal inc = 0;
     private byte prev_bars = 10, now_bars = 10;
+    public Canvas judgeCanvas;
+    public TMP_Text curr_judge;
+    public TMP_Text comboText;
+    private Coroutine showJudge;
+    private readonly WaitForFixedUpdate waitForFixedUpdate = new WaitForFixedUpdate();
+    private readonly StringBuilder builder = new StringBuilder();
     // private bool[] inLN;
     private void Awake(){
         // inLN = Enumerable.Repeat(false, lanes.Length).ToArray();
@@ -28,6 +37,11 @@ public class NotePlayer : MonoBehaviour {
         judge_nums = Enumerable.Repeat<ulong>(0, judges.Length).ToArray();
         gaugeBars = gauge_bars.GetComponentsInChildren<Image>(true);
         note_nums = Enumerable.Repeat(0, lanes.Length).ToArray();
+    }
+    private void Start(){
+        showJudge = StartCoroutine(ShowJudge());
+        StopCoroutine(showJudge);
+        judgeCanvas.enabled = false;
     }
 	//private void Update(){}
     private void FixedUpdate(){
@@ -74,6 +88,8 @@ public class NotePlayer : MonoBehaviour {
             if(toUpdateScore){
                 judges[(byte)NoteJudge.Perfect].text = judge_nums[(byte)NoteJudge.Perfect].ToString();
                 score.text = score_num.ToString(); combo.text = combo_nums.ToString();
+                comboText.text = builder.ComboNumToTMP(in combo_nums, NoteJudge.Perfect);
+                curr_judge.text = StaticClass.judge_tmp[(byte)NoteJudge.Perfect];
                 if((gauge_val < 100 && inc > 0) ||
                     (gauge_val > 0.1m && inc < 0)){
                     gauge_val += inc;
@@ -94,7 +110,15 @@ public class NotePlayer : MonoBehaviour {
                 }
                 toUpdateScore = false;
                 inc = 0;
+                StopCoroutine(showJudge);
+                showJudge = StartCoroutine(ShowJudge());
             }
         }
+    }
+    private IEnumerator<WaitForFixedUpdate> ShowJudge(){
+        judgeCanvas.enabled = true;
+        for(ushort i = 0; i < 500u; i++)
+            yield return waitForFixedUpdate;
+        judgeCanvas.enabled = false;
     }
 }

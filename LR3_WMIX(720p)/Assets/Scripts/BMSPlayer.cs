@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-// using System.Threading;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -21,8 +20,7 @@ public class BMSPlayer : MonoBehaviour {
     private uint timeLeft = (uint)(BMSInfo.totalTimeAsNanoseconds / ns_per_sec) +
         (uint)(BMSInfo.totalTimeAsNanoseconds % ns_per_sec == 0 ? 0 : 1);
     public Text timeLeftText;
-    // private Timer timer;
-    // private bool toUpdate = false;
+    private readonly WaitForFixedUpdate waitForFixedUpdate = new WaitForFixedUpdate();
     [HideInInspector] public bool escaped { get; internal set; } = false;
     [HideInInspector] public int bgm_table_row = 0;
     [HideInInspector] public int bga_table_row = 0;
@@ -46,16 +44,6 @@ public class BMSPlayer : MonoBehaviour {
         }
         fixedDeltaTimeAsNanoseconds = (ulong)(Time.fixedDeltaTime * ns_per_sec);
         timeLeftText.text = timeLeft.ToString();
-        // timer = new Timer(obj => {
-        //     if(timeLeft == 0){
-        //         timer.Dispose();
-        //         timer = null;
-        //         return;
-        //     }
-        //     timeLeft--;
-        //     // Debug.Log(timeLeft);
-        //     toUpdate = true;
-        // }, null, 0, 1000);
     }
     private void Start(){
         StartCoroutine(SetTimeLeft());
@@ -69,10 +57,6 @@ public class BMSPlayer : MonoBehaviour {
             return;
         }
         if(!no_bgm_notes && !no_key_notes && !no_bgi && !no_bpm_notes && !no_stop_notes){
-            // if(toUpdate){
-            //     timeLeftText.text = timeLeft.ToString();
-            //     toUpdate = false;
-            // }
             for(byte a = 0; a < sliders.Length; a++)
                 sliders[a].value = playingTimeAsNanoseconds;
             //return;
@@ -102,16 +86,14 @@ public class BMSPlayer : MonoBehaviour {
     }
     private void OnDestroy(){
         StopAllCoroutines();
-        // timer.Dispose();
-        // timer = null;
     }
-    private IEnumerator<WaitForSeconds> SetTimeLeft(){
+    private IEnumerator<WaitForFixedUpdate> SetTimeLeft(){
         while(timeLeft > 0){
-            yield return new WaitForSeconds(1);
+            for(ushort i = 0; i < 1000u; i++)
+                yield return waitForFixedUpdate;
             timeLeft--;
             timeLeftText.text = timeLeft.ToString();
         }
-        // StopCoroutine(SetTimeLeft1());
         Debug.Log("this coroutine stopped");
         yield break;
     }

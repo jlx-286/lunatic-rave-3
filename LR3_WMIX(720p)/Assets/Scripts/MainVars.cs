@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.UI;
@@ -100,29 +98,5 @@ public class MainVars : MonoBehaviour{// Game Manager
         // FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 1000d, 3d);
         // FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 2.8d);
         rng = RandomNumberGenerator.Create();
-    }
-	/*private void Update(){
-        if(Time.realtimeSinceStartup >= StaticClass.OverFlowTime
-            || Time.unscaledTime >= StaticClass.OverFlowTime
-            || Time.fixedUnscaledTime >= StaticClass.OverFlowTime
-            || Time.time >= StaticClass.OverFlowTime
-            || Time.fixedTime >= StaticClass.OverFlowTime
-        ){
-#if UNITY_EDITOR
-            EditorApplication.isPlaying = false;
-#elif UNITY_STANDALONE
-            Application.Quit();
-#endif
-        }
-    }*/
-    private void OnApplicationQuit(){
-        rng.Dispose();
-        // FluidManager.CleanUp();
-        VLCPlayer.VLCRelease();
-        StaticClass.FFmpegCleanUp();
-        BMSInfo.CleanUp();
-        Resources.UnloadUnusedAssets();
-        // AssetBundle.UnloadAllAssetBundles(true);
-        GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, false);
     }
 }

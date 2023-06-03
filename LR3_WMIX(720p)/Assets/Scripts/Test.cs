@@ -17,8 +17,6 @@ public unsafe class Test : MonoBehaviour {
     public AudioSource audioSource;
     public RawImage rawImage;
     public TestThread gm;
-    // private IntPtr player;
-    // private int offset = 0;
     //private byte count;
     [StructLayout(LayoutKind.Explicit)] private struct TestDecimal{
         [FieldOffset(0)] public decimal value;
@@ -28,9 +26,6 @@ public unsafe class Test : MonoBehaviour {
         [FieldOffset((sizeof(uint)))] public readonly uint higher;
         [FieldOffset((sizeof(ulong)))] public readonly ulong lower;
     }
-// #if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
-//     private uint tex_name = 0;
-// #endif
     /*private string TruncateGauge(decimal m){
         if(m >= 100) return "100.0";
         else if(m < 0.1m) return "0.0";
@@ -75,11 +70,7 @@ public unsafe class Test : MonoBehaviour {
         }
         Debug.Log(*scale);
         return m.ToString();
-    }
-    private void OnEnable() {
-        Debug.Log("OnEnable");
     }*/
-    // Start is called before the first frame update
     private void Start(){
         //count = 16;
         // Debug.Log((int)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond) & int.MaxValue);
@@ -97,22 +88,6 @@ public unsafe class Test : MonoBehaviour {
         ;*/
         // const int count = 400000;
         gm.Init();
-        /*const int width = 16, height = 16;
-        Texture2D t2d = Texture2D.blackTexture;
-        void* ptr = null;
-        Color32[] color32s = new Color32[width * height];
-#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
-        fixed(uint* p = &tex_name){
-            GL_libs.glDeleteTextures(1, p);
-            tex_name = 0;
-            GL_libs.glGenTextures(1, p);
-        }
-        GL_libs.BindTexture(tex_name);
-        fixed(void* p = color32s)
-            GL_libs.TexImage2D(width, height, p);
-        t2d = Texture2D.CreateExternalTexture(width, height,
-            TextureFormat.RGBA32, false, false, (IntPtr)tex_name);
-        t2d.filterMode = FilterMode.Point;*/
         /*Stopwatch sw = new Stopwatch();
         string s;
         const decimal m = 99.99m;
@@ -142,70 +117,6 @@ public unsafe class Test : MonoBehaviour {
             s = TruncateGauge(m);
         sw.Stop();
         Debug.Log(sw.ElapsedTicks);*/
-        /*sw.Restart();
-        for(int i = 0; i < count; i++){
-            GL_libs.BindTexture(tex_name);
-            fixed(void* p = color32s)
-                GL_libs.TexImage2D(width, height, p);
-        }
-        sw.Stop();
-        Debug.Log($"{sw.ElapsedTicks}");
-        sw.Restart();
-        for(int i = 0; i < count; i++){
-            GL_libs.BindTexture(tex_name);
-            fixed(void* p = color32s)
-                GL_libs.TexSubImage2D(width, height, p);
-            // t2d.Apply(false);
-        }
-        sw.Stop();
-        Debug.Log($"{sw.ElapsedTicks}");
-        sw.Restart();
-        for(int i = 0; i < count; i++){
-            GL_libs.BindTexture(tex_name);
-            fixed(void* p = color32s)
-                GL_libs.TexImage2D(width, height, p);
-        }
-        sw.Stop();
-        Debug.Log($"{sw.ElapsedTicks}");
-        sw.Restart();
-        for(int i = 0; i < count; i++){
-            GL_libs.BindTexture(tex_name);
-            fixed(void* p = color32s)
-                GL_libs.TexSubImage2D(width, height, p);
-            // t2d.Apply(false);
-        }
-        sw.Stop();
-        Debug.Log($"{sw.ElapsedTicks}");
-        sw.Restart();
-        for(int i = 0; i < count; i++){
-            GL_libs.BindTexture(tex_name);
-            fixed(void* p = color32s)
-                GL_libs.TexImage2D(width, height, p);
-        }
-        sw.Stop();
-        Debug.Log($"{sw.ElapsedTicks}");
-        sw.Restart();
-        for(int i = 0; i < count; i++){
-            GL_libs.BindTexture(tex_name);
-            fixed(void* p = color32s)
-                GL_libs.TexSubImage2D(width, height, p);
-            // t2d.Apply(false);
-        }
-        sw.Stop();
-        Debug.Log($"{sw.ElapsedTicks}");
-        fixed(uint* p = &tex_name)
-            GL_libs.glDeleteTextures(1, p);
-        Debug.Log(tex_name);
-        t2d = new Texture2D(width, height, TextureFormat.RGBA32, false){
-            filterMode = FilterMode.Point};
-        t2d.SetPixels32(color32s);
-        sw.Restart();
-        for(int i = 0; i < count; i++)
-            t2d.Apply(false);
-        sw.Stop();
-        Debug.Log(sw.ElapsedTicks);
-#endif
-        rawImage.texture = t2d;*/
         /*AudioClip clip = null;
         int channels, frequency, length, lengthSamples;
         float[] samples = StaticClass.AudioToSamples(Application.dataPath + "/~Media~/Angel Dust.mp3", out channels, out frequency);
@@ -224,8 +135,6 @@ public unsafe class Test : MonoBehaviour {
             DestroyImmediate(gm);
         });
     }
-    
-    // Update is called once per frame
     // private void Update(){
     //     if(Input.GetKeyUp(KeyCode.Space)){
     //        Debug.Log(KeyCode.Space);
@@ -239,10 +148,6 @@ public unsafe class Test : MonoBehaviour {
             Debug.Log(Time.realtimeSinceStartup);
             count--;
         }
-        //if(Input.GetKey(KeyCode.Space)){
-        //    playingTime += Time.fixedDeltaTime;
-        //    Debug.Log(playingTime);
-        //}
         //if(Input.GetKeyUp(KeyCode.Return)){
         //    Debug.Log(KeyCode.Return);
         //}
@@ -251,10 +156,6 @@ public unsafe class Test : MonoBehaviour {
         // StaticClass.rng.Dispose();
         // FluidManager.CleanUp();
         VLCPlayer.VLCRelease();
-// #if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
-//         fixed(uint* p = &tex_name)
-//             GL_libs.glDeleteTextures(1, p);
-// #endif
         StaticClass.FFmpegCleanUp();
         Resources.UnloadUnusedAssets();
         // AssetBundle.UnloadAllAssetBundles(true);

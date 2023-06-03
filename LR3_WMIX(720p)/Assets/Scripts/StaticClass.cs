@@ -168,6 +168,59 @@ public unsafe static class StaticClass{
         if(r > m) r -= 0.1m;
         return r.ToString("F1");
     }
+    private static readonly string[] tmp_digits = new string[10]{
+        "<sprite index=0>",
+        "<sprite index=6>",
+        "<sprite index=12>",
+        "<sprite index=18>",
+        "<sprite index=24>",
+        "<sprite index=30>",
+        "<sprite index=36>",
+        "<sprite index=42>",
+        "<sprite index=48>",
+        "<sprite index=54>",
+    };
+    private static readonly string[] blink_digits = new string[10]{
+        "<sprite anim=\"0,5,61\">",
+        "<sprite anim=\"6,11,61\">",
+        "<sprite anim=\"12,17,61\">",
+        "<sprite anim=\"18,23,61\">",
+        "<sprite anim=\"24,29,61\">",
+        "<sprite anim=\"30,35,61\">",
+        "<sprite anim=\"36,41,61\">",
+        "<sprite anim=\"42,47,61\">",
+        "<sprite anim=\"48,53,61\">",
+        "<sprite anim=\"54,59,61\">",
+    };
+    public static readonly string[] judge_tmp = new string[(byte)NoteJudge.Landmine + 1]{
+        "<sprite index=60>",
+        "<sprite index=60>",
+        "<sprite index=61>",
+        "<sprite index=62>",
+        "<sprite index=63>",
+        "<sprite anim=\"64,69,61\">",
+        "<sprite index=60>",
+        "<sprite index=60>",
+    };
+    public static string ComboNumToTMP(this StringBuilder builder, in ulong num, in NoteJudge noteJudge){
+        if(builder == null) builder = new StringBuilder(80);
+        else builder.Clear();
+        char[] digits;
+        switch(noteJudge){
+            case NoteJudge.Perfect:
+                digits = num.ToString().ToCharArray();
+                for(int i = 0; i < digits.Length; i++)
+                    builder.Append(blink_digits[digits[i] - '0']);
+                break;
+            case NoteJudge.Great: case NoteJudge.Good:
+                digits = num.ToString().ToCharArray();
+                for(int i = 0; i < digits.Length; i++)
+                    builder.Append(tmp_digits[digits[i] - '0']);
+                break;
+            default: return "";// break;
+        }
+        return builder.ToString();
+    }
     public static bool TryParseDecimal(string s, out decimal m){
         m = decimal.Zero;
         if(string.IsNullOrWhiteSpace(s)) return false;
