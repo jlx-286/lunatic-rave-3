@@ -76,6 +76,11 @@ public class MainVars : MonoBehaviour{// Game Manager
     public static Image[] pMSLNCenterForms;
     public static Image[] pMSLNEndForms;
     public static RandomNumberGenerator rng = null;
+    public static PlayMode playMode = PlayMode.AutoPlay | PlayMode.SingleSong | PlayMode.ExtraStage;
+    public Sprite[] stage_sprites;
+    public Sprite demo_play;
+    public static Sprite[] StageSprites;
+    public static Sprite DemoPlay;
     private void Start(){
         MeterForm = meter_form;
         BMSNoteForms = bms_note_forms;
@@ -86,6 +91,8 @@ public class MainVars : MonoBehaviour{// Game Manager
         pMSLNStartForms = pms_ln_start_forms;
         pMSLNCenterForms = pms_ln_center_forms;
         pMSLNEndForms = pms_ln_end_forms;
+        StageSprites = stage_sprites;
+        DemoPlay = demo_play;
         mixer.SetFloat("freq", 1);
         mixer.SetFloat("pitch", 1);
         chorusFilter = this.gameObject.GetComponent<AudioChorusFilter>();

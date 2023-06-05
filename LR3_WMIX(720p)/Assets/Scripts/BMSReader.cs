@@ -45,6 +45,7 @@ public class BMSReader : MonoBehaviour{
     public Button back_btn;
     public Button auto_btn;
     public Button replay_btn;
+    public Button practice_btn;
     public Text progress;
     public Text genre;
     public Text title;
@@ -1424,6 +1425,12 @@ public class BMSReader : MonoBehaviour{
         if(BMSInfo.stop_list_table.Count > 0 && BMSInfo.totalTimeAsNanoseconds < BMSInfo.stop_list_table.Last().offset)
             BMSInfo.totalTimeAsNanoseconds = BMSInfo.stop_list_table.Last().offset;*/
         auto_btn.onClick.AddListener(()=>{
+            MainVars.playMode = PlayMode.AutoPlay | PlayMode.SingleSong | PlayMode.ExtraStage;
+            SceneManager.UnloadSceneAsync(MainVars.cur_scene_name);
+            SceneManager.LoadScene(BMSInfo.playing_scene_name, LoadSceneMode.Additive);
+        });
+        play_btn.onClick.AddListener(()=>{
+            MainVars.playMode = PlayMode.Play | PlayMode.SingleSong | PlayMode.ExtraStage;
             SceneManager.UnloadSceneAsync(MainVars.cur_scene_name);
             SceneManager.LoadScene(BMSInfo.playing_scene_name, LoadSceneMode.Additive);
         });
@@ -1432,7 +1439,7 @@ public class BMSReader : MonoBehaviour{
             progress.text = "Done";
             // if(!illegal && !string.IsNullOrWhiteSpace(playing_scene_name)){
             if(!string.IsNullOrWhiteSpace(BMSInfo.playing_scene_name)){
-                auto_btn.interactable = true;
+                play_btn.interactable = auto_btn.interactable = true;
             }
             else Debug.LogWarning("Unknown player type");
             isDone = true;

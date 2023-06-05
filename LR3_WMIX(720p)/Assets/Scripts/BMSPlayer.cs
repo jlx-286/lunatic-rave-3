@@ -20,7 +20,7 @@ public class BMSPlayer : MonoBehaviour {
     private uint timeLeft = (uint)(BMSInfo.totalTimeAsNanoseconds / ns_per_sec) +
         (uint)(BMSInfo.totalTimeAsNanoseconds % ns_per_sec == 0 ? 0 : 1);
     public Text timeLeftText;
-    private readonly WaitForFixedUpdate waitForFixedUpdate = new WaitForFixedUpdate();
+    public Image stage;
     [HideInInspector] public bool escaped { get; internal set; } = false;
     [HideInInspector] public int bgm_table_row = 0;
     [HideInInspector] public int bga_table_row = 0;
@@ -44,6 +44,12 @@ public class BMSPlayer : MonoBehaviour {
         }
         fixedDeltaTimeAsNanoseconds = (ulong)(Time.fixedDeltaTime * ns_per_sec);
         timeLeftText.text = timeLeft.ToString();
+        if((MainVars.playMode & PlayMode.AutoPlay) == PlayMode.AutoPlay)
+            stage.sprite = MainVars.DemoPlay;
+        else if((MainVars.playMode & PlayMode.SingleSong) == PlayMode.SingleSong)
+            stage.sprite = MainVars.StageSprites[(byte)PlayMode.ExtraStage];
+        else
+            stage.sprite = MainVars.StageSprites[(byte)MainVars.playMode & 0xf];
     }
     private void Start(){
         StartCoroutine(SetTimeLeft());
@@ -90,7 +96,7 @@ public class BMSPlayer : MonoBehaviour {
     private IEnumerator<WaitForFixedUpdate> SetTimeLeft(){
         while(timeLeft > 0){
             for(ushort i = 0; i < 1000u; i++)
-                yield return waitForFixedUpdate;
+                yield return StaticClass.waitForFixedUpdate;
             timeLeft--;
             timeLeftText.text = timeLeft.ToString();
         }

@@ -168,6 +168,25 @@ public unsafe static class StaticClass{
         if(r > m) r -= 0.1m;
         return r.ToString("F1");
     }
+    public static string RateToString(this in double rate){
+        if(rate >= 100) return "100.00";
+        if(rate > 0){
+            double r = Math.Round(rate, 2);
+            if(r > rate) r -= 0.01d;
+            return r.ToString("F2");
+        }
+        return "0.00";
+    }
+    public static string RateToString(this in decimal rate){
+        if(rate >= 100) return "100.00";
+        if(rate > 0){
+            decimal r = decimal.Round(rate, 2);
+            if(r > rate) r -= 0.01m;
+            return r.ToString("F2");
+        }
+        return "0.00";
+    }
+    public static readonly WaitForFixedUpdate waitForFixedUpdate = new WaitForFixedUpdate();
     private static readonly string[] tmp_digits = new string[10]{
         "<sprite index=0>",
         "<sprite index=6>",

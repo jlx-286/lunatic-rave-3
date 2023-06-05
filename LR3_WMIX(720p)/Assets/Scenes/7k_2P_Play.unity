@@ -5182,9 +5182,9 @@ MonoBehaviour:
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_HighlightedColor: {r: 0.4, g: 0.4, b: 0.6, a: 1}
     m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
-    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
   m_SpriteState:
@@ -5235,7 +5235,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.5254902}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -6119,6 +6119,7 @@ MonoBehaviour:
   judgeCanvas: {fileID: 1786624736}
   curr_judge: {fileID: 965418957}
   comboText: {fileID: 1972284222}
+  rateText: {fileID: 879874981}
 --- !u!114 &690539710
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7792,7 +7793,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "0\x13"
+  m_Text: 0.00
 --- !u!222 &879874982
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -9823,6 +9824,7 @@ MonoBehaviour:
   diff: {fileID: 456702597}
   level: {fileID: 128479969}
   timeLeftText: {fileID: 1036401430}
+  stage: {fileID: 83567165}
   bgm_table_row: 0
   bga_table_row: 0
   row_key: 0

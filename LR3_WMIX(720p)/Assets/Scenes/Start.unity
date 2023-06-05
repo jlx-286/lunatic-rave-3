@@ -9477,7 +9477,7 @@ MonoBehaviour:
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.23529412, g: 1, b: 0.23529412, a: 1}
-    m_PressedColor: {r: 0, g: 1, b: 0, a: 1}
+    m_PressedColor: {r: 0.4, g: 0.4, b: 0.6, a: 1}
     m_DisabledColor: {r: 0, g: 0, b: 0, a: 1}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
@@ -10717,6 +10717,14 @@ MonoBehaviour:
   pms_ln_end_forms:
   - {fileID: 5871336810260268654, guid: b2e6d8d8a4b504dc59e6c58ece553232, type: 3}
   - {fileID: 4944382314114273399, guid: 968a6f46c771b6cd6a90217bad7c6cb5, type: 3}
+  stage_sprites:
+  - {fileID: 21300054, guid: ff4a4fea6f4718e48886aedca4e17023, type: 3}
+  - {fileID: 21300056, guid: ff4a4fea6f4718e48886aedca4e17023, type: 3}
+  - {fileID: 21300058, guid: ff4a4fea6f4718e48886aedca4e17023, type: 3}
+  - {fileID: 21300060, guid: ff4a4fea6f4718e48886aedca4e17023, type: 3}
+  - {fileID: 21300062, guid: ff4a4fea6f4718e48886aedca4e17023, type: 3}
+  - {fileID: 21300064, guid: ff4a4fea6f4718e48886aedca4e17023, type: 3}
+  demo_play: {fileID: 21300004, guid: ff4a4fea6f4718e48886aedca4e17023, type: 3}
 --- !u!20 &519420031
 Camera:
   m_ObjectHideFlags: 0
@@ -35802,7 +35810,7 @@ MonoBehaviour:
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.23529412, g: 0.23529412, b: 1, a: 1}
-    m_PressedColor: {r: 0, g: 0, b: 1, a: 1}
+    m_PressedColor: {r: 0.4, g: 0.4, b: 0.6, a: 1}
     m_DisabledColor: {r: 0, g: 0, b: 0, a: 1}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1

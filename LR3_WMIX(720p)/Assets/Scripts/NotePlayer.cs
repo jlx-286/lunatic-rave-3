@@ -28,7 +28,7 @@ public class NotePlayer : MonoBehaviour {
     public TMP_Text curr_judge;
     public TMP_Text comboText;
     private Coroutine showJudge;
-    private readonly WaitForFixedUpdate waitForFixedUpdate = new WaitForFixedUpdate();
+    public Text rateText;
     private readonly StringBuilder builder = new StringBuilder();
     // private bool[] inLN;
     private void Awake(){
@@ -108,6 +108,7 @@ public class NotePlayer : MonoBehaviour {
                     }
                     gauge_text.text = gauge_val.GaugeToString();
                 }
+                rateText.text = "100.00";
                 toUpdateScore = false;
                 inc = 0;
                 StopCoroutine(showJudge);
@@ -118,7 +119,7 @@ public class NotePlayer : MonoBehaviour {
     private IEnumerator<WaitForFixedUpdate> ShowJudge(){
         judgeCanvas.enabled = true;
         for(ushort i = 0; i < 500u; i++)
-            yield return waitForFixedUpdate;
+            yield return StaticClass.waitForFixedUpdate;
         judgeCanvas.enabled = false;
     }
 }

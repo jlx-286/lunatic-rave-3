@@ -71,15 +71,12 @@ public enum NoteJudge : byte{
     BD = 2, Bad = 2, Miss = 1,// combo break// PR = 1, Poor = 1,
     ExcessivePoor = 0,// 空Poor = 0, 空P = 0,
 }
-/*public enum NoteImg : byte{
-    white = 0, gray = 0, blue = 1, black = 1,
-    whiteStart = 2, grayStart = 2,
-    whiteCenter = 3, grayCenter = 3,
-    whiteEnd = 4, grayEnd = 4,
-    blueStart = 5, blackStart = 5,
-    blueCenter = 6, blackCenter = 6,
-    blueEnd = 7, blackEnd = 7,
-    red, redStart, redCenter, redEnd,
-    Count
-}*/
+public enum PlayMode : byte{
+    AutoPlay = 0x1<<6, Replay = 0x3<<6, Play = 0x0<<6, Practice = 0x2<<6,
+    SingleSong = 0x0<<4, Class = 0x1<<4, Course = 0x3<<4,
+    ExtraStage = 0x0, Stage1, Stage2, Stage3,
+    Stage4, FinalStage//Stage5, Stage6, Stage7,
+    // Stage8, Stage9, Stage10, Stage11,
+    // Stage12, Stage13, Stage14, Stage15,
+}
 #endregion

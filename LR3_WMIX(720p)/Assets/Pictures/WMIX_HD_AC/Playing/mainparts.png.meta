@@ -29,12 +29,12 @@ TextureImporter:
     21300048: num_0
     21300050: num_
     21300052: un_2p
-    21300054: extra_stage
+    21300054: stage_ex
     21300056: stage_1
     21300058: stage_2
     21300060: stage_3
     21300062: stage_4
-    21300064: final_stage
+    21300064: stage_final
     21300066: icon (2)
     21300068: ez_1p
     21300070: ez_2p
@@ -690,11 +690,11 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: extra_stage
+      name: stage_ex
       rect:
         serializedVersion: 2
         x: 298
-        y: 370
+        y: 369
         width: 241
         height: 21
       alignment: 0
@@ -790,11 +790,11 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: final_stage
+      name: stage_final
       rect:
         serializedVersion: 2
         x: 298
-        y: 258
+        y: 259
         width: 241
         height: 21
       alignment: 0

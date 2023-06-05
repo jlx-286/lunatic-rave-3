@@ -90,31 +90,32 @@ public unsafe class Test : MonoBehaviour {
         gm.Init();
         /*Stopwatch sw = new Stopwatch();
         string s;
-        const decimal m = 99.99m;
+        const decimal m = 11.4514m;
+        const double d = 11.4514;
         // Debug.Log(Gauge(m));
         sw.Restart();
         for(int i = 0; i < count; i++)
-            s = SubGauge(m);
+            s = d.RateToString();
         sw.Stop();
         Debug.Log(sw.ElapsedTicks);
         sw.Restart();
         for(int i = 0; i < count; i++)
-            s = ModGauge(m);
+            s = d.RateToSubstring();
         sw.Stop();
         Debug.Log(sw.ElapsedTicks);
         sw.Restart();
         for(int i = 0; i < count; i++)
-            s = SubGauge(m);
+            s = m.RateToString();
         sw.Stop();
         Debug.Log(sw.ElapsedTicks);
         sw.Restart();
         for(int i = 0; i < count; i++)
-            s = RoundGauge(m);
+            s = d.RateToString();
         sw.Stop();
         Debug.Log(sw.ElapsedTicks);
         sw.Restart();
         for(int i = 0; i < count; i++)
-            s = TruncateGauge(m);
+            s = d.RateToSubstring();
         sw.Stop();
         Debug.Log(sw.ElapsedTicks);*/
         /*AudioClip clip = null;
