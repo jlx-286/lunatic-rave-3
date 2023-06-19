@@ -30,7 +30,7 @@ public static class BMSInfo {
 	public static PlayerType playerType = PlayerType.Keys5;
 	public static ulong note_count;
 	// public static bool autoPlay;
-	public static ulong totalTimeAsNanoseconds = 0;
+	public static long totalTimeAsNanoseconds = 0;
     public static string playing_scene_name = string.Empty;
 #region medias
 	public static readonly Texture2D[] textures = Enumerable.Repeat<Texture2D>(null, 36*36).ToArray();
@@ -45,7 +45,7 @@ public static class BMSInfo {
 	public static List<BGMTimeRow> bgm_list_table = new List<BGMTimeRow>();
 	public static List<BGATimeRow> bga_list_table = new List<BGATimeRow>();
 	public static List<BPMTimeRow> bpm_list_table = new List<BPMTimeRow>();
-	public static readonly ulong[] track_end_time_as_ns = Enumerable.Repeat(ulong.MaxValue, 1000).ToArray();
+	public static readonly long[] track_end_time_as_ns = Enumerable.Repeat(-1L, 1000).ToArray();
 	public static List<StopTimeRow> stop_list_table = new List<StopTimeRow>();
 #endregion
 	public unsafe static void CleanUp(){
@@ -72,7 +72,7 @@ public static class BMSInfo {
 		bpm_list_table.Clear();
 		stop_list_table.Clear();
 		fixed(void* p = track_end_time_as_ns)
-			StaticClass.memset(p, -1, (IntPtr)(track_end_time_as_ns.LongLength * sizeof(ulong)));
+			StaticClass.memset(p, -1, (IntPtr)(track_end_time_as_ns.LongLength * sizeof(long)));
 #if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
 		fixed(uint* p = texture_names){
 			GL_libs.glDeleteTextures(texture_names.Length, p);

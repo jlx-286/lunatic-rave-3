@@ -9,8 +9,7 @@ public class BGAPlayer : MonoBehaviour {
     private ushort bgi_num;
     public GameObject[] poors;
     private Image[] images;
-    private Timer timer;
-    private bool toDisable = false;
+    private int bga_table_row = 0;
     private readonly ushort[] bgi_nums = new ushort[]{0,0,0,0};
 	private void Awake(){
 #if UNITY_EDITOR
@@ -24,10 +23,6 @@ public class BGAPlayer : MonoBehaviour {
         for(byte i = 0; i < poors.Length; i++)
             images[i] = poors[i].GetComponent<Image>();
         if(BMSInfo.bga_list_table.Any(v => v.channel == BGAChannel.Poor)){
-            timer = new Timer(obj => {
-                toDisable = true;
-                timer.Change(Timeout.Infinite, Timeout.Infinite);
-            }, null, Timeout.Infinite, Timeout.Infinite);
             for(byte i = 0; i < poors.Length; i++)
                 images[i].enabled = true;
         }else{
@@ -40,11 +35,11 @@ public class BGAPlayer : MonoBehaviour {
 	//private void FixedUpdate(){}
     private void Update(){
         if(BMS_Player.escaped) return;
-        if(!BMS_Player.no_bgi){
-            while(BMS_Player.bga_table_row < BMSInfo.bga_list_table.Count){
-                if(BMSInfo.bga_list_table[BMS_Player.bga_table_row].time <= BMS_Player.playingTimeAsNanoseconds){
-                    bgi_num = BMSInfo.bga_list_table[BMS_Player.bga_table_row].bgNum;
-                    switch(BMSInfo.bga_list_table[BMS_Player.bga_table_row].channel){
+        if(BMS_Player.playingTimeAsNanoseconds <= BMSInfo.totalTimeAsNanoseconds){
+            while(bga_table_row < BMSInfo.bga_list_table.Count){
+                if(BMSInfo.bga_list_table[bga_table_row].time <= BMS_Player.playingTimeAsNanoseconds){
+                    bgi_num = BMSInfo.bga_list_table[bga_table_row].bgNum;
+                    switch(BMSInfo.bga_list_table[bga_table_row].channel){
                         case BGAChannel.Base:
                             ChannelCase(0);
                             break;
@@ -58,13 +53,8 @@ public class BGAPlayer : MonoBehaviour {
                             ChannelCase(3);
                             break;
                     }
-                    BMS_Player.bga_table_row++;
+                    bga_table_row++;
                 }else break;
-            }
-            if(toDisable){
-                toDisable = false;
-                for(byte i = 0; i < poors.Length; i++)
-                    poors[i].SetActive(false);
             }
         }
     }
@@ -72,7 +62,6 @@ public class BGAPlayer : MonoBehaviour {
         for(byte num = 0; num < bgi_nums.Length; num++){
             if(VLCPlayer.playing[bgi_nums[num]]){
                 if(VLCPlayer.toStop[bgi_nums[num]]){
-                    // Debug.Log("to stop");
                     VLCPlayer.ClearPixels(bgi_nums[num]);
                     VLCPlayer.toStop[bgi_nums[num]] = false;
                     VLCPlayer.playing[bgi_nums[num]] = false;
@@ -94,18 +83,7 @@ public class BGAPlayer : MonoBehaviour {
             VLCPlayer.PlayerSetPause(bgi_nums[num], do_pause);
     }
 #endif
-    private void OnDestroy(){
-        if(timer != null){
-            timer.Dispose();
-            timer = null;
-        }
-    }
     private void ChannelCase(byte ii){
-        // if(timer != null && ii == 3){
-        //     for(byte i = 0; i < poors.Length; i++)
-        //         poors[i].SetActive(true);
-        //     timer.Change(1000, 0);
-        // }
         VLCPlayer.PlayerStop(bgi_nums[ii]);
         bgi_nums[ii] = bgi_num;
         VLCPlayer.PlayerPlay(bgi_num);

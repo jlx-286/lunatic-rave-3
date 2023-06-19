@@ -13,6 +13,7 @@ public class PlayingInit : MonoBehaviour{
     public MeterViewer meter_viewer;
     public NoteViewer note_viewer;
     public NotePlayer note_player;
+    public ManualNotePlayer manualNotePlayer;
     private Button play;
     private bool pressed = false;
     // public Button exit;
@@ -33,10 +34,13 @@ public class PlayingInit : MonoBehaviour{
         BGM_Player.enabled =
         BPM_Player.enabled =
         BGA_Player.enabled =
-        note_player.enabled =
+        // note_player.enabled =
         meter_viewer.enabled =
         note_viewer.enabled =
         true;
+        if((MainVars.playMode & PlayMode.AutoPlay) != 0)
+            note_player.enabled = true;
+        else manualNotePlayer.enabled = true;
         // DestroyImmediate(play.gameObject);
         DestroyImmediate(this.gameObject);
     }

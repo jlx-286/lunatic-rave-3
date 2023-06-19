@@ -21,33 +21,33 @@ using System.Runtime.InteropServices;
     // }
 }
 [StructLayout(LayoutKind.Explicit)] public struct NoteTimeRow{
-	[FieldOffset(0)] public ulong time;
-	[FieldOffset(sizeof(ulong))] public ushort clipNum;
-	[FieldOffset(sizeof(ulong) + sizeof(ushort))] public NoteType noteType;
-    public NoteTimeRow(ulong t, ushort num, NoteType tp){
+	[FieldOffset(0)] public long time;
+	[FieldOffset(sizeof(long))] public ushort clipNum;
+	[FieldOffset(sizeof(long) + sizeof(ushort))] public NoteType noteType;
+    public NoteTimeRow(long t, ushort num, NoteType tp){
         time = t; clipNum = num; noteType = tp;
     }
 }
 [StructLayout(LayoutKind.Explicit)] public struct BGMTimeRow{
-	[FieldOffset(0)] public ulong time;
-	[FieldOffset(sizeof(ulong))] public ushort clipNum;
-    public BGMTimeRow(ulong t, ushort num){
+	[FieldOffset(0)] public long time;
+	[FieldOffset(sizeof(long))] public ushort clipNum;
+    public BGMTimeRow(long t, ushort num){
         time = t; clipNum = num;
     }
 }
 [StructLayout(LayoutKind.Explicit)] public struct BGATimeRow{
-	[FieldOffset(0)] public ulong time;
-	[FieldOffset(sizeof(ulong))] public ushort bgNum;
-	[FieldOffset(sizeof(ulong) + sizeof(ushort))] public BGAChannel channel;
-    public BGATimeRow(ulong t, ushort num, byte ch){
+	[FieldOffset(0)] public long time;
+	[FieldOffset(sizeof(long))] public ushort bgNum;
+	[FieldOffset(sizeof(long) + sizeof(ushort))] public BGAChannel channel;
+    public BGATimeRow(long t, ushort num, byte ch){
         time = t; bgNum = num; channel = (BGAChannel)ch;
     }
 }
 [StructLayout(LayoutKind.Auto)] public struct BPMTimeRow{
-    public ulong time;
+    public long time;
     public bool IsBPMXX;
     public string value;
-    public BPMTimeRow(ulong t, decimal v, bool ex){
+    public BPMTimeRow(long t, decimal v, bool ex){
         try{
             // value = Math.Min(999, Math.Round(
             //     Math.Abs(v) * MainVars.speed,
@@ -72,9 +72,9 @@ using System.Runtime.InteropServices;
     }
 }
 [StructLayout(LayoutKind.Explicit)] public struct StopTimeRow{
-    [FieldOffset(0)] public ulong time;
-    [FieldOffset(sizeof(ulong))] public ulong length;
-    public StopTimeRow(ulong t, ulong l){
+    [FieldOffset(0)] public long time;
+    [FieldOffset(sizeof(long))] public long length;
+    public StopTimeRow(long t, long l){
         time = t; length = l;
     }
 }

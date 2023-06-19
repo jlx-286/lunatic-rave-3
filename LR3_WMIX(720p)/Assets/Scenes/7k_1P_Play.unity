@@ -8327,6 +8327,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1008631836}
   - component: {fileID: 1008631837}
+  - component: {fileID: 1008631838}
   m_Layer: 5
   m_Name: BMS player
   m_TagString: Untagged
@@ -8384,6 +8385,21 @@ MonoBehaviour:
   row_key: 0
   bpm_table_row: 0
   stop_table_row: 0
+  timeOut: 0
+--- !u!114 &1008631838
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1008631835}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43108cf478ade933ea4ed2e1055b7a9f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  keyLaser: {fileID: 1778926092}
+  BGA_Player: {fileID: 685439302}
 --- !u!1 &1012862941
 GameObject:
   m_ObjectHideFlags: 0
@@ -14620,6 +14636,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BMS_Player: {fileID: 1008631837}
+  note_nums: 
   lanes:
   - {fileID: 839583624}
   - {fileID: 1437201305}
@@ -14638,10 +14655,19 @@ MonoBehaviour:
   - {fileID: 984336631}
   - {fileID: 1754059345}
   - {fileID: 1754059345}
+  judge_nums: 
   score: {fileID: 2080796485}
+  currScore: 0
+  maxScore: 0
   combo: {fileID: 1770084101}
+  runningCombo: 0
+  maxCombo: 0
+  toUpdateScore: 0
   gauge_text: {fileID: 1101355716}
   gauge_bars: {fileID: 1315059513}
+  gaugeBars: []
+  prev_bars: 10
+  now_bars: 10
   judgeCanvas: {fileID: 1452388245}
   curr_judge: {fileID: 1111721197}
   comboText: {fileID: 790969604}
@@ -16240,6 +16266,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fec13cc45cc702f7ebd4e8241d6b9636, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  keyCodes: 
+  pressed: 
   keys:
   - {fileID: 2116281722}
   - {fileID: 2116281722}
@@ -16259,6 +16287,7 @@ MonoBehaviour:
   - {fileID: 331287426}
   - {fileID: 2116281722}
   - {fileID: 2116281722}
+  keyLanes: 
   notePlayer: {fileID: 1644245334}
 --- !u!1 &1789443014
 GameObject:
@@ -17242,6 +17271,7 @@ MonoBehaviour:
   meter_viewer: {fileID: 1778926091}
   note_viewer: {fileID: 1644245335}
   note_player: {fileID: 1644245334}
+  manualNotePlayer: {fileID: 1008631838}
 --- !u!1 &1917411280
 GameObject:
   m_ObjectHideFlags: 0

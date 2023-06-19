@@ -15,7 +15,7 @@ public class NoteViewer : MonoBehaviour{
     private int[] v_note_ids;
     private bool[] inLN;
     private const uint ns_per_ms = 1000000u;
-    [HideInInspector] public ulong offset;
+    [HideInInspector] public long offset;
     [HideInInspector] public float maskHeight;
     // private bool no_key_notes = false;
     [HideInInspector] public float yTime;
@@ -26,7 +26,7 @@ public class NoteViewer : MonoBehaviour{
         lanes_notes = new LinkedList<Image>[notePlayer.lanes.Length];
         downSpeed = mask.rect.height / MainVars.GreenNumber;
         // MainVars.GreenNumber = 573;
-        offset = (ulong)MainVars.GreenNumber * ns_per_ms;
+        offset = (long)MainVars.GreenNumber * ns_per_ms;
         maskHeight = mask.rect.height + 21;
         yTime = Time.fixedDeltaTime * -1000;
         switch(BMSInfo.scriptType){

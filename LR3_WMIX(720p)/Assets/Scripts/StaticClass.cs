@@ -211,7 +211,7 @@ public unsafe static class StaticClass{
         "<sprite anim=\"48,53,61\">",
         "<sprite anim=\"54,59,61\">",
     };
-    public static readonly string[] judge_tmp = new string[(byte)NoteJudge.Landmine + 1]{
+    public static readonly string[] judge_tmp = new string[(byte)NoteJudge.HCN + 1]{
         "<sprite index=60>",
         "<sprite index=60>",
         "<sprite index=61>",
@@ -236,7 +236,7 @@ public unsafe static class StaticClass{
                 for(int i = 0; i < digits.Length; i++)
                     builder.Append(tmp_digits[digits[i] - '0']);
                 break;
-            default: return "";// break;
+            default: return " ";// break;
         }
         return builder.ToString();
     }

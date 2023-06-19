@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.UI;
@@ -33,21 +34,8 @@ public class MainVars : MonoBehaviour{// Game Manager
         new ushort[]{21,60,120,200,1000},//easy
         new ushort[]{26,75,150,200,1000},//v.easy
     };
-    /*public static decimal[,] Increases = {
-        //{EP,Miss,BD,GD,GR,PG}
-        {-1.6m,-4.8m,-3.2m, 0.6m, 1.2m, 1.2m},// assist
-        {-1.6m,-4.8m,-3.2m, 0.6m, 1.2m, 1.2m},// easy
-        {   -2,   -6,   -4, 0.5m,    1,    1},// normal
-        {   -2,  -10,   -6,0.05m, 0.1m, 0.1m},// hard (30% halve)
-        {   -4,  -20,  -12,0.05m, 0.1m, 0.1m},// exh
-        {    0, -100, -100,   +0,   +0,   +0},// FC
-        { -100, -100, -100, -100,   -0,   +0},// PA (gr>=-1)
-        {   -2,   -3,   -2,0.05m, 0.1m, 0.1m},// normal-Grade (30% halve)
-        {   -4,   -6,   -4,0.05m, 0.1m, 0.1m},// hard-Grade
-        {   -6,  -10,   -6,0.05m, 0.1m, 0.1m},// exh-Grade
-        {-1.6m,-2.4m,-1.6m,0.06m,0.12m,0.12m},// course (30% halve)
-        {   -0,   -0,   -0,   +0,   -0,   -0},// G-A
-    };*/
+    [Range(-3000, 3000)] public short latency = 16;
+    public static long Latency;
     public static readonly Color32[] levelColor32s = {
         new Color32(0xFF,0xFF,0xFF,0xFF),// unknown
         // Color.white,
@@ -82,6 +70,7 @@ public class MainVars : MonoBehaviour{// Game Manager
     public static Sprite[] StageSprites;
     public static Sprite DemoPlay;
     private void Start(){
+        Latency = latency * TimeSpan.TicksPerMillisecond * 100;
         MeterForm = meter_form;
         BMSNoteForms = bms_note_forms;
         PMSNoteForms = pms_note_forms;

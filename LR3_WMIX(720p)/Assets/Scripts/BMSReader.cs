@@ -70,8 +70,8 @@ public class BMSReader : MonoBehaviour{
     private LinkedStack<ulong> ifs_count = new LinkedStack<ulong>();
     private StringBuilder file_names = new StringBuilder();
     string channel = string.Empty;
-    private ulong trackOffset_ns = 0;
-    private ulong stopLen = 0;
+    private long trackOffset_ns = 0;
+    private long stopLen = 0;
     private int stopIndex = 0;
     private readonly decimal[] track_end_bpms = Enumerable.Repeat(0m, 1000).ToArray();
     #endregion
@@ -91,20 +91,20 @@ public class BMSReader : MonoBehaviour{
         StaticClass.FFmpegCleanUp();
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, false);
     }
-    private const ulong ns_per_min = TimeSpan.TicksPerMinute * 100;
-    private ulong ConvertStopTime(int stopIndex, ushort track, decimal bpm)
-        => Convert.ToUInt64(Math.Round(ns_per_min * 4 *
+    private const long ns_per_min = TimeSpan.TicksPerMinute * 100;
+    private long ConvertStopTime(int stopIndex, ushort track, decimal bpm)
+        => Convert.ToInt64(Math.Round(ns_per_min * 4 *
             stop_dict[stop_measure_list[track][stopIndex].key]
             / bpm / MainVars.speed, MidpointRounding.ToEven));
-    private ulong ConvertOffset(ushort track, decimal bpm, ulong num, ulong den)
-        => Convert.ToUInt64(Math.Round(ns_per_min * 4m * num *
+    private long ConvertOffset(ushort track, decimal bpm, ulong num, ulong den)
+        => Convert.ToInt64(Math.Round(ns_per_min * 4m * num *
             beats_tracks[track] / bpm / MainVars.speed / den,
             MidpointRounding.ToEven));
-    private ulong ConvertOffset(ushort track, decimal bpm, Fraction64 measure)
+    private long ConvertOffset(ushort track, decimal bpm, Fraction64 measure)
         => ConvertOffset(track, bpm, measure.numerator, measure.denominator);
-    private ulong ConvertOffset(ushort track, decimal bpm, Fraction32 measure)
+    private long ConvertOffset(ushort track, decimal bpm, Fraction32 measure)
         => ConvertOffset(track, bpm, measure.Numerator, measure.Denominator);
-    private ulong ConvertOffset(ushort track, decimal bpm)
+    private long ConvertOffset(ushort track, decimal bpm)
         => ConvertOffset(track, bpm, 1, 1);
     private void ReadScript(){
         MainVars.cur_scene_name = "Decide";
@@ -1392,7 +1392,8 @@ public class BMSReader : MonoBehaviour{
                 v.noteType == NoteType.Default || v.noteType == NoteType.LongnoteStart || v.noteType == NoteType.LongnoteEnd);
         }
         // Debug.Log(BMSInfo.note_count);
-        BMSInfo.incr = BMSInfo.total / BMSInfo.note_count;
+        if(BMSInfo.note_count > 0) BMSInfo.incr = BMSInfo.total / BMSInfo.note_count;
+        else BMSInfo.incr = 0;
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
         if(BMSInfo.bpm_list_table.Count > 1){
             // Debug.Log(BMSInfo.bpm_list_table.Count);
@@ -1424,6 +1425,8 @@ public class BMSReader : MonoBehaviour{
         }
         if(BMSInfo.stop_list_table.Count > 0 && BMSInfo.totalTimeAsNanoseconds < BMSInfo.stop_list_table.Last().offset)
             BMSInfo.totalTimeAsNanoseconds = BMSInfo.stop_list_table.Last().offset;*/
+        BMSInfo.totalTimeAsNanoseconds += TimeSpan.TicksPerSecond * 100 * 2;
+        if(BMSInfo.totalTimeAsNanoseconds < 0) BMSInfo.totalTimeAsNanoseconds = 0;
         auto_btn.onClick.AddListener(()=>{
             MainVars.playMode = PlayMode.AutoPlay | PlayMode.SingleSong | PlayMode.ExtraStage;
             SceneManager.UnloadSceneAsync(MainVars.cur_scene_name);

@@ -65,7 +65,7 @@ public enum GaugeType : byte{
     [Obsolete("LR2 only?", false)] GAttack = 11,
 }
 public enum NoteJudge : byte{
-    Landmine = 7, HCN = 6,
+    None = byte.MaxValue, HCN = 7, Landmine = 6,
     Perfect = 5, PG = 5, PGreat = 5,// best
     GR = 4, Great = 4, GD = 3, Good = 3,
     BD = 2, Bad = 2, Miss = 1,// combo break// PR = 1, Poor = 1,

@@ -17,7 +17,8 @@ public unsafe class Test : MonoBehaviour {
     public AudioSource audioSource;
     public RawImage rawImage;
     public TestThread gm;
-    //private byte count;
+    private uint ms = 0;
+    private bool pressed1 = false, pressed2 = false;
     [StructLayout(LayoutKind.Explicit)] private struct TestDecimal{
         [FieldOffset(0)] public decimal value;
         [FieldOffset(0)] public ushort unused;
@@ -72,7 +73,6 @@ public unsafe class Test : MonoBehaviour {
         return m.ToString();
     }*/
     private void Start(){
-        //count = 16;
         // Debug.Log((int)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond) & int.MaxValue);
         /*const string s = "0.3333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"
         + "333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"
@@ -87,7 +87,7 @@ public unsafe class Test : MonoBehaviour {
         // + "333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"
         ;*/
         // const int count = 400000;
-        gm.Init();
+        // gm.Init();
         /*Stopwatch sw = new Stopwatch();
         string s;
         const decimal m = 11.4514m;
@@ -136,23 +136,24 @@ public unsafe class Test : MonoBehaviour {
             DestroyImmediate(gm);
         });
     }
-    // private void Update(){
-    //     if(Input.GetKeyUp(KeyCode.Space)){
-    //        Debug.Log(KeyCode.Space);
-    //     }
-    // }
-    /*private void FixedUpdate(){
-        if(count > 0){
-            Debug.Log(count);
-            // audioSource.Play();
-            Debug.Log(Time.time);
-            Debug.Log(Time.realtimeSinceStartup);
-            count--;
+    private void FixedUpdate(){
+        // input per frame?
+        if(!pressed2 && Input.GetKeyDown(KeyCode.Space)){
+            Debug.Log($"GetKeyDown:{ms}");
+            pressed2 = true;
+        }else if(pressed2 && Input.GetKeyUp(KeyCode.Space)){
+            pressed2 = false;
         }
-        //if(Input.GetKeyUp(KeyCode.Return)){
-        //    Debug.Log(KeyCode.Return);
-        //}
-    }*/
+        if(!pressed1 && Input.GetKey(KeyCode.Space)){
+            // Debug.Log(Time.deltaTime);
+            // Debug.Log(Time.fixedDeltaTime);
+            Debug.Log($"GetKey:{ms}");
+            pressed1 = true;
+        }else if(pressed1 && !Input.GetKey(KeyCode.Space)){
+            pressed1 = false;
+        }
+        ms++;
+    }
     private void OnApplicationQuit(){
         // StaticClass.rng.Dispose();
         // FluidManager.CleanUp();

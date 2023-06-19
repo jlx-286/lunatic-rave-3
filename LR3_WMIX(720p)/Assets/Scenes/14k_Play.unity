@@ -4464,6 +4464,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fec13cc45cc702f7ebd4e8241d6b9636, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  keyCodes: 
+  pressed: 
   keys:
   - {fileID: 452353266}
   - {fileID: 452353266}
@@ -4483,6 +4485,7 @@ MonoBehaviour:
   - {fileID: 210959762}
   - {fileID: 2055940782}
   - {fileID: 2055940782}
+  keyLanes: 
   notePlayer: {fileID: 1972267821}
 --- !u!1 &421068093
 GameObject:
@@ -7750,6 +7753,7 @@ GameObject:
   m_Component:
   - component: {fileID: 683835758}
   - component: {fileID: 683835759}
+  - component: {fileID: 683835760}
   m_Layer: 5
   m_Name: BMS player
   m_TagString: Untagged
@@ -7808,6 +7812,21 @@ MonoBehaviour:
   row_key: 0
   bpm_table_row: 0
   stop_table_row: 0
+  timeOut: 0
+--- !u!114 &683835760
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 683835757}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43108cf478ade933ea4ed2e1055b7a9f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  keyLaser: {fileID: 415383836}
+  BGA_Player: {fileID: 918236019}
 --- !u!1 &685653324
 GameObject:
   m_ObjectHideFlags: 0
@@ -9019,6 +9038,7 @@ MonoBehaviour:
   meter_viewer: {fileID: 415383835}
   note_viewer: {fileID: 1972267822}
   note_player: {fileID: 1972267821}
+  manualNotePlayer: {fileID: 683835760}
 --- !u!114 &772391293
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21680,6 +21700,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BMS_Player: {fileID: 683835759}
+  note_nums: 
   lanes:
   - {fileID: 1058837209}
   - {fileID: 1375381478}
@@ -21706,10 +21727,19 @@ MonoBehaviour:
   - {fileID: 1475484110}
   - {fileID: 778156018}
   - {fileID: 778156018}
+  judge_nums: 
   score: {fileID: 254697204}
+  currScore: 0
+  maxScore: 0
   combo: {fileID: 483842630}
+  runningCombo: 0
+  maxCombo: 0
+  toUpdateScore: 0
   gauge_text: {fileID: 1876116496}
   gauge_bars: {fileID: 959510436}
+  gaugeBars: []
+  prev_bars: 10
+  now_bars: 10
   judgeCanvas: {fileID: 2026148286}
   curr_judge: {fileID: 1500191843}
   comboText: {fileID: 1155565838}

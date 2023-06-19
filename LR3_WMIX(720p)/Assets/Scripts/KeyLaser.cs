@@ -1,17 +1,17 @@
 ﻿using System.Linq;
 using UnityEngine;
 public class KeyLaser : MonoBehaviour{
-    private KeyCode[] keyCodes;
-    private bool[] pressed;
+    [HideInInspector] public KeyCode[] keyCodes;
+    [HideInInspector] public bool[] pressed;
     public Canvas[] keys;
-    private byte[] keyLanes;
+    [HideInInspector] public byte[] keyLanes;
     public NotePlayer notePlayer;
     /*private int[] audio_key_nums;
     private ushort[] clipNums;
     private ulong[] judgeWindow;
     private int[] first;
     private bool[] passed;*/
-    private void Start(){
+    private void Awake(){
         if(BMSInfo.scriptType == ScriptType.BMS){
             keyCodes = new KeyCode[]{
                 // KeyCode.Q, KeyCode.W,

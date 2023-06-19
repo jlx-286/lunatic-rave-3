@@ -9,6 +9,7 @@ public class BPMPlayer : MonoBehaviour{
     public Text now;
     public GameObject min;
     public Text min_val;
+    private int bpm_table_row = 0;
     private void Awake(){
         now.text = (BMSInfo.start_bpm * MainVars.speed).ToString("G29");
         Debug.Log(now.text);
@@ -23,11 +24,11 @@ public class BPMPlayer : MonoBehaviour{
     }
     private void Update(){
         if(BMS_Player.escaped) return;
-        if(!BMS_Player.no_bpm_notes){
-            while(BMS_Player.bpm_table_row < BMSInfo.bpm_list_table.Count){
-                if(BMSInfo.bpm_list_table[BMS_Player.bpm_table_row].time <= BMS_Player.playingTimeAsNanoseconds){
-                    now.text = BMSInfo.bpm_list_table[BMS_Player.bpm_table_row].value;
-                    BMS_Player.bpm_table_row++;
+        if(BMS_Player.playingTimeAsNanoseconds <= BMSInfo.totalTimeAsNanoseconds){
+            while(bpm_table_row < BMSInfo.bpm_list_table.Count){
+                if(BMSInfo.bpm_list_table[bpm_table_row].time <= BMS_Player.playingTimeAsNanoseconds){
+                    now.text = BMSInfo.bpm_list_table[bpm_table_row].value;
+                    bpm_table_row++;
                 }
                 else break;
             }

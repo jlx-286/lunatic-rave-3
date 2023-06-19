@@ -5222,6 +5222,7 @@ MonoBehaviour:
   meter_viewer: {fileID: 1231928342}
   note_viewer: {fileID: 690539710}
   note_player: {fileID: 690539709}
+  manualNotePlayer: {fileID: 1040491526}
 --- !u!114 &649206382
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6094,6 +6095,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BMS_Player: {fileID: 1040491525}
+  note_nums: 
   lanes:
   - {fileID: 820024643}
   - {fileID: 141481954}
@@ -6112,10 +6114,19 @@ MonoBehaviour:
   - {fileID: 678917441}
   - {fileID: 1093521863}
   - {fileID: 1093521863}
+  judge_nums: 
   score: {fileID: 1429145252}
+  currScore: 0
+  maxScore: 0
   combo: {fileID: 116405846}
+  runningCombo: 0
+  maxCombo: 0
+  toUpdateScore: 0
   gauge_text: {fileID: 1970910479}
   gauge_bars: {fileID: 381424279}
+  gaugeBars: []
+  prev_bars: 10
+  now_bars: 10
   judgeCanvas: {fileID: 1786624736}
   curr_judge: {fileID: 965418957}
   comboText: {fileID: 1972284222}
@@ -9773,6 +9784,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1040491524}
   - component: {fileID: 1040491525}
+  - component: {fileID: 1040491526}
   m_Layer: 5
   m_Name: BMS player
   m_TagString: Untagged
@@ -9830,6 +9842,21 @@ MonoBehaviour:
   row_key: 0
   bpm_table_row: 0
   stop_table_row: 0
+  timeOut: 0
+--- !u!114 &1040491526
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1040491523}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43108cf478ade933ea4ed2e1055b7a9f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  keyLaser: {fileID: 1231928343}
+  BGA_Player: {fileID: 153972148}
 --- !u!1 &1067837734
 GameObject:
   m_ObjectHideFlags: 0
@@ -11110,6 +11137,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fec13cc45cc702f7ebd4e8241d6b9636, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  keyCodes: 
+  pressed: 
   keys:
   - {fileID: 846683933}
   - {fileID: 846683933}
@@ -11129,6 +11158,7 @@ MonoBehaviour:
   - {fileID: 1416482118}
   - {fileID: 846683933}
   - {fileID: 846683933}
+  keyLanes: 
   notePlayer: {fileID: 690539709}
 --- !u!1 &1241625600
 GameObject:
