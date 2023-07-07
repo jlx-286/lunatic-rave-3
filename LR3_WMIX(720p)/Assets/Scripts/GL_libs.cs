@@ -1,11 +1,26 @@
-#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
 using System;
 // using System.Linq;
 using System.Runtime.InteropServices;
 using UnityEngine;
 public unsafe static class GL_libs{
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || PLATFORM_STANDALONE_WIN
+    private const string PluginName = "DX11Plugin";// GL_NAME = "d3d11",
+    // private static uint D3D11CalcSubResource(
+    //     uint mipSlice, uint arraySlice, uint mipLevels) => mipSlice + arraySlice * mipLevels;
+    // private static readonly uint DstSubresource = D3D11CalcSubResource(0, 0, 1);
+    [DllImport(PluginName)] public extern static void Release(
+        ref IntPtr res, ref UIntPtr device, ref UIntPtr context);
+    [DllImport(PluginName)] public extern static void ModifyTexturePixels(UIntPtr context,
+        IntPtr res, int width, int height, void* dataPtr, byte pixelSize = 4, uint dstSubresource = 0);
+    // [DllImport(PluginName)] public extern static void ModifyTexturePixels(UIntPtr context,
+    //     IntPtr res, int width, int height, UIntPtr dataPtr, byte pixelSize = 4, uint dstSubresource = 0);
+    [DllImport(PluginName)] public extern static void GetInfo(
+        IntPtr res, out UIntPtr device, out UIntPtr context);
+#else
 #if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
     private const string GL_NAME = "OpenGL4";
+// #elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || PLATFORM_STANDALONE_WIN
+//     private const string GL_NAME = "libGLESv2", egl = "libEGL";
 #else
     private const string GL_NAME = "GLESv2";
 #endif
@@ -55,5 +70,5 @@ public unsafe static class GL_libs{
         t2d.filterMode = FilterMode.Point;
         return t2d;
     }
-}
 #endif
+}

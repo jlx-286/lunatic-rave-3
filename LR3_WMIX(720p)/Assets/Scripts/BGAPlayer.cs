@@ -67,7 +67,8 @@ public class BGAPlayer : MonoBehaviour {
                     VLCPlayer.playing[bgi_nums[num]] = false;
                 }
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-                BMSInfo.textures[bgi_nums[num]].Apply(false);
+                GL_libs.ModifyTexturePixels(BMSInfo.d3d11_device_contexts[bgi_nums[num]], BMSInfo.d3d11_resources[bgi_nums[num]],
+                    VLCPlayer.media_sizes[bgi_nums[num]].width, VLCPlayer.media_sizes[bgi_nums[num]].height, VLCPlayer.addrs[bgi_nums[num]], VLCPlayer.pixelBytes);
 #else
                 GL_libs.BindTexture(BMSInfo.texture_names[bgi_nums[num]]);
                 GL_libs.TexSubImageRGB((int)VLCPlayer.offsetYs[bgi_nums[num]], VLCPlayer.media_sizes[bgi_nums[num]].width,

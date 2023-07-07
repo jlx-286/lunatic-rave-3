@@ -46,19 +46,22 @@ public unsafe static class VLCPlayer{
     public static readonly UIntPtr[] ev_mgs = Enumerable.Repeat(UIntPtr.Zero, 36*36).ToArray();
     public static readonly bool[] playing = Enumerable.Repeat(false, 36*36).ToArray();
     public static readonly bool[] toStop = Enumerable.Repeat(false, 36*36).ToArray();
+    public static readonly byte*[] addrs = new byte*[36*36];
     private static readonly libvlc_callback_t endFunc = (e, data)=>{
-        *(bool*)data = true; Debug.Log("to end"); };
+        *(bool*)data = true; // Debug.Log("to end");
+    };
     private static readonly libvlc_callback_t playFunc = (e, data)=>{
         *(bool*)data = true; };
-#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || PLATFORM_STANDALONE_WIN
+    public const byte pixelBytes = 4;
+#else
     public static readonly uint[] offsetYs = Enumerable.Repeat<uint>(0, 36*36).ToArray();
     public static readonly byte[][] tex_pixels = Enumerable.Repeat<byte[]>(null, 36*36).ToArray();
-    public static readonly byte*[] addrs = new byte*[36*36];
+    // private const byte pixelBytes = 3;
 #endif
     public static void ClearPixels(ushort num){
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-        NativeArray<byte> arr = BMSInfo.textures[num].GetRawTextureData<byte>();
-        StaticClass.memset(arr.GetUnsafePtr(), 0, (IntPtr)arr.Length);
+        StaticClass.memset(addrs[num], 0, (UIntPtr)((ulong)media_sizes[num].uwidth * media_sizes[num].uheight * pixelBytes));
 #else
         fixed(void* p = tex_pixels[num])
             StaticClass.memset(p, 0, (IntPtr)tex_pixels[num].LongLength);
@@ -120,9 +123,12 @@ public unsafe static class VLCPlayer{
             if(libvlc_event_attach(ev_mgs[num],
                 (int)libvlc_event_e.libvlc_MediaPlayerEndReached,
                 endFunc, p + num) != 0) goto cleanup;
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || PLATFORM_STANDALONE_WIN
+        libvlc_video_set_format(players[num], "RV32", media_sizes[num].uwidth,
+            media_sizes[num].uheight, media_sizes[num].uwidth * pixelBytes);
+#else
         libvlc_video_set_format(players[num], "RV24", media_sizes[num].uwidth,
             media_sizes[num].uheight, media_sizes[num].uwidth * 3);
-#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
         if(media_sizes[num].uwidth <= media_sizes[num].uheight){
             tex_pixels[num] = new byte[3 * media_sizes[num].uwidth
                 * media_sizes[num].uheight];
@@ -154,27 +160,29 @@ public unsafe static class VLCPlayer{
     public static void NewVideoTex(ushort num){
         if(players[num] == UIntPtr.Zero) return;
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-        byte* ptr = null;
+        uint offset = 0;
         NativeArray<byte> arr;
         if(media_sizes[num].uwidth <= media_sizes[num].uheight){
             BMSInfo.textures[num] = new Texture2D(media_sizes[num].width,
-                media_sizes[num].height, TextureFormat.RGB24, false){
+                media_sizes[num].height, TextureFormat.BGRA32, false){
                 filterMode = FilterMode.Point };
             arr = BMSInfo.textures[num].GetRawTextureData<byte>();
-            ptr = (byte*)arr.GetUnsafePtr();// GetUnsafeReadOnlyPtr());
+            addrs[num] = (byte*)arr.GetUnsafePtr();// GetUnsafeReadOnlyPtr());
         }else{// if(media_sizes[num].uwidth > media_sizes[num].uheight)
             BMSInfo.textures[num] = new Texture2D(media_sizes[num].width,
-                media_sizes[num].width, TextureFormat.RGB24, false){
+                media_sizes[num].width, TextureFormat.BGRA32, false){
                 filterMode = FilterMode.Point };
             arr = BMSInfo.textures[num].GetRawTextureData<byte>();
-            ptr = (byte*)arr.GetUnsafePtr();// GetUnsafeReadOnlyPtr());
-            StaticClass.memset(ptr, 0, (IntPtr)arr.Length);
-            ptr += (media_sizes[num].uwidth - media_sizes[num].uheight)
-                / 2 * media_sizes[num].uwidth * 3;
-            // media_sizes[num].uheight = media_sizes[num].uwidth;
+            addrs[num] = (byte*)arr.GetUnsafePtr();// GetUnsafeReadOnlyPtr());
+            StaticClass.memset(addrs[num], 0, (IntPtr)arr.Length);
+            offset = (media_sizes[num].uwidth - media_sizes[num].uheight)
+                / 2 * media_sizes[num].uwidth * pixelBytes;
+            media_sizes[num].uheight = media_sizes[num].uwidth;
         }
+        BMSInfo.d3d11_resources[num] = BMSInfo.textures[num].GetNativeTexturePtr();
+        GL_libs.GetInfo(BMSInfo.d3d11_resources[num], out BMSInfo.d3d11_devices[num], out BMSInfo.d3d11_device_contexts[num]);
         libvlc_video_set_callbacks(players[num], (opaque, planes)=>{
-            *planes = opaque; return null; }, null, null, ptr);
+            *planes = opaque; return null; }, null, null, addrs[num] + offset);
         libvlc_media_player_play(players[num]);
         while(libvlc_media_player_get_state(players[num]) < State.Playing);
         libvlc_media_player_set_pause(players[num], 1);
@@ -249,10 +257,10 @@ public unsafe static class VLCPlayer{
             medias[num] = UIntPtr.Zero;
         }
         playing[num] = toStop[num] = false;
+        addrs[num] = null;
 #if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
         tex_pixels[num] = null;
         offsetYs[num] = 0;
-        addrs[num] = null;
 #endif
     }
     public static UIntPtr InstNew(string[] args) => args == null

@@ -10687,6 +10687,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mixer: {fileID: 24100000, guid: e4a624e88480fae4cad3fbf455afa29e, type: 2}
+  latency: 40
   meter_form: {fileID: 1295007876359072189, guid: 84714ea435d4783f1b6fa483f3a662c1,
     type: 3}
   bms_note_forms:

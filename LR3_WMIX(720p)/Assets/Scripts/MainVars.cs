@@ -34,7 +34,7 @@ public class MainVars : MonoBehaviour{// Game Manager
         new ushort[]{21,60,120,200,1000},//easy
         new ushort[]{26,75,150,200,1000},//v.easy
     };
-    [Range(-3000, 3000)] public short latency = 16;
+    [Range(-3000, 3000)] public short latency;
     public static long Latency;
     public static readonly Color32[] levelColor32s = {
         new Color32(0xFF,0xFF,0xFF,0xFF),// unknown

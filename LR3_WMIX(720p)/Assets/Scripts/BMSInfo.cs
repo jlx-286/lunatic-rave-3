@@ -34,7 +34,14 @@ public static class BMSInfo {
     public static string playing_scene_name = string.Empty;
 #region medias
 	public static readonly Texture2D[] textures = Enumerable.Repeat<Texture2D>(null, 36*36).ToArray();
-#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || PLATFORM_STANDALONE_WIN
+	public static readonly IntPtr[] d3d11_resources = Enumerable.Repeat(IntPtr.Zero, 36*36).ToArray();
+	public static readonly UIntPtr[] d3d11_devices = Enumerable.Repeat(UIntPtr.Zero, 36*36).ToArray();
+	public static readonly UIntPtr[] d3d11_device_contexts = Enumerable.Repeat(UIntPtr.Zero, 36*36).ToArray();
+	public static IntPtr stageFileRes;
+	public static UIntPtr stageFileDevice;
+	public static UIntPtr stageFileDeviceContext;
+#else
 	public static readonly uint[] texture_names = Enumerable.Repeat<uint>(0, 36*36).ToArray();
 	public static uint stageFilePtr;
 #endif
@@ -73,14 +80,19 @@ public static class BMSInfo {
 		stop_list_table.Clear();
 		fixed(void* p = track_end_time_as_ns)
 			StaticClass.memset(p, -1, (IntPtr)(track_end_time_as_ns.LongLength * sizeof(long)));
-#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || PLATFORM_STANDALONE_WIN
+		for(int i = 0; i < d3d11_devices.Length; i++)
+			GL_libs.Release(ref d3d11_resources[i], ref d3d11_devices[i], ref d3d11_device_contexts[i]);
+#else
 		fixed(uint* p = texture_names){
 			GL_libs.glDeleteTextures(texture_names.Length, p);
 			StaticClass.memset(p, 0, (IntPtr)(texture_names.LongLength * sizeof(uint)));
 		}
 #endif
 		Array.Clear(textures, 0, textures.Length);
-#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || PLATFORM_STANDALONE_WIN
+		GL_libs.Release(ref stageFileRes, ref stageFileDevice, ref stageFileDeviceContext);
+#else
 		fixed(uint* p = &stageFilePtr)
 			GL_libs.glDeleteTextures(1, p);
 		stageFilePtr = 0;

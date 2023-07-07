@@ -138,7 +138,7 @@ public unsafe static class StaticClass{
         ulong length;
         if(GetAudioInfo(path, out channels, out frequency, out length) && length <= int.MaxValue)
             result = new float[length];
-        else Debug.LogWarning(path + ":Invalid data or too long data");
+        // else Debug.LogWarning(path + ":Invalid data or too long data");
         fixed(float* p = result) CopyAudioSamples(p);
         /*if(result == null){
             try{

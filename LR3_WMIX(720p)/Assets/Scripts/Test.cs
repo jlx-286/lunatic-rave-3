@@ -12,7 +12,7 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 using ThreadState = System.Threading.ThreadState;
 using Debug = UnityEngine.Debug;
-public unsafe class Test : MonoBehaviour {
+public unsafe class Test : MonoBehaviour{
     public Button play_b;
     public AudioSource audioSource;
     public RawImage rawImage;
@@ -24,8 +24,8 @@ public unsafe class Test : MonoBehaviour {
         [FieldOffset(0)] public ushort unused;
         [FieldOffset(2)] public readonly byte exp;
         [FieldOffset(3)] public readonly sbyte sign;
-        [FieldOffset((sizeof(uint)))] public readonly uint higher;
-        [FieldOffset((sizeof(ulong)))] public readonly ulong lower;
+        [FieldOffset(sizeof(uint))] public readonly uint higher;
+        [FieldOffset(sizeof(ulong))] public readonly ulong lower;
     }
     /*private string TruncateGauge(decimal m){
         if(m >= 100) return "100.0";
@@ -134,6 +134,7 @@ public unsafe class Test : MonoBehaviour {
             // audioSource.Play();
             // Debug.Log(audioSource.isPlaying);
             DestroyImmediate(gm);
+            Debug.Log(Time.deltaTime);
         });
     }
     private void FixedUpdate(){
