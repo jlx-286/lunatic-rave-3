@@ -157,10 +157,10 @@ public class ManualNotePlayer : MonoBehaviour{
                 }
                 for(int i = 0; i < noteJudges.Length; i++) noteJudges[i] = NoteJudge.None;
                 if((notePlayer.gauge_val < 100 && notePlayer.inc > 0) ||
-                    (notePlayer.gauge_val > 0.1m && notePlayer.inc < 0)){
+                    (notePlayer.gauge_val > 2 && notePlayer.inc < 0)){
                     notePlayer.gauge_val += notePlayer.inc;
                     if(notePlayer.gauge_val > 100) notePlayer.gauge_val = 100;
-                    else if(notePlayer.gauge_val < 0.1m) notePlayer.gauge_val = 0.1m;
+                    else if(notePlayer.gauge_val < 2) notePlayer.gauge_val = 2;
                     notePlayer.now_bars = (byte)notePlayer.gauge_val; notePlayer.now_bars /= 2;
                     if(notePlayer.prev_bars != notePlayer.now_bars){
                         if(notePlayer.now_bars > notePlayer.prev_bars){

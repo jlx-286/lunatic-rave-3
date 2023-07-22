@@ -57,14 +57,14 @@ public class NotePlayer : MonoBehaviour {
             new decimal[6]{            -1.6m,             -4.8m,             -3.2m,0.6m * BMSInfo.incr,1.2m * BMSInfo.incr,1.2m * BMSInfo.incr},// assist
             new decimal[6]{            -1.6m,             -4.8m,             -3.2m,0.6m * BMSInfo.incr,1.2m * BMSInfo.incr,1.2m * BMSInfo.incr},// easy
             new decimal[6]{               -2,                -6,                -4,0.5m * BMSInfo.incr,       BMSInfo.incr,       BMSInfo.incr},// normal
-            new decimal[6]{-2 * hardGaugeMul,-10 * hardGaugeMul, -6 * hardGaugeMul,              0.05m,               0.1m,               0.1m},// hard (30% halve)
+            new decimal[6]{-2 * hardGaugeMul,-10 * hardGaugeMul, -6 * hardGaugeMul,              0.05m,               0.1m,               0.1m},// hard (32% halve)
             new decimal[6]{-4 * hardGaugeMul,-20 * hardGaugeMul,-12 * hardGaugeMul,              0.05m,               0.1m,               0.1m},// exh
             new decimal[6]{                0,              -100,              -100,                 +0,                 +0,                 +0},// FC
             new decimal[6]{             -100,              -100,              -100,               -100,  -1 * hardGaugeMul,               0.1m},// PA (gr>=-1)
-            new decimal[6]{               -2,                -3,                -2,              0.05m,               0.1m,               0.1m},// normal-Grade (30% halve)
+            new decimal[6]{               -2,                -3,                -2,              0.05m,               0.1m,               0.1m},// normal-Grade (32% halve)
             new decimal[6]{               -4,                -6,                -4,              0.05m,               0.1m,               0.1m},// hard-Grade
             new decimal[6]{               -6,               -10,                -6,              0.05m,               0.1m,               0.1m},// exh-Grade
-            new decimal[6]{            -1.6m,             -2.4m,             -1.6m,              0.06m,              0.12m,              0.12m},// course (30% halve)
+            new decimal[6]{            -1.6m,             -2.4m,             -1.6m,              0.06m,              0.12m,              0.12m},// course (32% halve)
             new decimal[6]{-2 * hardGaugeMul,-10 * hardGaugeMul, -6 * hardGaugeMul,               0.1m,  -6 * hardGaugeMul, -10 * hardGaugeMul},// G-A
         };
     }
@@ -127,10 +127,10 @@ public class NotePlayer : MonoBehaviour {
                 comboText.text = builder.ComboNumToTMP(in runningCombo, NoteJudge.Perfect);
                 curr_judge.text = StaticClass.judge_tmp[(byte)NoteJudge.Perfect];
                 if((gauge_val < 100 && inc > 0) ||
-                    (gauge_val > 0.1m && inc < 0)){
+                    (gauge_val > 2 && inc < 0)){
                     gauge_val += inc;
                     if(gauge_val > 100) gauge_val = 100;
-                    else if(gauge_val < 0.1m) gauge_val = 0.1m;
+                    else if(gauge_val < 2) gauge_val = 2;
                     now_bars = (byte)gauge_val; now_bars /= 2;
                     if(prev_bars != now_bars){
                         if(now_bars > prev_bars){
