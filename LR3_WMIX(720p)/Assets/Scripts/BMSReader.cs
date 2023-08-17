@@ -216,10 +216,10 @@ public class BMSReader : MonoBehaviour{
                     file_lines[j] = null;
                 }
                 else if(Regex.IsMatch(file_lines[j], @"^#(EX)?BPM[\d\w]{2}\s+[\+-]?\d+(\.\d+)?", StaticClass.regexOption)){
-                    file_lines[j] = Regex.Match(file_lines[j], @"[\d\w]{2}\s+[\+-]?\d+(\.\d+)?",
+                    file_lines[j] = Regex.Match(file_lines[j], @"[\d\w]{2}\s+[\+-]?\d+(\.\d+)?\S*",
                         StaticClass.regexOption).Value;
                     u = StaticClass.Convert36To10(file_lines[j].Substring(0, 2));
-                    if(u > 0 && decimal.TryParse(file_lines[j].Substring(2).TrimStart(), out ld) && ld > 0)
+                    if(u > 0 && StaticClass.TryParseDecimal(file_lines[j].Substring(2).TrimStart(), out ld) && ld > 0)
                         exbpm_dict[u] = ld;
                     file_lines[j] = null;
                 }
