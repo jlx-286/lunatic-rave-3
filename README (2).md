@@ -13,26 +13,21 @@
         + <a href="https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2022-10-31-12-44/ffmpeg-n4.4.3-win64-lgpl-shared-4.4.zip">download FFmpeg</a> and add the directory of "avcodec-58.dll" to "%path%"
 - Linux (Debian or Ubuntu)
     1. VLC
-        ``` shell
-        # sudo apt install vlc-plugin-base vlc-plugin-video-output libvlc5
-        sudo apt install vlc-plugin-base vlc-plugin-video-output libvlc-dev
+        ```shell
+        sudo apt install vlc-plugin-base vlc-plugin-video-output libvlc-dev # libvlc-bin
         # sudo apt install vlc libvlc-dev
         ```
     2. FFmpeg (libavcodec + libavutil + libavformat + libswresample + libswscale)
         ```shell
-        sudo apt install libavformat-dev libswscale-dev
+        sudo apt install libavcodec58 libavformat58 libavutil56 libswresample3 libswscale5
         ```
     3. FluidSynth
         ```shell
         sudo apt install libfluidsynth-dev
-        # sudo apt install libfluidsynth2
+        # sudo apt install libfluidsynth2 || sudo apt install libfluidsynth3
         # apt download timgm6mb-soundfont fluid-soundfont-gm
         ```
-    4. OpenGL ES 2
-        ```shell
-        sudo apt install libgles-dev # libgles2
-        ```
-    5. Others
+    4. Others
         ```shell
         ## You can install the dependencies by Synaptic (in GUI):
         # sudo apt install synaptic

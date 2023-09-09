@@ -4,19 +4,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <deque>
-// #include <cmath>
-// #include <float.h>
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
-// #include <libavfilter/avfilter.h>
-// #include <libavdevice/avdevice.h>
 #include <libswresample/swresample.h>
 #include <libswscale/swscale.h>
 };
-// g++ -O3 -fPIC -shared -Wall -o FFmpegPlugin.so FFmpegPlugin.cpp -lavcodec -lavformat -lavutil -lswresample -lswscale
-// g++ -O3 -shared -Wall -I"./ffmpeg~/include" -L"./ffmpeg~/lib" -o FFmpegPlugin.dll FFmpegPlugin.cpp -lavcodec -lavformat -lavutil -lswresample -lswscale
+// g++ -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpegPlugin.so FFmpegPlugin.cpp -lavcodec -lavformat -lavutil -lswresample -lswscale
+// g++ -O3 -fPIC -shared -Wall -I"./include" -L"./bin" -o FFmpegPlugin.dll FFmpegPlugin.cpp -lavcodec-58 -lavformat-58 -lavutil-56 -lswresample-3 -lswscale-5
 AVCodecContext* openCodecContext(AVFormatContext* fc, int* stream, enum AVMediaType type){
     if(fc == NULL || avformat_find_stream_info(fc, NULL) < 0) return NULL;
     *stream = av_find_best_stream(fc, type, -1, -1, NULL, 0);
@@ -28,7 +24,7 @@ AVCodecContext* openCodecContext(AVFormatContext* fc, int* stream, enum AVMediaT
     return cc;
 }
 AVFormatContext* g_fc = NULL;
-extern "C" void GetVideoSize(const char* path, int* width, int* height){
+extern "C" bool GetVideoSize(const char* path, int* width, int* height){
     *width = *height = 0;
     int stream = -1;
     AVCodecContext* cc = NULL;
@@ -39,6 +35,7 @@ extern "C" void GetVideoSize(const char* path, int* width, int* height){
     *width = cc->width;
     *height = cc->height;
     cleanup: avformat_close_input(&g_fc);
+    return (*width > 0 && *height > 0);
 }
 SwrContext* g_swr = NULL;
 AVPacket* g_pkt = NULL;
@@ -161,7 +158,7 @@ extern "C" void CopyPixels(void* addr, int width, int height, bool isBitmap, boo
     target->width = width;
     target->height = height;
     target->format = AV_PIX_FMT_RGBA;
-    avpicture_alloc((AVPicture*)target, AV_PIX_FMT_RGBA, width, height);
+    if(av_frame_get_buffer(target, 0) != 0) goto cleanup;
     if(av_read_frame(g_fc, g_pkt) == 0
         && g_pkt->stream_index == picStream
         && avcodec_send_packet(cc, g_pkt) == 0
@@ -190,6 +187,31 @@ extern "C" void CopyPixels(void* addr, int width, int height, bool isBitmap, boo
                             if(*(uint8_t*)(target->data[0] + (w + h * width) * 4 + 0) > 4
                             || *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 1) > 4
                             || *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 2) > 4)
+                                memcpy(addr + (h * height + (height - width) / 2 + w) * 4,
+                                    target->data[0] + ((height - 1 - h) * width + w) * 4, 4);
+                        }
+                    }
+                }
+            }else if(cc->codec_id == AV_CODEC_ID_PNG || cc->codec_id == AV_CODEC_ID_APNG || cc->codec_id == AV_CODEC_ID_GIF){
+                if(width >= height){
+                    for(int h = 0; h < height; h++){
+                        for(int w = 0; w < width; w++){
+                            if(*(uint8_t*)(target->data[0] + (w + h * width) * 4 + 0) > 0
+                            || *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 1) > 0
+                            || *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 2) > 0)
+                                memcpy(addr + ((width - 1 - h) * width + w) * 4,
+                                    target->data[0] + (h * width + w) * 4, 4);
+                                // memcpy(addr + (h * width + w) * 4,
+                                //     target->data[0] + ((height - 1 - h) * width + w) * 4, 4);
+                        }
+                    }
+                }
+                else if(width < height){
+                    for(int h = 0; h < height; h++){
+                        for(int w = 0; w < width; w++){
+                            if(*(uint8_t*)(target->data[0] + (w + h * width) * 4 + 0) > 0
+                            || *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 1) > 0
+                            || *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 2) > 0)
                                 memcpy(addr + (h * height + (height - width) / 2 + w) * 4,
                                     target->data[0] + ((height - 1 - h) * width + w) * 4, 4);
                         }

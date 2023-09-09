@@ -16,7 +16,7 @@ using UnityEngine;
 public unsafe static class StaticClass{
     public const RegexOptions regexOption = RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
     private const string PluginName = "FFmpegPlugin";
-    [DllImport(PluginName, EntryPoint = "GetVideoSize")] private extern static void __GetVideoSize(
+    [DllImport(PluginName)] public extern static bool GetVideoSize(
         string url, out int width, out int height);
     [DllImport(PluginName)] private extern static bool GetAudioInfo(
         string url, out int channels, out int frequency, out ulong length);
@@ -40,12 +40,14 @@ public unsafe static class StaticClass{
 #endif
 */
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-    [DllImport("ucrtbase")] public extern static void* memset(void* src, int val, UIntPtr count);
-    [DllImport("ucrtbase")] public extern static void* memset(void* src, int val, IntPtr count);
+    private const string libc = "ucrtbase";
+#elif UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || PLATFORM_STANDALONE_LINUX
+    private const string libc = "libc";
 #else
-    [DllImport("libavcodec")] public extern static void* memset(void* src, int val, UIntPtr count);
-    [DllImport("libavcodec")] public extern static void* memset(void* src, int val, IntPtr count);
+    private const string libc = "libavcodec";
 #endif
+    [DllImport(libc)] public extern static void* memset(void* src, int val, UIntPtr count);
+    [DllImport(libc)] public extern static void* memset(void* src, int val, IntPtr count);
     private static readonly Encoding Shift_JIS = Encoding.GetEncoding("shift_jis");
     private static readonly Encoding GB18030 = Encoding.GetEncoding("GB18030");
     /// <summary>
@@ -152,14 +154,6 @@ public unsafe static class StaticClass{
             }
         }*/
         return result;
-    }
-    public static bool GetVideoSize(string path, out int width, out int height){
-        if(!File.Exists(path)){
-            width = height = 0;
-            return false;
-        }
-        __GetVideoSize(path, out width, out height);
-        return (width > 0 && height > 0);
     }
     public static string GaugeToString(this in decimal m){
         if(m >= 100) return "100.0";

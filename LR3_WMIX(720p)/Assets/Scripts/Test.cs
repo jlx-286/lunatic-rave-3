@@ -118,26 +118,27 @@ public unsafe class Test : MonoBehaviour{
             s = d.RateToSubstring();
         sw.Stop();
         Debug.Log(sw.ElapsedTicks);*/
-        /*AudioClip clip = null;
+        FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2");
+        AudioClip clip = null;
         int channels, frequency, length, lengthSamples;
-        float[] samples = StaticClass.AudioToSamples(Application.dataPath + "/~Media~/Angel Dust.mp3", out channels, out frequency);
+        float[] samples = FluidManager.MidiToSamples(Application.streamingAssetsPath + "/onestop.mid", out lengthSamples, out frequency);
         if(samples != null){
-            clip = AudioClip.Create("ffmpeg", samples.Length / channels, channels, frequency, false);
+            clip = AudioClip.Create("midi", samples.Length / FluidManager.channels, FluidManager.channels, frequency, false);
             clip.SetData(samples, 0);
             Debug.Log(clip.samples);
             Debug.Log(clip.length);
             //Debug.Log(samples.Length);
         }
         audioSource.clip = clip;
-        rawImage.texture = Texture2D.blackTexture;*/
+        // rawImage.texture = Texture2D.blackTexture;*/
         play_b.onClick.AddListener(() => {
-            // audioSource.Play();
+            audioSource.Play();
             // Debug.Log(audioSource.isPlaying);
             DestroyImmediate(gm);
             Debug.Log(Time.deltaTime);
         });
     }
-    private void FixedUpdate(){
+    /*private void FixedUpdate(){
         // input per frame?
         if(!pressed2 && Input.GetKeyDown(KeyCode.Space)){
             Debug.Log($"GetKeyDown:{ms}");
@@ -154,10 +155,10 @@ public unsafe class Test : MonoBehaviour{
             pressed1 = false;
         }
         ms++;
-    }
+    }*/
     private void OnApplicationQuit(){
         // StaticClass.rng.Dispose();
-        // FluidManager.CleanUp();
+        FluidManager.CleanUp();
         VLCPlayer.VLCRelease();
         StaticClass.FFmpegCleanUp();
         Resources.UnloadUnusedAssets();
