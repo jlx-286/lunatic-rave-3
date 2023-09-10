@@ -7,27 +7,27 @@
 
 ### Dependencies:
 - Windows (<https://learn.microsoft.com/windows-server/administration/windows-commands/path>)
-    - <a href="https://www.videolan.org/vlc/">VLC</a>
+    + <a href="https://www.videolan.org/vlc/">VLC</a>
         + install VLC and add the directory of "libvlc.dll" to "%path%"
-    - FFmpeg (avcodec-58 + avformat-58 + avutil-56 + swresample-3 + swscale-5)
+    + FFmpeg (avcodec-58 + avformat-58 + avutil-56 + swresample-3 + swscale-5)
         + <a href="https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2022-10-31-12-44/ffmpeg-n4.4.3-win64-lgpl-shared-4.4.zip">download FFmpeg</a> and add the directory of "avcodec-58.dll" to "%path%"
 - Linux (Debian or Ubuntu)
-    1. VLC
+    + VLC
         ```shell
         sudo apt install vlc-plugin-base vlc-plugin-video-output libvlc-dev # libvlc-bin
         # sudo apt install vlc libvlc-dev
         ```
-    2. FFmpeg (libavcodec + libavutil + libavformat + libswresample + libswscale)
+    + FFmpeg (libavcodec + libavutil + libavformat + libswresample + libswscale)
         ```shell
         sudo apt install libavcodec58 libavformat58 libavutil56 libswresample3 libswscale5
         ```
-    3. FluidSynth
+    + FluidSynth
         ```shell
         sudo apt install libfluidsynth-dev
         # sudo apt install libfluidsynth2 || sudo apt install libfluidsynth3
         # apt download timgm6mb-soundfont fluid-soundfont-gm
         ```
-    4. Others
+    + Others
         ```shell
         ## You can install the dependencies by Synaptic (in GUI):
         # sudo apt install synaptic

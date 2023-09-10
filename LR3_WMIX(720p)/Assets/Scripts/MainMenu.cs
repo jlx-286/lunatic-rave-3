@@ -14,6 +14,9 @@ public class MainMenu : MonoBehaviour {
 	public readonly static AudioSource[] audioSources = Enumerable.Repeat<AudioSource>(null, 36 * 36 + 1).ToArray();
 	public AudioSource audioSource;
 	private void Start(){
+#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || PLATFORM_STANDALONE_LINUX
+        FFmpegPlugins.MatchFFmpegVersion();
+#endif
         exit_btn.onClick.AddListener(() => {
 #if UNITY_EDITOR
             EditorApplication.isPlaying = false;
@@ -75,7 +78,7 @@ public class MainMenu : MonoBehaviour {
         MainVars.rng.Dispose();
         // FluidManager.CleanUp();
         VLCPlayer.VLCRelease();
-        StaticClass.FFmpegCleanUp();
+        FFmpegPlugins.CleanUp();
         BMSInfo.CleanUp();
         Resources.UnloadUnusedAssets();
         // AssetBundle.UnloadAllAssetBundles(true);

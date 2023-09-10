@@ -267,7 +267,7 @@ public class BMSReader : MonoBehaviour{
                     + @"\.(bmp|png|jpg|jpeg|gif|mag|wmf|emf|cur|ico|tga|dds|dib|tiff|webp|pbm|pgm|ppm|xcf|pcx|iff|ilbm|pxr|svg|psd)\n"
                     , StaticClass.regexOption).Value.TrimEnd();
                     int width, height;
-                    Color32[] color32s = StaticClass.GetStageImage(bms_directory + file_lines[j], out width, out height);
+                    Color32[] color32s = FFmpegPlugins.GetStageImage(bms_directory + file_lines[j], out width, out height);
                     if(color32s != null && color32s.Length > 0 && width > 0 && height > 0){
                         unityActions.Enqueue(()=>{
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
@@ -653,7 +653,7 @@ public class BMSReader : MonoBehaviour{
                     + @"\.(bmp|png|jpg|jpeg|gif|mag|wmf|emf|cur|ico|tga|dds|dib|tiff|webp|pbm|pgm|ppm|xcf|pcx|iff|ilbm|pxr|svg|psd)\n"
                     , StaticClass.regexOption).Value.TrimEnd();
                     int width, height;
-                    Color32[] color32s = StaticClass.GetTextureInfo(bms_directory + bmp_names[i], out width, out height);
+                    Color32[] color32s = FFmpegPlugins.GetTextureInfo(bms_directory + bmp_names[i], out width, out height);
                     if(color32s != null && color32s.Length > 0 && width > 0 && height > 0){
                         unityActions.Enqueue(() => {
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
@@ -689,7 +689,7 @@ public class BMSReader : MonoBehaviour{
                 + @"\.(WAV|OGG|MP3|AIFF|AIF|MOD|IT|S3M|XM|MID|AAC|M3A|WMA|AMR|FLAC)\n",
                 StaticClass.regexOption).Value.TrimEnd();
                 int channels = 0, frequency = 0;
-                float[] samples = StaticClass.AudioToSamples(bms_directory + wav_names[i], out channels, out frequency);
+                float[] samples = FFmpegPlugins.AudioToSamples(bms_directory + wav_names[i], out channels, out frequency);
                 if(samples != null && samples.Length >= channels && channels > 0 && frequency > 0){
                     unityActions.Enqueue(() => {
                         AudioClip clip = AudioClip.Create("clip", samples.Length / channels,
@@ -1502,7 +1502,7 @@ public class BMSReader : MonoBehaviour{
         }
         for(ushort i = 0; i < wav_names.Length; i++)
             wav_names[i] = bmp_names[i] = null;
-        StaticClass.FFmpegCleanUp();
+        FFmpegPlugins.CleanUp();
     }
     private void BMS_region(){
         laneMap[0x11] = laneMap[0x51] = laneMap[0xD1] = 1;

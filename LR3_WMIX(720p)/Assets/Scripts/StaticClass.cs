@@ -15,17 +15,6 @@ using Ude;
 using UnityEngine;
 public unsafe static class StaticClass{
     public const RegexOptions regexOption = RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
-    private const string PluginName = "FFmpegPlugin";
-    [DllImport(PluginName)] public extern static bool GetVideoSize(
-        string url, out int width, out int height);
-    [DllImport(PluginName)] private extern static bool GetAudioInfo(
-        string url, out int channels, out int frequency, out ulong length);
-    [DllImport(PluginName)] private extern static void CopyAudioSamples(float* addr);
-    [DllImport(PluginName)] private extern static bool GetPixelsInfo(
-        string url, out int width, out int height, out bool isBitmap);
-    [DllImport(PluginName)] private extern static void CopyPixels(
-        void* addr, int width, int height, bool isBitmap, bool strech = false);
-    [DllImport(PluginName, EntryPoint = "CleanUp")] public extern static void FFmpegCleanUp();
 /*
     /// <summary>
     /// seconds
@@ -50,11 +39,6 @@ public unsafe static class StaticClass{
     [DllImport(libc)] public extern static void* memset(void* src, int val, IntPtr count);
     private static readonly Encoding Shift_JIS = Encoding.GetEncoding("shift_jis");
     private static readonly Encoding GB18030 = Encoding.GetEncoding("GB18030");
-    /// <summary>
-    /// using Ude;
-    /// </summary>
-    /// <param name="path">text file path</param>
-    /// <returns></returns>
     public static Encoding GetEncodingByFilePath(string path){
         CharsetDetector detector = new CharsetDetector();
         using(FileStream fileStream = File.OpenRead(path)){
@@ -74,12 +58,6 @@ public unsafe static class StaticClass{
         }
         else return Shift_JIS;
     }
-
-    /// <summary>
-    /// returns 0 if the string is null or the string doesn't match ^[\d\w]+$
-    /// </summary>
-    /// <param name="s"></param>
-    /// <returns>ushort number</returns>
     public static ushort Convert36To10(string s){
         if(s == null || !Regex.IsMatch(s, @"^[\d\w]+$", StaticClass.regexOption)){
             return 0;
@@ -94,67 +72,6 @@ public unsafe static class StaticClass{
         return result;
     }
 
-    /// <summary>
-    /// Depends on FFmpeg libraries
-    /// </summary>
-    /// <param name="path"></param>
-    /// <param name="width"></param>
-    /// <param name="height"></param>
-    /// <returns>Color32[] (use Texture2D.SetPixels32(Color32[]))</returns>
-    public static Color32[] GetTextureInfo(string path, out int width, out int height){
-        width = height = 0;
-        if(!File.Exists(path)) return null;
-        Color32[] color32s = null;
-        bool isBitmap;
-        if(GetPixelsInfo(path, out width, out height, out isBitmap)){
-            int max = Math.Max(width, height);
-            ulong length = (ulong)max;
-            length *= length;
-            if(length <= int.MaxValue) color32s = new Color32[length];
-            fixed(void* p = color32s)
-                CopyPixels(p, width, height, isBitmap
-                || Regex.IsMatch(path, @"\.bmp$", regexOption));
-            width = height = max;
-        }
-        return color32s;
-    }
-    public static Color32[] GetStageImage(string path, out int width, out int height){
-        width = height = 0;
-        if(!File.Exists(path)) return null;
-        Color32[] color32s = null;
-        bool isBitmap;
-        if(GetPixelsInfo(path, out width, out height, out isBitmap)){
-            color32s = new Color32[width * height];
-            fixed(void* p = color32s)
-                CopyPixels(p, width, height, false, true);
-        }
-        return color32s;
-    }
-    public static float[] AudioToSamples(string path, out int channels, out int frequency){
-        if(!File.Exists(path)){
-            channels = frequency = 0;
-            // Debug.Log(path);
-            return null;
-        }
-        float[] result = null;
-        ulong length;
-        if(GetAudioInfo(path, out channels, out frequency, out length) && length <= int.MaxValue)
-            result = new float[length];
-        // else Debug.LogWarning(path + ":Invalid data or too long data");
-        fixed(float* p = result) CopyAudioSamples(p);
-        /*if(result == null){
-            try{
-                channels = FluidManager.channels;
-                int lengthSamples = 0;
-                result = FluidManager.MidiToSamples(path, out lengthSamples, out frequency);
-            }catch(Exception e){
-                channels = frequency = 0;
-                result = null;
-                Debug.LogWarning(e.GetBaseException());
-            }
-        }*/
-        return result;
-    }
     public static string GaugeToString(this in decimal m){
         if(m >= 100) return "100.0";
         else if(m < 0.1m) return "0.0";

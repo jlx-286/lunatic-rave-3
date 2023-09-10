@@ -160,7 +160,7 @@ public unsafe class Test : MonoBehaviour{
         // StaticClass.rng.Dispose();
         FluidManager.CleanUp();
         VLCPlayer.VLCRelease();
-        StaticClass.FFmpegCleanUp();
+        FFmpegPlugins.CleanUp();
         Resources.UnloadUnusedAssets();
         // AssetBundle.UnloadAllAssetBundles(true);
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, false);

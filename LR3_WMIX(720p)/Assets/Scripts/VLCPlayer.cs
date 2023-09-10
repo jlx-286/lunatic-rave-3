@@ -109,7 +109,7 @@ public unsafe static class VLCPlayer{
     private extern static void libvlc_event_detach(UIntPtr evmn,
         int eventType, libvlc_callback_t c, void* userData);
     public static bool PlayerNew(string path, ushort num){
-        if(instance == UIntPtr.Zero || !StaticClass.GetVideoSize(
+        if(instance == UIntPtr.Zero || !FFmpegPlugins.GetVideoSize(
             path, out media_sizes[num].width, out media_sizes[num].height))
             return false;
         if(medias[num] == UIntPtr.Zero) medias[num] = libvlc_media_new_path(instance, path);
