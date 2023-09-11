@@ -30,6 +30,32 @@ public unsafe static class FFmpegPlugins{
             void* addr, int width, int height, bool isBitmap, bool strech = false);
         [DllImport(PluginName)] public extern static void CleanUp();
     }
+    private static class V5{
+        private const string PluginName = "FFmpeg5Plugin";
+        [DllImport(PluginName)] public extern static bool GetVideoSize(
+            string url, out int width, out int height);
+        [DllImport(PluginName)] public extern static bool GetAudioInfo(
+            string url, out int channels, out int frequency, out ulong length);
+        [DllImport(PluginName)] public extern static void CopyAudioSamples(float* addr);
+        [DllImport(PluginName)] public extern static bool GetPixelsInfo(
+            string url, out int width, out int height, out bool isBitmap);
+        [DllImport(PluginName)] public extern static void CopyPixels(
+            void* addr, int width, int height, bool isBitmap, bool strech = false);
+        [DllImport(PluginName)] public extern static void CleanUp();
+    }
+    private static class V6{
+        private const string PluginName = "FFmpeg6Plugin";
+        [DllImport(PluginName)] public extern static bool GetVideoSize(
+            string url, out int width, out int height);
+        [DllImport(PluginName)] public extern static bool GetAudioInfo(
+            string url, out int channels, out int frequency, out ulong length);
+        [DllImport(PluginName)] public extern static void CopyAudioSamples(float* addr);
+        [DllImport(PluginName)] public extern static bool GetPixelsInfo(
+            string url, out int width, out int height, out bool isBitmap);
+        [DllImport(PluginName)] public extern static void CopyPixels(
+            void* addr, int width, int height, bool isBitmap, bool strech = false);
+        [DllImport(PluginName)] public extern static void CleanUp();
+    }
     public static void MatchFFmpegVersion(){
         const string PluginDir = "/lib/x86_64-linux-gnu/";
         if(File.Exists(PluginDir + "libavcodec.so.58")){//FFmpeg 4.x
@@ -40,9 +66,19 @@ public unsafe static class FFmpegPlugins{
             CopyPixels       = V4.CopyPixels;
             CleanUp          = V4.CleanUp;
         }else if(File.Exists(PluginDir + "libavcodec.so.59")){//FFmpeg 5.x
-            throw new DllNotFoundException("not FFmpeg 4.x");
+            GetVideoSize     = V5.GetVideoSize;
+            GetAudioInfo     = V5.GetAudioInfo;
+            CopyAudioSamples = V5.CopyAudioSamples;
+            GetPixelsInfo    = V5.GetPixelsInfo;
+            CopyPixels       = V5.CopyPixels;
+            CleanUp          = V5.CleanUp;
         }else if(File.Exists(PluginDir + "libavcodec.so.60")){//FFmpeg 6.x
-            throw new DllNotFoundException("not FFmpeg 4.x");
+            GetVideoSize     = V6.GetVideoSize;
+            GetAudioInfo     = V6.GetAudioInfo;
+            CopyAudioSamples = V6.CopyAudioSamples;
+            GetPixelsInfo    = V6.GetPixelsInfo;
+            CopyPixels       = V6.CopyPixels;
+            CleanUp          = V6.CleanUp;
         }else throw new DllNotFoundException("unknown FFmpeg version");
     }
 #else
