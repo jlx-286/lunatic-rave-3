@@ -144,7 +144,7 @@ public unsafe static class VLCPlayer{
         }
         libvlc_video_set_callbacks(players[num], (opaque, planes)=>{
             *planes = opaque; return null; }, null, null, addrs[num]);
-        libvlc_media_player_play(players[num]);
+        Debug.Log("libvlc_media_player_play:" + libvlc_media_player_play(players[num]));
         while(libvlc_media_player_get_state(players[num]) < State.Playing);
         libvlc_media_player_set_pause(players[num], 1);
         fixed(bool* p = playing)

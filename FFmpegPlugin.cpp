@@ -99,7 +99,9 @@ extern "C" bool GetAudioInfo(const char* path, int* channels, int* frequency, si
                     if(got_samples < 0) goto cleanup;
                 }
                 av_freep(&g_buf);
+                av_frame_unref(g_frame);
             }
+            av_frame_unref(g_frame);
         }
         av_packet_unref(g_pkt);
     }
@@ -158,7 +160,7 @@ extern "C" void CopyPixels(void* addr, int width, int height, bool isBitmap, boo
     target->width = width;
     target->height = height;
     target->format = AV_PIX_FMT_RGBA;
-    if(av_frame_get_buffer(target, 0) != 0) goto cleanup;
+    if(av_frame_get_buffer(target, 1) != 0) goto cleanup;
     if(av_read_frame(g_fc, g_pkt) == 0
         && g_pkt->stream_index == picStream
         && avcodec_send_packet(cc, g_pkt) == 0
@@ -167,7 +169,7 @@ extern "C" void CopyPixels(void* addr, int width, int height, bool isBitmap, boo
             g_frame->height, target->data, target->linesize) > 0
     ){
         if(!strech){
-            if(isBitmap){
+            if(isBitmap || cc->codec_id == AV_CODEC_ID_PNG || cc->codec_id == AV_CODEC_ID_APNG || cc->codec_id == AV_CODEC_ID_GIF){
                 if(width >= height){
                     for(int h = 0; h < height; h++){
                         for(int w = 0; w < width; w++){
@@ -176,8 +178,6 @@ extern "C" void CopyPixels(void* addr, int width, int height, bool isBitmap, boo
                             || *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 2) > 4)
                                 memcpy(addr + ((width - 1 - h) * width + w) * 4,
                                     target->data[0] + (h * width + w) * 4, 4);
-                                // memcpy(addr + (h * width + w) * 4,
-                                //     target->data[0] + ((height - 1 - h) * width + w) * 4, 4);
                         }
                     }
                 }
@@ -187,43 +187,16 @@ extern "C" void CopyPixels(void* addr, int width, int height, bool isBitmap, boo
                             if(*(uint8_t*)(target->data[0] + (w + h * width) * 4 + 0) > 4
                             || *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 1) > 4
                             || *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 2) > 4)
-                                memcpy(addr + (h * height + (height - width) / 2 + w) * 4,
-                                    target->data[0] + ((height - 1 - h) * width + w) * 4, 4);
-                        }
-                    }
-                }
-            }else if(cc->codec_id == AV_CODEC_ID_PNG || cc->codec_id == AV_CODEC_ID_APNG || cc->codec_id == AV_CODEC_ID_GIF){
-                if(width >= height){
-                    for(int h = 0; h < height; h++){
-                        for(int w = 0; w < width; w++){
-                            if(*(uint8_t*)(target->data[0] + (w + h * width) * 4 + 0) > 0
-                            || *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 1) > 0
-                            || *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 2) > 0)
-                                memcpy(addr + ((width - 1 - h) * width + w) * 4,
-                                    target->data[0] + (h * width + w) * 4, 4);
-                                // memcpy(addr + (h * width + w) * 4,
-                                //     target->data[0] + ((height - 1 - h) * width + w) * 4, 4);
-                        }
-                    }
-                }
-                else if(width < height){
-                    for(int h = 0; h < height; h++){
-                        for(int w = 0; w < width; w++){
-                            if(*(uint8_t*)(target->data[0] + (w + h * width) * 4 + 0) > 0
-                            || *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 1) > 0
-                            || *(uint8_t*)(target->data[0] + (w + h * width) * 4 + 2) > 0)
-                                memcpy(addr + (h * height + (height - width) / 2 + w) * 4,
-                                    target->data[0] + ((height - 1 - h) * width + w) * 4, 4);
+                                memcpy(((height - width) / 2 + w + (height - 1 - h) * height)
+                                    * 4 + addr, target->data[0] + (w + h * width) * 4, 4);
                         }
                     }
                 }
             }else{
                 if(width >= height){
                     for(int h = 0; h < height; h++){
-                        memcpy(addr + (width - 1 - h - (width - height) / 2) * width * 4,
+                        memcpy(addr + (width - 1 - h) * width * 4,
                             target->data[0] + h * width * 4, 4UL * width);
-                        // memcpy(addr + h * width * 4,
-                        //     target->data[0] + (height - 1 - h) * width * 4, 4UL * width);
                     }
                 }
                 else if(width < height){

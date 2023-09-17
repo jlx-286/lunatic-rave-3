@@ -3,23 +3,18 @@
     - Windows: Fatal error in GC "GetThreadContext failed" (due to Unity with System.Threading?)
 + considering 2020.2.0 or newer version(s)
     - <https://docs.unity3d.com/2020.2/Documentation/ScriptReference/Time.html>
-	- <a href="https://gamedev.stackexchange.com/questions/141807/what-happens-when-time-time-gets-very-large-in-unity">What happens when Time.time gets very large in Unity?</a>
+	- [What happens when Time.time gets very large in Unity?](https://gamedev.stackexchange.com/questions/141807/what-happens-when-time-time-gets-very-large-in-unity)
 
 ### Dependencies:
 - Windows (<https://learn.microsoft.com/windows-server/administration/windows-commands/path>)
-    + <a href="https://www.videolan.org/vlc/">VLC</a>
-        + install VLC and add the directory of "libvlc.dll" to "%path%"
+    + install [VLC](https://www.videolan.org/vlc/) and add the directory of "libvlc.dll" to "%path%"
     + FFmpeg (avcodec-58 + avformat-58 + avutil-56 + swresample-3 + swscale-5)
-        + <a href="https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2022-10-31-12-44/ffmpeg-n4.4.3-win64-lgpl-shared-4.4.zip">download FFmpeg</a> and add the directory of "avcodec-58.dll" to "%path%"
+        + [download FFmpeg](https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2022-10-31-12-44/ffmpeg-n4.4.3-win64-lgpl-shared-4.4.zip) and add the directory of "avcodec-58.dll" to "%path%"
 - Linux (Debian or Ubuntu)
     + VLC
         ```shell
         sudo apt install vlc-plugin-base vlc-plugin-video-output libvlc-dev # libvlc-bin
         # sudo apt install vlc libvlc-dev
-        ```
-    + FFmpeg (libavcodec + libavutil + libavformat + libswresample + libswscale)
-        ```shell
-        sudo apt install libavcodec58 libavformat58 libavutil56 libswresample3 libswscale5
         ```
     + FluidSynth
         ```shell
@@ -35,18 +30,17 @@
         # sudo apt install patchelf || sudo snap install patchelf
         # snap download vlc ffmpeg minuet
         ```
-- FluidSynth
-    + The plugins are from <a href="https://assetstore.unity.com/packages/tools/audio/fluid-midi-player-173680">Unity Asset Store</a>.
+- [FluidSynth](https://www.fluidsynth.org)
+    + The plugins are from [Unity Asset Store](https://assetstore.unity.com/packages/tools/audio/fluid-midi-player-173680).
         (alternative:<https://github.com/FluidSynth/fluidsynth/releases/>)
-    + The soundfont in "<a href="https://docs.unity3d.com/2018.2/Documentation/ScriptReference/Application-streamingAssetsPath.html">Application.streamingAssetsPath</a>" is from timgm6mb-soundfont.
+    + The soundfont in "[Application.streamingAssetsPath](https://docs.unity3d.com/2018.2/Documentation/ScriptReference/Application-streamingAssetsPath.html)" is from timgm6mb-soundfont.
     + <https://github.com/FluidSynth/fluidsynth/wiki/Download#distributions>
 
 ### About .gitignore
 1. previous .gitignore (by owy787)
-    + same as <a href="https://github.com/github/gitignore/blob/main/C.gitignore">C.gitignore</a>
+    + same as [C.gitignore](https://github.com/github/gitignore/blob/main/C.gitignore)
 2. current .gitignore (by jlx-286)
-    + from <a href="https://github.com/github/gitignore/blob/main/Unity.gitignore">Unity.gitignore</a>
-    + from <https://www.it1352.com/1848876.html>
+    + from [Unity.gitignore](https://github.com/github/gitignore/blob/main/Unity.gitignore) and <https://www.it1352.com/1848876.html>
     ``` dockerfile
         /.out/
         /UWP/
