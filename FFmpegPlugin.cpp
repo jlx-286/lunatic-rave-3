@@ -11,32 +11,35 @@ extern "C" {
 #include <libswresample/swresample.h>
 #include <libswscale/swscale.h>
 };
+#if LIBAVCODEC_VERSION_MAJOR > 58
+// g++ -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpeg5Plugin.so FFmpeg5Plugin.cpp -lavcodec -lavformat -lavutil -lswresample -lswscale
+// g++ -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpeg6Plugin.so FFmpeg6Plugin.cpp -lavcodec -lavformat -lavutil -lswresample -lswscale
+AVCodecContext* cc = NULL;
+#else
 // g++ -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpegPlugin.so FFmpegPlugin.cpp -lavcodec -lavformat -lavutil -lswresample -lswscale
-// g++ -O3 -fPIC -shared -Wall -I"./include" -L"./bin" -o FFmpegPlugin.dll FFmpegPlugin.cpp -lavcodec-58 -lavformat-58 -lavutil-56 -lswresample-3 -lswscale-5
+// g++ -O3 -fPIC -shared -Wall -I"./include" -L"." -o FFmpegPlugin.dll FFmpegPlugin.cpp -lavcodec-58 -lavformat-58 -lavutil-56 -lswresample-3 -lswscale-5
+#endif
 AVCodecContext* openCodecContext(AVFormatContext* fc, int* stream, enum AVMediaType type){
     if(fc == NULL || avformat_find_stream_info(fc, NULL) < 0) return NULL;
     *stream = av_find_best_stream(fc, type, -1, -1, NULL, 0);
     if(*stream < 0) return NULL;
+#if LIBAVCODEC_VERSION_MAJOR > 58
+    cc = avcodec_alloc_context3(NULL);
+    if(cc == NULL || avcodec_parameters_to_context(cc, fc->streams[*stream]->codecpar) < 0)
+    { avcodec_free_context(&cc); return NULL; }
+    cc->codec = avcodec_find_decoder(cc->codec_id);
+    if(cc->codec == NULL || avcodec_open2(cc, cc->codec, NULL) != 0)
+        avcodec_free_context(&cc);
+    return cc;
+#else
     AVCodecContext* cc = fc->streams[*stream]->codec;
     if(cc == NULL) return NULL;
     cc->codec = avcodec_find_decoder(cc->codec_id);
     if(cc->codec == NULL || avcodec_open2(cc, cc->codec, NULL) != 0) return NULL;
     return cc;
+#endif
 }
 AVFormatContext* g_fc = NULL;
-extern "C" bool GetVideoSize(const char* path, int* width, int* height){
-    *width = *height = 0;
-    int stream = -1;
-    AVCodecContext* cc = NULL;
-    if(avformat_open_input(&g_fc, path, NULL, NULL) != 0 || g_fc == NULL)
-        goto cleanup;
-    cc = openCodecContext(g_fc, &stream, AVMEDIA_TYPE_VIDEO);
-    if(cc == NULL || stream < 0) goto cleanup;
-    *width = cc->width;
-    *height = cc->height;
-    cleanup: avformat_close_input(&g_fc);
-    return (*width > 0 && *height > 0);
-}
 SwrContext* g_swr = NULL;
 AVPacket* g_pkt = NULL;
 AVFrame* g_frame = NULL;
@@ -44,7 +47,9 @@ uint8_t* g_buf = NULL;
 std::deque<float> AudioSamples;
 extern "C" bool GetAudioInfo(const char* path, int* channels, int* frequency, size_t* length){
     *channels = *frequency = *length = 0;
+#if LIBAVCODEC_VERSION_MAJOR < 59
     AVCodecContext* cc = NULL;
+#endif
     int stream = -1;
     int got_samples, buffer_size, i;
     int64_t channel_layout;
@@ -70,8 +75,7 @@ extern "C" bool GetAudioInfo(const char* path, int* channels, int* frequency, si
     if(g_swr == NULL) goto cleanup;
     swr_init(g_swr);
     while(av_read_frame(g_fc, g_pkt) == 0){
-        if(g_pkt->stream_index != stream) continue;
-        if(avcodec_send_packet(cc, g_pkt) == 0){
+        if(g_pkt->stream_index == stream && avcodec_send_packet(cc, g_pkt) == 0){
             while(avcodec_receive_frame(cc, g_frame) == 0){
                 buffer_size = av_samples_get_buffer_size(
                     NULL, *channels, g_frame->nb_samples, AV_SAMPLE_FMT_FLT, 1);
@@ -111,6 +115,9 @@ extern "C" bool GetAudioInfo(const char* path, int* channels, int* frequency, si
     swr_free(&g_swr);
     av_frame_free(&g_frame);
     av_packet_free(&g_pkt);
+#if LIBAVCODEC_VERSION_MAJOR > 58
+    avcodec_free_context(&cc);
+#endif
     avformat_close_input(&g_fc);
     return *length > 0;
 }
@@ -123,7 +130,9 @@ extern "C" bool GetPixelsInfo(const char* url, int* width, int* height, bool* is
     *width = *height = 0;
     *isBitmap = false;
     picStream = -1;
+#if LIBAVCODEC_VERSION_MAJOR < 59
     AVCodecContext* cc = NULL;
+#endif
     if(avformat_open_input(&g_fc, url, NULL, NULL) != 0 || g_fc == NULL)
         goto cleanup;
     cc = openCodecContext(g_fc, &picStream, AVMEDIA_TYPE_VIDEO);
@@ -133,15 +142,22 @@ extern "C" bool GetPixelsInfo(const char* url, int* width, int* height, bool* is
     *isBitmap = (cc->codec_id == AV_CODEC_ID_BMP);
     return true;
     cleanup:
+#if LIBAVCODEC_VERSION_MAJOR > 58
+    avcodec_free_context(&cc);
+#endif
     avformat_close_input(&g_fc);
     return false;
 }
 SwsContext* g_sws = NULL;
 AVFrame* target = NULL;
 extern "C" void CopyPixels(void* addr, int width, int height, bool isBitmap, bool strech = false){
+#if LIBAVCODEC_VERSION_MAJOR < 59
     AVCodecContext* cc = NULL;
+#endif
     if(g_fc == NULL || picStream < 0 || addr == NULL || width < 1 || height < 1) goto cleanup;
+#if LIBAVCODEC_VERSION_MAJOR < 59
     cc = g_fc->streams[picStream]->codec;
+#endif
     g_sws = sws_getContext(
         width, height, cc->pix_fmt,
         width, height, AV_PIX_FMT_RGBA,
@@ -217,6 +233,9 @@ extern "C" void CopyPixels(void* addr, int width, int height, bool isBitmap, boo
     av_frame_free(&target);
     av_frame_free(&g_frame);
     av_packet_free(&g_pkt);
+#if LIBAVCODEC_VERSION_MAJOR > 58
+    avcodec_free_context(&cc);
+#endif
     avformat_close_input(&g_fc);
 }
 extern "C" void CleanUp(){
@@ -227,6 +246,9 @@ extern "C" void CleanUp(){
     swr_free(&g_swr);
     sws_freeContext(g_sws);
     g_sws = NULL;
+#if LIBAVCODEC_VERSION_MAJOR > 58
+    avcodec_free_context(&cc);
+#endif
     avformat_close_input(&g_fc);
     AudioSamples.clear();
 }

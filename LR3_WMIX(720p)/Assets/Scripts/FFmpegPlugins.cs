@@ -5,13 +5,11 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 public unsafe static class FFmpegPlugins{
 #if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || PLATFORM_STANDALONE_LINUX
-    public delegate bool GetVideoSizeFunc(string url, out int width, out int height);
     public delegate bool GetAudioInfoFunc(string url, out int channels, out int frequency, out ulong length);
     public delegate void CopyAudioSamplesFunc(float* addr);
     public delegate bool GetPixelsInfoFunc(string url, out int width, out int height, out bool isBitmap);
     public delegate void CopyPixelsFunc(void* addr, int width, int height, bool isBitmap, bool strech = false);
     public delegate void CleanUpFunc();
-    public static GetVideoSizeFunc GetVideoSize = null;
     public static GetAudioInfoFunc GetAudioInfo = null;
     public static CopyAudioSamplesFunc CopyAudioSamples = null;
     public static GetPixelsInfoFunc GetPixelsInfo = null;
@@ -19,8 +17,6 @@ public unsafe static class FFmpegPlugins{
     public static CleanUpFunc CleanUp = null;
     private static class V4{
         private const string PluginName = "FFmpegPlugin";
-        [DllImport(PluginName)] public extern static bool GetVideoSize(
-            string url, out int width, out int height);
         [DllImport(PluginName)] public extern static bool GetAudioInfo(
             string url, out int channels, out int frequency, out ulong length);
         [DllImport(PluginName)] public extern static void CopyAudioSamples(float* addr);
@@ -32,8 +28,6 @@ public unsafe static class FFmpegPlugins{
     }
     private static class V5{
         private const string PluginName = "FFmpeg5Plugin";
-        [DllImport(PluginName)] public extern static bool GetVideoSize(
-            string url, out int width, out int height);
         [DllImport(PluginName)] public extern static bool GetAudioInfo(
             string url, out int channels, out int frequency, out ulong length);
         [DllImport(PluginName)] public extern static void CopyAudioSamples(float* addr);
@@ -45,8 +39,6 @@ public unsafe static class FFmpegPlugins{
     }
     private static class V6{
         private const string PluginName = "FFmpeg6Plugin";
-        [DllImport(PluginName)] public extern static bool GetVideoSize(
-            string url, out int width, out int height);
         [DllImport(PluginName)] public extern static bool GetAudioInfo(
             string url, out int channels, out int frequency, out ulong length);
         [DllImport(PluginName)] public extern static void CopyAudioSamples(float* addr);
@@ -59,21 +51,18 @@ public unsafe static class FFmpegPlugins{
     public static void MatchFFmpegVersion(){
         const string PluginDir = "/lib/x86_64-linux-gnu/";
         if(File.Exists(PluginDir + "libavcodec.so.58")){//FFmpeg 4.x
-            GetVideoSize     = V4.GetVideoSize;
             GetAudioInfo     = V4.GetAudioInfo;
             CopyAudioSamples = V4.CopyAudioSamples;
             GetPixelsInfo    = V4.GetPixelsInfo;
             CopyPixels       = V4.CopyPixels;
             CleanUp          = V4.CleanUp;
         }else if(File.Exists(PluginDir + "libavcodec.so.59")){//FFmpeg 5.x
-            GetVideoSize     = V5.GetVideoSize;
             GetAudioInfo     = V5.GetAudioInfo;
             CopyAudioSamples = V5.CopyAudioSamples;
             GetPixelsInfo    = V5.GetPixelsInfo;
             CopyPixels       = V5.CopyPixels;
             CleanUp          = V5.CleanUp;
         }else if(File.Exists(PluginDir + "libavcodec.so.60")){//FFmpeg 6.x
-            GetVideoSize     = V6.GetVideoSize;
             GetAudioInfo     = V6.GetAudioInfo;
             CopyAudioSamples = V6.CopyAudioSamples;
             GetPixelsInfo    = V6.GetPixelsInfo;
@@ -83,8 +72,6 @@ public unsafe static class FFmpegPlugins{
     }
 #else
     private const string PluginName = "FFmpegPlugin";
-    [DllImport(PluginName)] public extern static bool GetVideoSize(
-        string url, out int width, out int height);
     [DllImport(PluginName)] private extern static bool GetAudioInfo(
         string url, out int channels, out int frequency, out ulong length);
     [DllImport(PluginName)] private extern static void CopyAudioSamples(float* addr);

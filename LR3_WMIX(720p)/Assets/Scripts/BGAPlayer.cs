@@ -14,9 +14,8 @@ public class BGAPlayer : MonoBehaviour {
 	private void Awake(){
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.pauseStateChanged += _ => {
-            int do_pause = (int)_ ^ 1;
-            for(byte num = 0; num < bgi_nums.Length; num++)
-                VLCPlayer.PlayerSetPause(bgi_nums[num], do_pause);
+            for(byte layer = 0; layer < bgi_nums.Length; layer++)
+                FFmpegVideoPlayer.PlayerSetPause(layer, _);
         };
 #endif
         images = new Image[poors.Length];
@@ -59,38 +58,43 @@ public class BGAPlayer : MonoBehaviour {
         }
     }
     private unsafe void LateUpdate(){
-        for(byte num = 0; num < bgi_nums.Length; num++){
-            if(VLCPlayer.playing[bgi_nums[num]]){
-                if(VLCPlayer.toStop[bgi_nums[num]]){
-                    VLCPlayer.ClearPixels(bgi_nums[num]);
-                    VLCPlayer.toStop[bgi_nums[num]] = false;
-                    VLCPlayer.playing[bgi_nums[num]] = false;
+        for(byte layer = 0; layer < bgi_nums.Length; layer++){
+            if(FFmpegVideoPlayer.playing[layer]){
+                if(FFmpegVideoPlayer.toStop[layer]){
+                    FFmpegVideoPlayer.ClearPixels(layer, bgi_nums[layer]);
+                    FFmpegVideoPlayer.toStop[layer] = false;
+                    FFmpegVideoPlayer.playing[layer] = false;
                 }
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-                GL_libs.ModifyTexturePixels(BMSInfo.d3d11_device_contexts[bgi_nums[num]], BMSInfo.d3d11_resources[bgi_nums[num]],
-                    VLCPlayer.media_sizes[bgi_nums[num]].width, VLCPlayer.media_sizes[bgi_nums[num]].height, VLCPlayer.addrs[bgi_nums[num]], VLCPlayer.pixelBytes);
+                GL_libs.ModifyTexturePixels(FFmpegVideoPlayer.d3d11_device_contexts[layer], FFmpegVideoPlayer.d3d11_resources[layer],
+                    FFmpegVideoPlayer.media_sizes[bgi_nums[layer]].width, FFmpegVideoPlayer.media_sizes[bgi_nums[layer]].height,
+                    FFmpegVideoPlayer.addrs[layer], FFmpegVideoPlayer.pixelBytes);
 #else
-                GL_libs.BindTexture(BMSInfo.texture_names[bgi_nums[num]]);
-                GL_libs.TexSubImageRGB((int)VLCPlayer.offsetYs[bgi_nums[num]], VLCPlayer.media_sizes[bgi_nums[num]].width,
-                    VLCPlayer.media_sizes[bgi_nums[num]].height, VLCPlayer.addrs[bgi_nums[num]]);
+                GL_libs.BindTexture(FFmpegVideoPlayer.texNames[layer]);
+                GL_libs.TexSubImageRGB((int)FFmpegVideoPlayer.offsetYs[bgi_nums[layer]], FFmpegVideoPlayer.media_sizes[bgi_nums[layer]].width,
+                    FFmpegVideoPlayer.media_sizes[bgi_nums[layer]].height, FFmpegVideoPlayer.addrs[layer]);
 #endif
             }
         }
     }
 #if !UNITY_EDITOR
     private void OnApplicationPause(bool pauseStatus){
-        int do_pause = pauseStatus ? 1 : 0;
-        for(byte num = 0; num < bgi_nums.Length; num++)
-            VLCPlayer.PlayerSetPause(bgi_nums[num], do_pause);
+        for(byte layer = 0; layer < bgi_nums.Length; layer++)
+            FFmpegVideoPlayer.PlayerSetPause(layer, pauseStatus);
     }
 #endif
-    private void ChannelCase(byte ii){
-        VLCPlayer.PlayerStop(bgi_nums[ii]);
-        bgi_nums[ii] = bgi_num;
-        VLCPlayer.PlayerPlay(bgi_num);
-        if(BMSInfo.textures[bgi_num] == null)
-            BMSInfo.textures[bgi_num] = Texture2D.blackTexture;
-        for(byte i = ii; i < rawImages.Length; i += 4)
-            rawImages[i].texture = BMSInfo.textures[bgi_num];
+    private void ChannelCase(byte layer){
+        FFmpegVideoPlayer.PlayerStop(layer);
+        bgi_nums[layer] = bgi_num;
+        if(FFmpegVideoPlayer.media_sizes[bgi_num].width > 0){
+            FFmpegVideoPlayer.PlayerPlay(layer, bgi_num);
+            for(byte i = layer; i < rawImages.Length; i += 4)
+                rawImages[i].texture = FFmpegVideoPlayer.textures[layer];
+        }else{
+            if(BMSInfo.textures[bgi_num] == null)
+                BMSInfo.textures[bgi_num] = Texture2D.blackTexture;
+            for(byte i = layer; i < rawImages.Length; i += 4)
+                rawImages[i].texture = BMSInfo.textures[bgi_num];
+        }
     }
 }

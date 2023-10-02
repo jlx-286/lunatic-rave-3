@@ -76,8 +76,9 @@ public class EffectorNum : MonoBehaviour {
                     break;
                 case FXname.Frequency:
                     MainVars.freq = valsb;
-                    mixer.SetFloat("freq", Mathf.Pow(2, valsb / 12f));
-                    MainVars.speed = (decimal)Math.Pow(2, valsb / 12d);
+                    FFmpegVideoPlayer.speed = Math.Pow(2, valsb / 12d);
+                    mixer.SetFloat("freq", (float)FFmpegVideoPlayer.speed);
+                    MainVars.speed = (decimal)FFmpegVideoPlayer.speed;
                     break;
                 case FXname.EQ62:
                     MainVars.eq_62 = valsb;

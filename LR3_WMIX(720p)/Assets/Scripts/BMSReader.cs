@@ -125,9 +125,7 @@ public class BMSReader : MonoBehaviour{
         ulong min_false_level = ulong.MaxValue, curr_level = 0;
         file_lines = File.ReadAllLines(bms_directory + bms_file_name, encoding);
         // Random random = new Random((int)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond) & int.MaxValue);
-        VLCPlayer.instance = VLCPlayer.InstNew(new string[]{ "--video-filter=transform",
-            "--transform-type=vflip", "--no-osd", "--no-audio", "--no-repeat",
-            "--no-loop", $"--rate={MainVars.speed}" });
+        FFmpegVideoPlayer.SetSpeed(FFmpegVideoPlayer.speed);
         for(int j = 0; j < file_lines.Length; j++){ 
             if(string.IsNullOrWhiteSpace(file_lines[j])){
                 file_lines[j] = null; continue; }
@@ -636,8 +634,7 @@ public class BMSReader : MonoBehaviour{
 #else
                     tmp_path = tmp_path.Replace('\\', '/');
 #endif
-                    if(VLCPlayer.PlayerNew(tmp_path, i))
-                        unityActions.Enqueue(()=>{ VLCPlayer.NewVideoTex(a); });
+                    FFmpegVideoPlayer.VideoNew(tmp_path, i);
                 }
                 else if(Regex.IsMatch(Path.GetExtension(bmp_names[i]),
                     @"^\.(bmp|png|jpg|jpeg|gif|mag|wmf|emf|cur|ico|tga|dds|dib|tiff|webp|pbm|pgm|ppm|xcf|pcx|iff|ilbm|pxr|svg|psd)$",
@@ -1341,7 +1338,7 @@ public class BMSReader : MonoBehaviour{
             // Debug.Log(BMSInfo.bga_list_table.Count);
             GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
         }
-        if((VLCPlayer.players[0] != UIntPtr.Zero || BMSInfo.textures[0] != null) &&
+        if((FFmpegVideoPlayer.media_sizes[0].width > 0 || BMSInfo.textures[0] != null) &&
             !BMSInfo.bga_list_table.Any(v => (v.channel == BGAChannel.Poor) && (v.time == 0))){
             BMSInfo.bga_list_table.Insert(0, new BGATimeRow(0, 0, (byte)BGAChannel.Poor));
         }

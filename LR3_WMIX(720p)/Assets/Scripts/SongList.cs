@@ -25,7 +25,7 @@ public class SongList : MonoBehaviour, IPointerClickHandler {
             MainVars.bms_file_path = Path.GetDirectoryName(MainVars.bms_file_path).Replace('\\', '/') + '/';
             isInCus = true;
             BMSInfo.CleanUp();
-            VLCPlayer.VLCRelease();
+            FFmpegVideoPlayer.Release();
             for(int i = 0; i < 36 * 36; i++) MainMenu.audioSources[i].clip = null;
             AssetBundle.UnloadAllAssetBundles(true);
         }

@@ -43,6 +43,22 @@ public unsafe static class GL_libs{
     //     GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
     [DllImport(GL_NAME)] public extern static void glDeleteTextures(int count, uint* textures);
     [DllImport(GL_NAME)] public extern static void glGenTextures(int count, uint* textures);
+    public static void DeleteTextures(uint[] textures){
+        fixed(uint* p = textures)
+            glDeleteTextures(textures.Length, p);
+    }
+    public static void DeleteTextures(ref uint texture){
+        fixed(uint* p = &texture)
+            glDeleteTextures(1, p);
+    }
+    public static void GenTextures(uint[] textures){
+        fixed(uint* p = textures)
+            glGenTextures(textures.Length, p);
+    }
+    public static void GenTextures(out uint texture){
+        fixed(uint* p = &texture)
+            glGenTextures(1, p);
+    }
     public static Texture2D Texture2DFromGL(Color32[] pixels, int width, int height, ref uint texture_name){
         fixed(uint* tn = &texture_name) glDeleteTextures(1, tn);
         texture_name = 0;

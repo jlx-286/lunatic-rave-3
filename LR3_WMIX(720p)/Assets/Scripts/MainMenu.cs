@@ -11,11 +11,14 @@ using UnityEngine.UI;
 public class MainMenu : MonoBehaviour {
     public Button play_btn;
     public Button exit_btn;
-	public readonly static AudioSource[] audioSources = Enumerable.Repeat<AudioSource>(null, 36 * 36 + 1).ToArray();
-	public AudioSource audioSource;
-	private void Start(){
+    public readonly static AudioSource[] audioSources = Enumerable.Repeat<AudioSource>(null, 36 * 36 + 1).ToArray();
+    public AudioSource audioSource;
+    private void Start(){
 #if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || PLATFORM_STANDALONE_LINUX
         FFmpegPlugins.MatchFFmpegVersion();
+        FFmpegVideoPlayer.MatchFFmpegVersion();
+#else
+        FFmpegVideoPlayer.Init();
 #endif
         exit_btn.onClick.AddListener(() => {
 #if UNITY_EDITOR
@@ -34,8 +37,8 @@ public class MainMenu : MonoBehaviour {
                 SceneManager.LoadScene("Select", LoadSceneMode.Additive);
             }
         });
-	}
-	/*private void Update(){
+    }
+    /*private void Update(){
         if(Time.realtimeSinceStartup >= StaticClass.OverFlowTime
             || Time.unscaledTime >= StaticClass.OverFlowTime
             || Time.fixedUnscaledTime >= StaticClass.OverFlowTime
@@ -77,7 +80,7 @@ public class MainMenu : MonoBehaviour {
     private void OnApplicationQuit(){
         MainVars.rng.Dispose();
         // FluidManager.CleanUp();
-        VLCPlayer.VLCRelease();
+        FFmpegVideoPlayer.Release();
         FFmpegPlugins.CleanUp();
         BMSInfo.CleanUp();
         Resources.UnloadUnusedAssets();
