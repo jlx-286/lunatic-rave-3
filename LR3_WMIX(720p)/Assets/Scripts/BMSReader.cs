@@ -75,14 +75,15 @@ public class BMSReader : MonoBehaviour{
     private int stopIndex = 0;
     private readonly decimal[] track_end_bpms = Enumerable.Repeat(0m, 1000).ToArray();
     #endregion
+    private bool inThread = true;
     private void Start(){
         thread = new Thread(ReadScript){ IsBackground = true };
         thread.Start();
         StartCoroutine(DequeueLoop());
     }
     private void OnDestroy(){
+        inThread = false;
         if(thread != null){
-            try{ thread.Abort(); }catch{}
             while(thread.IsAlive);
             thread = null;
         }
@@ -126,7 +127,7 @@ public class BMSReader : MonoBehaviour{
         file_lines = File.ReadAllLines(bms_directory + bms_file_name, encoding);
         // Random random = new Random((int)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond) & int.MaxValue);
         FFmpegVideoPlayer.SetSpeed(FFmpegVideoPlayer.speed);
-        for(int j = 0; j < file_lines.Length; j++){ 
+        for(int j = 0; inThread && j < file_lines.Length; j++){ 
             if(string.IsNullOrWhiteSpace(file_lines[j])){
                 file_lines[j] = null; continue; }
             file_lines[j] = file_lines[j].Trim();
@@ -437,6 +438,7 @@ public class BMSReader : MonoBehaviour{
             }
             else if(curr_level >= min_false_level) file_lines[j] = null;
         }
+        if(!inThread) return;
         if(BMSInfo.difficulty == Difficulty.Unknown){
             if(BMSInfo.scriptType == ScriptType.BMS)
                 switch(BMSInfo.play_level){
@@ -483,7 +485,7 @@ public class BMSReader : MonoBehaviour{
             // slider.value = float.Epsilon / 2;
             progress.text = "Parsing";
         });
-        for(int j = 0; j < file_lines.Length; j++){
+        for(int j = 0; inThread && j < file_lines.Length; j++){
             if(file_lines[j] == null) continue;
             else if(Regex.IsMatch(file_lines[j], @"^#\d{3}08:[\d\w]{2,}", StaticClass.regexOption)){// exbpm index
                 track = Convert.ToUInt16(file_lines[j].Substring(1, 3));
@@ -508,13 +510,14 @@ public class BMSReader : MonoBehaviour{
                 }
             }
         }
+        if(!inThread) return;
         decimal.TryParse(
             Regex.Match(BMSInfo.bpm, @"\d+(\.\d+)?", StaticClass.regexOption).Value,
             // Regex.Match(BMSInfo.bpm, @"\d+(\.\d+)?").Captures[0].Value,
             // Regex.Match(BMSInfo.bpm, @"\d+(\.\d+)?").Groups[0].Captures[0].Value,
             out BMSInfo.start_bpm);
         if(BMSInfo.start_bpm <= 0) BMSInfo.start_bpm = 130;
-        for(ushort i = 0; i <= BMSInfo.max_tracks; i++){
+        for(ushort i = 0; inThread && i <= BMSInfo.max_tracks; i++){
             if(bpm_index_lists[i] != null){
                 if(bpm_index_lists[i].Count > 1){
                     // bpm_index_lists[i] = bpm_index_lists[i].Distinct((a, b) => a.measure == b.measure).ToList();
@@ -545,6 +548,7 @@ public class BMSReader : MonoBehaviour{
                 stop_measure_list[i] = stop_measure_list[i].GroupBy(v => v.measure).Select(v => v.First()).ToList();
             }
         }
+        if(!inThread) return;
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
         if(bpm_index_lists[0] == null) bpm_index_lists[0] = new List<BPMMeasureRow>();
         if(bpm_index_lists[0].Count > 0 && bpm_index_lists[0][0].measure.Numerator == 0)
@@ -553,7 +557,7 @@ public class BMSReader : MonoBehaviour{
         BMSInfo.min_bpm = Math.Min(BMSInfo.start_bpm, BMSInfo.min_bpm);
         BMSInfo.max_bpm = Math.Max(BMSInfo.start_bpm, BMSInfo.max_bpm);
         curr_bpm = BMSInfo.start_bpm;
-        for(ushort i = 0; i <= BMSInfo.max_tracks; i++){
+        for(ushort i = 0; inThread && i <= BMSInfo.max_tracks; i++){
             temp_bpm_index = bpm_index_lists[i];
             stopIndex = 0; stopLen = 0;
             if(temp_bpm_index == null || temp_bpm_index.Count < 1){
@@ -616,12 +620,13 @@ public class BMSReader : MonoBehaviour{
             if(i == 0) BMSInfo.track_end_time_as_ns[i] = trackOffset_ns + stopLen;
             else BMSInfo.track_end_time_as_ns[i] = BMSInfo.track_end_time_as_ns[i - 1] + trackOffset_ns + stopLen;
         }
+        if(!inThread) return;
         curr_bpm = BMSInfo.start_bpm;
         unityActions.Enqueue(()=>{
             progress.text = $"Loaded/Total:0/{total_medias_count}";
             // slider.value = float.Epsilon / 2;
         });
-        for(ushort i = 0; i < wav_names.Length; i++){
+        for(ushort i = 0; inThread && i < wav_names.Length; i++){
             ushort a = i;
             if(bmp_names[i] != null){
                 if(Regex.IsMatch(Path.GetExtension(bmp_names[i]),
@@ -704,10 +709,11 @@ public class BMSReader : MonoBehaviour{
                 });
             }
         }
+        if(!inThread) return;
         unityActions.Enqueue(()=>{ progress.text = "Parsing"; });
         file_names.Clear(); file_names = null;
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
-        for(int j = 0; j < file_lines.Length; j++){
+        for(int j = 0; inThread && j < file_lines.Length; j++){
             if(file_lines[j] == null) continue;
             if(Regex.IsMatch(file_lines[j], @"^#\d{3}[\d\w]{2}:[\d\w]{2,}", StaticClass.regexOption)){
                 byte.TryParse(file_lines[j].Substring(4, 2), NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo, out hex_digits);
@@ -1293,12 +1299,13 @@ public class BMSReader : MonoBehaviour{
                 }
             }
         }
+        if(!inThread) return;
         exbpm_dict.Clear(); exbpm_dict = null;
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
         if(BMSInfo.scriptType == ScriptType.BMS) BMS_region();
         else if(BMSInfo.scriptType == ScriptType.PMS) PMS_region();
         stop_dict.Clear(); stop_dict = null;
-        for(ushort i = 0; i <= BMSInfo.max_tracks; i++){
+        for(ushort i = 0; inThread && i <= BMSInfo.max_tracks; i++){
             if(bpm_index_lists[i] != null){
                 bpm_index_lists[i].Clear();
                 bpm_index_lists[i] = null;
@@ -1308,6 +1315,7 @@ public class BMSReader : MonoBehaviour{
                 stop_measure_list[i] = null;
             }
         }
+        if(!inThread) return;
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
         // Debug.Log("sorting");
         if(BMSInfo.bgm_list_table.Count > 1){
@@ -1345,7 +1353,7 @@ public class BMSReader : MonoBehaviour{
         if(BMSInfo.bga_list_table.Count > 0 && BMSInfo.totalTimeAsNanoseconds < BMSInfo.bga_list_table.Last().time)
             BMSInfo.totalTimeAsNanoseconds = BMSInfo.bga_list_table.Last().time;
         // Debug.Log(BMSInfo.note_count);
-        for(int i = 0; i < BMSInfo.note_list_lanes.Length; i++){
+        for(int i = 0; inThread && i < BMSInfo.note_list_lanes.Length; i++){
             if(BMSInfo.note_list_lanes[i].Count < 1) continue;
             if(BMSInfo.note_list_lanes[i].Count > 1){
                 // BMSInfo.note_list_lanes[i] = BMSInfo.note_list_lanes[i].Distinct((a, b) => a.time == b.time).ToList();
@@ -1396,6 +1404,7 @@ public class BMSReader : MonoBehaviour{
             BMSInfo.note_count += (uint)BMSInfo.note_list_lanes[i].Count(v =>
                 v.noteType == NoteType.Default || v.noteType == NoteType.LongnoteStart || v.noteType == NoteType.LongnoteEnd);
         }
+        if(!inThread) return;
         // Debug.Log(BMSInfo.note_count);
         if(BMSInfo.note_count > 0) BMSInfo.incr = BMSInfo.total / BMSInfo.note_count;
         else BMSInfo.incr = 0;
@@ -1521,7 +1530,7 @@ public class BMSReader : MonoBehaviour{
         BMSInfo.note_list_lanes = new List<NoteTimeRow>[16];
         for(int i = 0; i < 16; i++)
             BMSInfo.note_list_lanes[i] = new List<NoteTimeRow>();
-        for(int j = 0; j < file_lines.Length; j++){
+        for(int j = 0; inThread && j < file_lines.Length; j++){
             if(file_lines[j] == null) continue;
             if(Regex.IsMatch(file_lines[j], @"^#\d{3}[\d\w]{2}:[\d\w]{2,}", StaticClass.regexOption)){
                 channel = file_lines[j].Substring(4, 2);
@@ -1729,6 +1738,7 @@ public class BMSReader : MonoBehaviour{
             }
             file_lines[j] = null;
         }
+        if(!inThread) return;
         if((channelEnum & ChannelEnum.Has_2P_7) == ChannelEnum.Has_2P_7){
             BMSInfo.playerType = PlayerType.Keys14;
             BMSInfo.playing_scene_name = "14k_Play";
@@ -1769,7 +1779,7 @@ public class BMSReader : MonoBehaviour{
         BMSInfo.note_list_lanes = new List<NoteTimeRow>[9];
         for(int i = 0; i < 9; i++)
             BMSInfo.note_list_lanes[i] = new List<NoteTimeRow>();
-        for(int j = 0; j < file_lines.Length; j++){
+        for(int j = 0; inThread && j < file_lines.Length; j++){
             if(file_lines[j] == null) continue;
             if(Regex.IsMatch(file_lines[j], @"^#\d{3}[\d\w]{2}:[\d\w]{2,}", StaticClass.regexOption)){
                 channel = file_lines[j].Substring(4, 2);
@@ -1977,6 +1987,7 @@ public class BMSReader : MonoBehaviour{
             }
             file_lines[j] = null;
         }
+        if(!inThread) return;
         if((channelEnum & ChannelEnum.BME_DP) == ChannelEnum.BME_DP)
             BMSInfo.playerType = PlayerType.BME_DP;
         else if((channelEnum & ChannelEnum.BME_SP) == ChannelEnum.BME_SP){

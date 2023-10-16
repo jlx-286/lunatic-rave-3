@@ -16,7 +16,7 @@ extern "C" {
 // g++ -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpeg6Plugin.so FFmpeg6Plugin.cpp -lavcodec -lavformat -lavutil -lswresample -lswscale
 AVCodecContext* cc = NULL;
 #else
-// g++ -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpegPlugin.so FFmpegPlugin.cpp -lavcodec -lavformat -lavutil -lswresample -lswscale
+// g++-9 -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpegPlugin.so FFmpegPlugin.cpp -lavcodec -lavformat -lavutil -lswresample -lswscale
 // g++ -O3 -fPIC -shared -Wall -I"./include" -L"." -o FFmpegPlugin.dll FFmpegPlugin.cpp -lavcodec-58 -lavformat-58 -lavutil-56 -lswresample-3 -lswscale-5
 #endif
 AVCodecContext* openCodecContext(AVFormatContext* fc, int* stream, enum AVMediaType type){

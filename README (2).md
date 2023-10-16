@@ -1,6 +1,6 @@
-### Unity Editor Version
-+ known problem(s)
-    - some videos aren't shown completely
+### known problem(s)
+- "sws_scale" crashes (in Windows) when (the video in) "[トルコ行進曲 (Hd-NRG mix)](https://manbow.nothing.sh/event/event.cgi?action=More_def&num=47&event=78)" is stopped
+### Unity Editor Version(s)
 + considering 2019.3 or newer version(s)
     - Windows: Fatal error in GC "GetThreadContext failed" (due to Unity with System.Threading?)
 + considering 2020.2.0 or newer version(s)
@@ -15,16 +15,13 @@
     + FluidSynth
         ```shell
         sudo apt install libfluidsynth-dev
-        # sudo apt install libfluidsynth2 || sudo apt install libfluidsynth3
         # apt download timgm6mb-soundfont fluid-soundfont-gm
-        ```
-    + Others
-        ```shell
+        # sudo apt install libfluidsynth2 || sudo apt install libfluidsynth3
         ## You can install the dependencies by Synaptic (in GUI):
         # sudo apt install synaptic
         ## considering plugins from snap store
         # sudo apt install patchelf || sudo snap install patchelf
-        # snap download ffmpeg minuet
+        # snap download minuet
         ```
 - [FluidSynth](https://www.fluidsynth.org)
     + The plugins are from [Unity Asset Store](https://assetstore.unity.com/packages/tools/audio/fluid-midi-player-173680).

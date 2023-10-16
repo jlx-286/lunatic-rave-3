@@ -228,13 +228,11 @@ public unsafe static class FFmpegVideoPlayer{
         threads[layer] = new Thread(()=>{
             SetVideoState(layer, VideoState.playing);
             playing[layer] = true;
-            Debug.Log($"{media_sizes[num].width}x{media_sizes[num].height}");
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
             PlayVideo(paths[num], layer, num, addrs[layer] + offsets[num]);
 #else
             PlayVideo(paths[num], layer, num, addrs[layer]);
 #endif
-            Debug.Log($"{media_sizes[num].width}x{media_sizes[num].height}");
             // playing[layer] = false;
             toStop[layer] = true;
         }){IsBackground = true};

@@ -14,7 +14,7 @@ extern "C" {
 // g++ -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpeg5Player.so FFmpeg5Player.cpp -lavcodec -lavformat -lavutil -lswscale
 // g++ -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpeg6Player.so FFmpeg6Player.cpp -lavcodec -lavformat -lavutil -lswscale
 #else
-// g++ -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpegPlayer.so FFmpegPlayer.cpp -lavcodec -lavformat -lavutil -lswscale
+// g++-9 -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpegPlayer.so FFmpegPlayer.cpp -lavcodec -lavformat -lavutil -lswscale
 // g++ -O3 -fPIC -shared -Wall -I"./include" -L"." -o FFmpegPlayer.dll FFmpegPlayer.cpp -lavcodec-58 -lavformat-58 -lavutil-56 -lswscale-5
 #endif
 AVCodecContext* openCodecContext(AVFormatContext* fc, int* stream, enum AVMediaType type){
@@ -67,16 +67,16 @@ extern "C" bool GetVideoSize(const char* url, uint16_t num, int* width, int* hei
     if(avformat_open_input(&fc, url, NULL, NULL) != 0 || fc == NULL) goto cleanup;
     cc = openCodecContext(fc, &stream, AVMEDIA_TYPE_VIDEO);
     if(cc == NULL || stream < 0) goto cleanup;
-    *width = cc->width; *height = cc->height;
-    if(*width < 1 || *height < 1) goto cleanup;
     sws_cxts[num] = sws_getContext(
-        *width, *height, cc->pix_fmt,
-        *width, *height, pf,
+        cc->width, cc->height, cc->pix_fmt,
+        cc->width, cc->height, pf,
         // SWS_FAST_BILINEAR
         SWS_POINT
         , NULL, NULL, NULL);
     if(sws_cxts[num] == NULL || sws_init_context(sws_cxts[num],
         NULL, NULL) < 0) goto cleanup;
+    *width = cc->width; *height = cc->height;
+    if(*width < 1 || *height < 1) goto cleanup;
     cleanup:
 #if LIBAVCODEC_VERSION_MAJOR > 58
     avcodec_free_context(&cc);
@@ -96,7 +96,7 @@ extern "C" void SetVideoState(uint8_t layer, VideoState _ = VideoState::playing)
     states[layer] = _;
 }
 extern "C" void PlayVideo(const char* url, uint8_t layer, uint16_t num, uint8_t* pixels){
-    int64_t startTime, nowTime, frameTime;
+    int64_t startTime, sleepTime, frameTime;
     startTime = av_gettime_relative();
     uint8_t* data[AV_NUM_DATA_POINTERS];// = {NULL};
     int linesize[AV_NUM_DATA_POINTERS];// = {0};
@@ -126,30 +126,36 @@ extern "C" void PlayVideo(const char* url, uint8_t layer, uint16_t num, uint8_t*
     while(states[layer] != VideoState::stopped){
         if(states[layer] == VideoState::paused) continue;
         else if(states[layer] == VideoState::playing && av_read_frame(fc, packet) == 0){
-            if(packet->stream_index == stream){// && != AVERROR(EAGAIN)
+            if(packet->stream_index == stream){
                 avcodec_send_packet(cc, packet);
                 ret = avcodec_receive_frame(cc, frame);
                 if(ret < 0){
-                    if(ret == AVERROR(EAGAIN)) continue;
+                    if(ret == AVERROR(EAGAIN)){
+                        av_frame_unref(frame);
+                        av_packet_unref(packet);
+                        continue;
+                    }
                     else goto cleanup;
                 }
-                if(firstFrame && packet->pts > 0){
-                    firstFrame = false;
-                    startTime -= packet->pts;
-                }else{
-                    if(frame->pts >= 0){
-                        sws_scale(sws_cxts[num], frame->data, frame->linesize, 0, cc->height,
-                            data, linesize);
-                        for(int h = 0; h < cc->height; h++)
-                            memcpy(pixels + (cc->height - 1 - h) * cc->width * pixel_size,
-                                data[0] + h * cc->width * pixel_size, cc->width * pixel_size);
-                        nowTime = av_gettime_relative() - startTime;
-                        frameTime = (int64_t)(std::round(frame->pts / timeBase * AV_TIME_BASE / speed));
-                        if(frameTime > nowTime)
-                            av_usleep((unsigned int)(frameTime - nowTime));
+                if(frame->best_effort_timestamp >= 0){
+                    frameTime = (int64_t)(std::round(frame->best_effort_timestamp / timeBase * AV_TIME_BASE / speed));
+                    if(firstFrame){
+                        firstFrame = false;
+                        startTime -= frameTime;
+                    }else{
+                        ret = sws_scale(sws_cxts[num], frame->data, frame->linesize, 0, cc->height, data, linesize);
+                        if(ret >= 0 && ret <= cc->height){
+                            for(int h = 0; h < cc->height; h++)
+                                memcpy(pixels + (cc->height - 1 - h) * cc->width * pixel_size,
+                                    data[0] + h * cc->width * pixel_size, cc->width * pixel_size);
+                            sleepTime = frameTime - (av_gettime_relative() - startTime);
+                            if(sleepTime <= 0 || sleepTime > UINT32_MAX);
+                            else if(av_usleep((unsigned int)sleepTime) == 0);
+                            else goto cleanup;
+                        }
+                        else goto cleanup;
                     }
                 }
-                if(states[layer] == VideoState::stopped) goto cleanup;
                 av_frame_unref(frame);
             }
             av_packet_unref(packet);
