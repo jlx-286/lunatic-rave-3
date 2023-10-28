@@ -10,18 +10,18 @@
 ### Dependencies:
 - Windows (<https://learn.microsoft.com/windows-server/administration/windows-commands/path>)
     + FFmpeg (avcodec-58 + avformat-58 + avutil-56 + swresample-3 + swscale-5)
-        + [download FFmpeg](https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2022-10-31-12-44/ffmpeg-n4.4.3-win64-lgpl-shared-4.4.zip) and add the directory of "avcodec-58.dll" to "%path%"
+        + [download FFmpeg](https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2023-04-30-12-46/ffmpeg-n4.4.4-win64-lgpl-shared-4.4.zip) and add the directory of "avcodec-58.dll" to "%path%"
 - Linux (Debian or Ubuntu)
     + FluidSynth
         ```shell
-        sudo apt install libfluidsynth-dev
-        # apt download timgm6mb-soundfont fluid-soundfont-gm
-        # sudo apt install libfluidsynth2 || sudo apt install libfluidsynth3
-        ## You can install the dependencies by Synaptic (in GUI):
-        # sudo apt install synaptic
-        ## considering plugins from snap store
-        # sudo apt install patchelf || sudo snap install patchelf
-        # snap download minuet
+            sudo apt install libfluidsynth-dev
+            # apt download timgm6mb-soundfont fluid-soundfont-gm
+            # sudo apt install libfluidsynth2 || sudo apt install libfluidsynth3
+            ## You can install the dependencies by Synaptic (in GUI):
+            # sudo apt install synaptic
+            ## considering plugins from snap store
+            # sudo apt install patchelf || sudo snap install patchelf
+            # snap download minuet
         ```
 - [FluidSynth](https://www.fluidsynth.org)
     + The plugins are from [Unity Asset Store](https://assetstore.unity.com/packages/tools/audio/fluid-midi-player-173680).

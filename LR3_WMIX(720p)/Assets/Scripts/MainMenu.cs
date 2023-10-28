@@ -53,7 +53,7 @@ public class MainMenu : MonoBehaviour {
         }
     }*/
     private bool LoadConfig(){
-        string configPath = Application.dataPath + "/config.json";
+        string configPath = Application.streamingAssetsPath + "/config.json";
         if(!File.Exists(configPath)) return false;
         JObject jObject = JObject.Parse(File.ReadAllText(configPath));
         if(jObject == null) return false;

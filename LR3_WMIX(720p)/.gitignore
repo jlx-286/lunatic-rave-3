@@ -75,6 +75,7 @@ crashlytics-build.properties
 ## Custom
 /.out
 /UWP
+/dist
 *.exe.meta
 /[Aa]ssets/**/.*
 /[Aa]ssets/**/*~

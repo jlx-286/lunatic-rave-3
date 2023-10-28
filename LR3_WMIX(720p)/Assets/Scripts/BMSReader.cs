@@ -76,6 +76,7 @@ public class BMSReader : MonoBehaviour{
     private readonly decimal[] track_end_bpms = Enumerable.Repeat(0m, 1000).ToArray();
     #endregion
     private bool inThread = true;
+    private bool sorting = false;
     private void Start(){
         thread = new Thread(ReadScript){ IsBackground = true };
         thread.Start();
@@ -84,6 +85,12 @@ public class BMSReader : MonoBehaviour{
     private void OnDestroy(){
         inThread = false;
         if(thread != null){
+            if(sorting){
+                try{ thread.Abort(); }
+                catch(Exception e){
+                    Debug.LogWarning(e.GetBaseException());
+                }
+            }
             while(thread.IsAlive);
             thread = null;
         }
@@ -119,12 +126,19 @@ public class BMSReader : MonoBehaviour{
             BMSInfo.scriptType = ScriptType.BMS;
         else if(Regex.IsMatch(bms_file_name, @"\.pms$", StaticClass.regexOption))
             BMSInfo.scriptType = ScriptType.PMS;
-        foreach(string item in Directory.EnumerateFiles(bms_directory,"*",SearchOption.AllDirectories)){
-            file_names.Append(item); file_names.Append('\n'); }
+        using(IEnumerator<string> item = Directory.EnumerateFiles(bms_directory,"*",SearchOption.AllDirectories).GetEnumerator()){
+            while(inThread && item.MoveNext()){
+                file_names.Append(item.Current);
+                file_names.Append('\n');
+            }
+        }
+        if(!inThread) return;
         file_names.Replace('\\', '/');
+        sorting = true;
         Encoding encoding = StaticClass.GetEncodingByFilePath(bms_directory + bms_file_name);
-        ulong min_false_level = ulong.MaxValue, curr_level = 0;
         file_lines = File.ReadAllLines(bms_directory + bms_file_name, encoding);
+        sorting = false;
+        ulong min_false_level = ulong.MaxValue, curr_level = 0;
         // Random random = new Random((int)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond) & int.MaxValue);
         FFmpegVideoPlayer.SetSpeed(FFmpegVideoPlayer.speed);
         for(int j = 0; inThread && j < file_lines.Length; j++){ 
@@ -520,6 +534,7 @@ public class BMSReader : MonoBehaviour{
         for(ushort i = 0; inThread && i <= BMSInfo.max_tracks; i++){
             if(bpm_index_lists[i] != null){
                 if(bpm_index_lists[i].Count > 1){
+                    sorting = true;
                     // bpm_index_lists[i] = bpm_index_lists[i].Distinct((a, b) => a.measure == b.measure).ToList();
                     bpm_index_lists[i].Sort((x, y) => {
                         if(x.measure != y.measure)
@@ -532,13 +547,17 @@ public class BMSReader : MonoBehaviour{
                         return 0;
                     });
                     bpm_index_lists[i] = bpm_index_lists[i].GroupBy(v => v.measure).Select(v => v.First()).ToList();
+                    sorting = false;
                 }
                 if(bpm_index_lists[i].Count > 0){
+                    sorting = true;
                     BMSInfo.min_bpm = Math.Min(bpm_index_lists[i].Min(v => v.BPM), BMSInfo.min_bpm);
                     BMSInfo.max_bpm = Math.Max(bpm_index_lists[i].Max(v => v.BPM), BMSInfo.max_bpm);
+                    sorting = false;
                 }
             }
             if(stop_measure_list[i] != null && stop_measure_list[i].Count > 1){
+                sorting = true;
                 // stop_measure_list[i] = stop_measure_list[i].Distinct((a, b) => a.measure == b.measure).ToList();
                 stop_measure_list[i].Sort((x, y) => {
                     if(x.measure != y.measure) return x.measure.CompareTo(y.measure);
@@ -546,6 +565,7 @@ public class BMSReader : MonoBehaviour{
                     return 0;
                 });
                 stop_measure_list[i] = stop_measure_list[i].GroupBy(v => v.measure).Select(v => v.First()).ToList();
+                sorting = false;
             }
         }
         if(!inThread) return;
@@ -1319,6 +1339,7 @@ public class BMSReader : MonoBehaviour{
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
         // Debug.Log("sorting");
         if(BMSInfo.bgm_list_table.Count > 1){
+            sorting = true;
             // Debug.Log(BMSInfo.bgm_list_table.Count);
             // BMSInfo.bgm_list_table = BMSInfo.bgm_list_table.Distinct((a, b) => a.time == b.time && a.clipNum == b.clipNum).ToList();
             BMSInfo.bgm_list_table.Sort((x, y) => {
@@ -1329,10 +1350,12 @@ public class BMSReader : MonoBehaviour{
             // BMSInfo.bgm_list_table = BMSInfo.bgm_list_table.GroupBy(v => new {v.time, v.clipNum}).Select(v => v.First()).ToList();
             // Debug.Log(BMSInfo.bgm_list_table.Count);
             GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
+            sorting = false;
         }
         if(BMSInfo.bgm_list_table.Count > 0 && BMSInfo.totalTimeAsNanoseconds < BMSInfo.bgm_list_table.Last().time)
             BMSInfo.totalTimeAsNanoseconds = BMSInfo.bgm_list_table.Last().time;
         if(BMSInfo.bga_list_table.Count > 1){
+            sorting = true;
             // Debug.Log(BMSInfo.bga_list_table.Count);
             // BMSInfo.bga_list_table = BMSInfo.bga_list_table.Distinct((a, b) => a.time == b.time && a.channel == b.channel).ToList();
             BMSInfo.bga_list_table.Sort((x, y) => {
@@ -1345,6 +1368,7 @@ public class BMSReader : MonoBehaviour{
             // BMSInfo.bga_list_table = BMSInfo.bga_list_table.GroupBy(v => new {v.time, v.channel}).Select(v => v.First()).ToList();
             // Debug.Log(BMSInfo.bga_list_table.Count);
             GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
+            sorting = false;
         }
         if((FFmpegVideoPlayer.media_sizes[0].width > 0 || BMSInfo.textures[0] != null) &&
             !BMSInfo.bga_list_table.Any(v => (v.channel == BGAChannel.Poor) && (v.time == 0))){
@@ -1355,6 +1379,7 @@ public class BMSReader : MonoBehaviour{
         // Debug.Log(BMSInfo.note_count);
         for(int i = 0; inThread && i < BMSInfo.note_list_lanes.Length; i++){
             if(BMSInfo.note_list_lanes[i].Count < 1) continue;
+            sorting = true;
             if(BMSInfo.note_list_lanes[i].Count > 1){
                 // BMSInfo.note_list_lanes[i] = BMSInfo.note_list_lanes[i].Distinct((a, b) => a.time == b.time).ToList();
                 BMSInfo.note_list_lanes[i].Sort((x, y)=>{
@@ -1403,6 +1428,7 @@ public class BMSReader : MonoBehaviour{
             BMSInfo.totalTimeAsNanoseconds = Math.Max(BMSInfo.totalTimeAsNanoseconds, t.time);
             BMSInfo.note_count += (uint)BMSInfo.note_list_lanes[i].Count(v =>
                 v.noteType == NoteType.Default || v.noteType == NoteType.LongnoteStart || v.noteType == NoteType.LongnoteEnd);
+            sorting = false;
         }
         if(!inThread) return;
         // Debug.Log(BMSInfo.note_count);
@@ -1410,6 +1436,7 @@ public class BMSReader : MonoBehaviour{
         else BMSInfo.incr = 0;
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
         if(BMSInfo.bpm_list_table.Count > 1){
+            sorting = true;
             // Debug.Log(BMSInfo.bpm_list_table.Count);
             // BMSInfo.bpm_list_table = BMSInfo.bpm_list_table.Distinct((a, b) => a.time == b.time).ToList();
             BMSInfo.bpm_list_table.Sort((x, y) =>{
@@ -1425,10 +1452,12 @@ public class BMSReader : MonoBehaviour{
             // BMSInfo.bpm_list_table = BMSInfo.bpm_list_table.GroupBy(v => v.time).Select(v => v.First()).ToList();
             // Debug.Log(BMSInfo.bpm_list_table.Count);
             GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
+            sorting = false;
         }
         if(BMSInfo.bpm_list_table.Count > 0 && BMSInfo.totalTimeAsNanoseconds < BMSInfo.bpm_list_table.Last().time)
             BMSInfo.totalTimeAsNanoseconds = BMSInfo.bpm_list_table.Last().time;
         /*if(BMSInfo.stop_list_table.Count > 1){
+            sorting = true;
             BMSInfo.stop_list_table.Sort((x, y) => {
                 if(x.time != y.time) return x.offset.CompareTo(y.time);
                 if(x.length != y.length) return y.ticks.CompareTo(x.length);
@@ -1436,6 +1465,7 @@ public class BMSReader : MonoBehaviour{
             });
             BMSInfo.stop_list_table = BMSInfo.stop_list_table.GroupBy(v => v.time).Select(v => v.First()).ToList();
             GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
+            sorting = false;
         }
         if(BMSInfo.stop_list_table.Count > 0 && BMSInfo.totalTimeAsNanoseconds < BMSInfo.stop_list_table.Last().offset)
             BMSInfo.totalTimeAsNanoseconds = BMSInfo.stop_list_table.Last().offset;*/
