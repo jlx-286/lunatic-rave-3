@@ -82,6 +82,7 @@ public class MainMenu : MonoBehaviour {
         // FluidManager.CleanUp();
         FFmpegVideoPlayer.Release();
         FFmpegPlugins.CleanUp();
+        BMSInfo.CleanUpTex();
         BMSInfo.CleanUp();
         Resources.UnloadUnusedAssets();
         // AssetBundle.UnloadAllAssetBundles(true);

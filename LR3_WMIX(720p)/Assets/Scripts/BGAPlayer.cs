@@ -65,15 +65,7 @@ public class BGAPlayer : MonoBehaviour {
                     FFmpegVideoPlayer.toStop[layer] = false;
                     FFmpegVideoPlayer.playing[layer] = false;
                 }
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-                GL_libs.ModifyTexturePixels(FFmpegVideoPlayer.d3d11_device_contexts[layer], FFmpegVideoPlayer.d3d11_resources[layer],
-                    FFmpegVideoPlayer.media_sizes[bgi_nums[layer]].width, FFmpegVideoPlayer.media_sizes[bgi_nums[layer]].height,
-                    FFmpegVideoPlayer.addrs[layer], FFmpegVideoPlayer.pixelBytes);
-#else
-                GL_libs.BindTexture(FFmpegVideoPlayer.texNames[layer]);
-                GL_libs.TexSubImageRGB((int)FFmpegVideoPlayer.offsetYs[bgi_nums[layer]], FFmpegVideoPlayer.media_sizes[bgi_nums[layer]].width,
-                    FFmpegVideoPlayer.media_sizes[bgi_nums[layer]].height, FFmpegVideoPlayer.addrs[layer]);
-#endif
+                FFmpegVideoPlayer.textures[layer].Apply(false);
             }
         }
     }

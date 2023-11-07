@@ -15,9 +15,7 @@ public unsafe static class FFmpegVideoPlayer{
     };
     [StructLayout(LayoutKind.Explicit)] public struct VideoSize{
         [FieldOffset(0)] public int width;
-        [FieldOffset(0)] public uint uwidth;
         [FieldOffset(sizeof(int))] public int height;
-        [FieldOffset(sizeof(int))] public uint uheight;
     }
     public static double speed = 1;
     public static readonly Thread[] threads = Enumerable.Repeat<Thread>(null, 4).ToArray();
@@ -28,18 +26,14 @@ public unsafe static class FFmpegVideoPlayer{
     private const ushort ZZ = 36*36;
     public static readonly string[] paths = Enumerable.Repeat<string>(null, ZZ).ToArray();
     public static readonly VideoSize[] media_sizes = Enumerable.Repeat(
-        new VideoSize(){uwidth = 0, uheight = 0}, ZZ).ToArray();
+        new VideoSize(){width = 0, height = 0}, ZZ).ToArray();
+    private static readonly int[] offsets = Enumerable.Repeat(0, ZZ).ToArray();
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || PLATFORM_STANDALONE_WIN
-    public const byte pixelBytes = 4;
-    public static readonly IntPtr[] d3d11_resources = Enumerable.Repeat(IntPtr.Zero, 4).ToArray();
-	public static readonly UIntPtr[] d3d11_devices = Enumerable.Repeat(UIntPtr.Zero, 4).ToArray();
-	public static readonly UIntPtr[] d3d11_device_contexts = Enumerable.Repeat(UIntPtr.Zero, 4).ToArray();
-    public static readonly uint[] offsets = Enumerable.Repeat<uint>(0, ZZ).ToArray();
+    private const byte pixelBytes = 4;
+    private const TextureFormat textureFormat = TextureFormat.BGRA32;
 #else
-    public static readonly uint[] texNames = Enumerable.Repeat<uint>(0, 4).ToArray();
-    private static readonly byte[][] tex_pixels = Enumerable.Repeat<byte[]>(null, 4).ToArray();
-    public static readonly uint[] offsetYs = Enumerable.Repeat<uint>(0, ZZ).ToArray();
-    // private const byte pixelBytes = 3;
+    private const byte pixelBytes = 3;
+    private const TextureFormat textureFormat = TextureFormat.RGB24;
 #endif
 #if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX
     private delegate void InitFunc();
@@ -141,12 +135,6 @@ public unsafe static class FFmpegVideoPlayer{
             SetVideoState(layer, VideoState.stopped);
             while(threads[layer].IsAlive);
             threads[layer] = null;
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-			GL_libs.Release(ref d3d11_resources[layer], ref d3d11_devices[layer], ref d3d11_device_contexts[layer]);
-#else
-            GL_libs.DeleteTextures(ref texNames[layer]);
-            tex_pixels[layer] = null;
-#endif
             textures[layer] = null;
             addrs[layer] = null;
         }
@@ -174,51 +162,24 @@ public unsafe static class FFmpegVideoPlayer{
     private static void VideoFree(ushort num){
         if(num >= ZZ) return;
         paths[num] = null;
-        media_sizes[num] = new VideoSize(){uwidth = 0, uheight = 0};
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+        media_sizes[num] = new VideoSize(){width = 0, height = 0};
         offsets[num] = 0;
-#else
-        offsetYs[num] = 0;
-#endif
     }
     private static void NewVideoTex(byte layer, ushort num){
-        if(layer >= threads.Length || num >= ZZ || media_sizes[num].width < 1) return;
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+        if(layer >= threads.Length || num >= ZZ ||
+            media_sizes[num].width < 1 || media_sizes[num].height < 1) return;
         NativeArray<byte> arr;
-        if(media_sizes[num].uwidth <= media_sizes[num].uheight){
+        if(media_sizes[num].width <= media_sizes[num].height)
             textures[layer] = new Texture2D(media_sizes[num].width,
-                media_sizes[num].height, TextureFormat.BGRA32, false){
+                media_sizes[num].height, textureFormat, false){
                 filterMode = FilterMode.Point };
-            arr = textures[layer].GetRawTextureData<byte>();
-            addrs[layer] = (byte*)arr.GetUnsafePtr();// GetUnsafeReadOnlyPtr());
-        }else{// if(media_sizes[num].uwidth > media_sizes[num].uheight)
+        else// if(media_sizes[num].width > media_sizes[num].height)
             textures[layer] = new Texture2D(media_sizes[num].width,
-                media_sizes[num].width, TextureFormat.BGRA32, false){
+                media_sizes[num].width, textureFormat, false){
                 filterMode = FilterMode.Point };
-            arr = textures[layer].GetRawTextureData<byte>();
-            addrs[layer] = (byte*)arr.GetUnsafePtr();// GetUnsafeReadOnlyPtr());
-            StaticClass.memset(addrs[layer], 0, (IntPtr)arr.Length);
-            offsets[num] = (media_sizes[num].uwidth - media_sizes[num].uheight) / 2 * media_sizes[num].uwidth * pixelBytes;
-            media_sizes[num].uheight = media_sizes[num].uwidth;
-        }
-        d3d11_resources[layer] = textures[layer].GetNativeTexturePtr();
-        GL_libs.GetInfo(d3d11_resources[layer], out d3d11_devices[layer], out d3d11_device_contexts[layer]);
-#else
-        if(media_sizes[num].uwidth <= media_sizes[num].uheight){
-            tex_pixels[layer] = new byte[3 * media_sizes[num].uwidth
-                * media_sizes[num].uheight];
-            fixed(byte* ptr = tex_pixels[layer]) addrs[layer] = ptr;
-            textures[layer] = GL_libs.NewRGBTex(tex_pixels[layer],
-                media_sizes[num].width, media_sizes[num].height, ref texNames[layer]);
-        }else{// if(media_sizes[num].uwidth > media_sizes[num].uheight)
-            tex_pixels[layer] = new byte[3 * media_sizes[num].uwidth
-                * media_sizes[num].uwidth];
-            fixed(byte* ptr = tex_pixels[layer])
-                addrs[layer] = ptr + offsetYs[num] * media_sizes[num].uwidth * 3;
-            textures[layer] = GL_libs.NewRGBTex(tex_pixels[layer],
-                media_sizes[num].width, media_sizes[num].width, ref texNames[layer]);
-        }
-#endif
+        arr = textures[layer].GetRawTextureData<byte>();
+        addrs[layer] = (byte*)arr.GetUnsafePtr();// GetUnsafeReadOnlyPtr());
+        StaticClass.memset(addrs[layer], 0, (IntPtr)arr.Length);
     }
     public static void PlayerPlay(byte layer, ushort num){
         if(layer >= threads.Length) return;
@@ -228,11 +189,7 @@ public unsafe static class FFmpegVideoPlayer{
         threads[layer] = new Thread(()=>{
             SetVideoState(layer, VideoState.playing);
             playing[layer] = true;
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
             PlayVideo(paths[num], layer, num, addrs[layer] + offsets[num]);
-#else
-            PlayVideo(paths[num], layer, num, addrs[layer]);
-#endif
             // playing[layer] = false;
             toStop[layer] = true;
         }){IsBackground = true};
@@ -244,12 +201,10 @@ public unsafe static class FFmpegVideoPlayer{
             return false;
         }
         paths[num] = path;
-#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
-        if(media_sizes[num].uwidth <= media_sizes[num].uheight)
-            offsetYs[num] = 0;
-        else// if(media_sizes[num].uwidth > media_sizes[num].uheight)
-            offsetYs[num] = (media_sizes[num].uwidth - media_sizes[num].uheight) / 2;
-#endif
+        if(media_sizes[num].width <= media_sizes[num].height)
+            offsets[num] = 0;
+        else// if(media_sizes[num].width > media_sizes[num].height)
+            offsets[num] = (media_sizes[num].width - media_sizes[num].height) / 2 * media_sizes[num].width * pixelBytes;
         return true;
     }
     public static void Release(){
@@ -264,11 +219,7 @@ public unsafe static class FFmpegVideoPlayer{
             StaticClass.memset(p, 0, (IntPtr)(toStop.Length * sizeof(bool)));
     }
     public static void ClearPixels(byte layer, ushort num){
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || PLATFORM_STANDALONE_WIN
-        StaticClass.memset(addrs[layer], 0, (IntPtr)(4L * media_sizes[num].width * media_sizes[num].height));
-#else
-        fixed(void* p = tex_pixels[layer])
-            StaticClass.memset(p, 0, (IntPtr)(tex_pixels[layer].LongLength));
-#endif
+        StaticClass.memset(addrs[layer] + offsets[num], 0, (IntPtr)((long)pixelBytes
+            * media_sizes[num].width * media_sizes[num].height));
     }
 }

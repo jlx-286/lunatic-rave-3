@@ -119,6 +119,7 @@ public class BMSReader : MonoBehaviour{
             SceneManager.UnloadSceneAsync(MainVars.cur_scene_name);
             SceneManager.LoadScene("Select", LoadSceneMode.Additive);
         });
+        unityActions.Enqueue(BMSInfo.CleanUpTex);
         BMSInfo.Init();
         bms_directory = Path.GetDirectoryName(MainVars.bms_file_path).Replace('\\', '/') + '/';
         bms_file_name = Path.GetFileName(MainVars.bms_file_path);
@@ -283,20 +284,11 @@ public class BMSReader : MonoBehaviour{
                     Color32[] color32s = FFmpegPlugins.GetStageImage(bms_directory + file_lines[j], out width, out height);
                     if(color32s != null && color32s.Length > 0 && width > 0 && height > 0){
                         unityActions.Enqueue(()=>{
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-                            Texture2D t2d = new Texture2D(width, height, TextureFormat.RGBA32, false){filterMode = FilterMode.Point};
-                            BMSInfo.stageFileRes = t2d.GetNativeTexturePtr();
-                            GL_libs.GetInfo(BMSInfo.stageFileRes, out BMSInfo.stageFileDevice, out BMSInfo.stageFileDeviceContext);
-                            unsafe{
-                                fixed(void* p = color32s)
-                                    GL_libs.ModifyTexturePixels(BMSInfo.stageFileDeviceContext,
-                                        BMSInfo.stageFileRes, width, height, p);
-                            }
+                            Texture2D t2d = new Texture2D(width, height,
+                                TextureFormat.RGBA32, false){filterMode = FilterMode.Point};
+                            t2d.SetPixels32(color32s);
+                            t2d.Apply(false, true);
                             stageFile.texture = t2d;
-#else
-                            stageFile.texture = GL_libs.Texture2DFromGL(color32s,
-                                width, height, ref BMSInfo.stageFilePtr);
-#endif
                         });
                     }
                     file_lines[j] = null;
@@ -678,19 +670,10 @@ public class BMSReader : MonoBehaviour{
                     Color32[] color32s = FFmpegPlugins.GetTextureInfo(bms_directory + bmp_names[i], out width, out height);
                     if(color32s != null && color32s.Length > 0 && width > 0 && height > 0){
                         unityActions.Enqueue(() => {
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-                            BMSInfo.textures[a] = new Texture2D(width, height, TextureFormat.RGBA32, false){filterMode = FilterMode.Point};
-                            BMSInfo.d3d11_resources[a] = BMSInfo.textures[a].GetNativeTexturePtr();
-                            GL_libs.GetInfo(BMSInfo.d3d11_resources[a], out BMSInfo.d3d11_devices[a], out BMSInfo.d3d11_device_contexts[a]);
-                            unsafe{
-                                fixed(void* p = color32s)
-                                    GL_libs.ModifyTexturePixels(BMSInfo.d3d11_device_contexts[a],
-                                        BMSInfo.d3d11_resources[a], width, height, p);
-                            }
-#else
-                            BMSInfo.textures[a] = GL_libs.Texture2DFromGL(color32s,
-                                width, height, ref BMSInfo.texture_names[a]);
-#endif
+                            BMSInfo.textures[a] = new Texture2D(width, height,
+                                TextureFormat.RGBA32, false){filterMode = FilterMode.Point};
+                            BMSInfo.textures[a].SetPixels32(color32s);
+                            BMSInfo.textures[a].Apply(false, true);
                         });
                     }
                 }
