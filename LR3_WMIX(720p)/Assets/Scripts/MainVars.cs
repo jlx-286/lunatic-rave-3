@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -45,24 +46,23 @@ public class MainVars : MonoBehaviour{// Game Manager
         new Color32(0xF3,0x23,0x37,0xFF),// another
         new Color32(0xE9,0x4A,0xEB,0xFF),// insane
     };
-    public Image meter_form;
-    public Image[] bms_note_forms;
-    public Image[] pms_note_forms;
-    public Image[] bms_ln_start_forms;
+    public Sprite[] bms_notes_tex;
+    public Sprite[] pms_notes_tex;
+    public Sprite[] bms_lns_start_tex;
     public Image[] bms_ln_center_forms;
-    public Image[] bms_ln_end_forms;
-    public Image[] pms_ln_start_forms;
+    public Sprite[] bms_lns_end_tex;
+    public Sprite[] pms_lns_start_tex;
     public Image[] pms_ln_center_forms;
-    public Image[] pms_ln_end_forms;
-    public static Image MeterForm;
-    public static Image[] BMSNoteForms;
-    public static Image[] PMSNoteForms;
-    public static Image[] BMSLNStartForms;
+    public Sprite[] pms_lns_end_tex;
+    public static Texture2D MeterLine;
+    public static Texture2D[] BMSNotesTex;
+    public static Texture2D[] PMSNotesTex;
+    public static Texture2D[] BMSLNsStartTex;
     public static Image[] BMSLNCenterForms;
-    public static Image[] BMSLNEndForms;
-    public static Image[] pMSLNStartForms;
-    public static Image[] pMSLNCenterForms;
-    public static Image[] pMSLNEndForms;
+    public static Texture2D[] BMSLNsEndTex;
+    public static Texture2D[] PMSLNsStartTex;
+    public static Image[] PMSLNCenterForms;
+    public static Texture2D[] PMSLNsEndTex;
     public static RandomNumberGenerator rng = null;
     public static PlayMode playMode = PlayMode.AutoPlay | PlayMode.SingleSong | PlayMode.ExtraStage;
     public Sprite[] stage_sprites;
@@ -71,15 +71,28 @@ public class MainVars : MonoBehaviour{// Game Manager
     public static Sprite DemoPlay;
     private void Start(){
         Latency = latency * TimeSpan.TicksPerMillisecond * 100;
-        MeterForm = meter_form;
-        BMSNoteForms = bms_note_forms;
-        PMSNoteForms = pms_note_forms;
-        BMSLNStartForms = bms_ln_start_forms;
+        MeterLine = new Texture2D(1000, 2, TextureFormat.RGBA32,
+            false){filterMode = FilterMode.Point};
+        MeterLine.SetPixels32(Enumerable.Repeat(new Color32(255, 255, 255, 127), 2000).ToArray());
+        MeterLine.Apply(false, true);
+        BMSNotesTex = new Texture2D[bms_notes_tex.Length];
+        BMSLNsStartTex = new Texture2D[bms_lns_start_tex.Length];
+        BMSLNsEndTex = new Texture2D[bms_lns_end_tex.Length];
+        for(int i = 0; i < BMSNotesTex.Length; i++){
+            BMSNotesTex[i] = bms_notes_tex[i].ToTexture2D();
+            BMSLNsStartTex[i] = bms_lns_start_tex[i].ToTexture2D();
+            BMSLNsEndTex[i] = bms_lns_end_tex[i].ToTexture2D();
+        }
+        PMSNotesTex = new Texture2D[pms_notes_tex.Length];
+        PMSLNsStartTex = new Texture2D[pms_lns_start_tex.Length];
+        PMSLNsEndTex = new Texture2D[pms_lns_end_tex.Length];
+        for(int i = 0; i < PMSNotesTex.Length; i++){
+            PMSNotesTex[i] = pms_notes_tex[i].ToTexture2D();
+            PMSLNsStartTex[i] = pms_lns_start_tex[i].ToTexture2D();
+            PMSLNsEndTex[i] = pms_lns_end_tex[i].ToTexture2D();
+        }
         BMSLNCenterForms = bms_ln_center_forms;
-        BMSLNEndForms = bms_ln_end_forms;
-        pMSLNStartForms = pms_ln_start_forms;
-        pMSLNCenterForms = pms_ln_center_forms;
-        pMSLNEndForms = pms_ln_end_forms;
+        PMSLNCenterForms = pms_ln_center_forms;
         StageSprites = stage_sprites;
         DemoPlay = demo_play;
         mixer.SetFloat("freq", 1);

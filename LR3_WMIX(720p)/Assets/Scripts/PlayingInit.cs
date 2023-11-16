@@ -10,7 +10,6 @@ public class PlayingInit : MonoBehaviour{
     public BGMPlayer BGM_Player;
     public BPMPlayer BPM_Player;
     public BGAPlayer BGA_Player;
-    public MeterViewer meter_viewer;
     public NoteViewer note_viewer;
     public NotePlayer note_player;
     public ManualNotePlayer manualNotePlayer;
@@ -35,7 +34,6 @@ public class PlayingInit : MonoBehaviour{
         BPM_Player.enabled =
         BGA_Player.enabled =
         // note_player.enabled =
-        meter_viewer.enabled =
         note_viewer.enabled =
         true;
         if((MainVars.playMode & PlayMode.AutoPlay) != 0)

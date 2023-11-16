@@ -215,6 +215,17 @@ public unsafe static class StaticClass{
         }while(result < 1 || result > max);
         return result;
     }
+    public static Texture2D ToTexture2D(this Sprite sprite){
+        Texture2D src = sprite.texture;
+        Rect rect = sprite.rect;
+        // rect = sprite.textureRect;
+        Texture2D dst = new Texture2D((int)rect.width, (int)rect.height,
+            src.format, false){filterMode = src.filterMode};
+        dst.Apply(false, true);
+        Graphics.CopyTexture(src, 0, 0, (int)rect.x, (int)rect.y,
+            (int)rect.width, (int)rect.height , dst, 0, 0, 0, 0);
+        return dst;
+    }
     public static ulong gcd(ulong a, ulong b){
         if(a == 0 || a == b) return b;
 		if(b == 0) return a;
