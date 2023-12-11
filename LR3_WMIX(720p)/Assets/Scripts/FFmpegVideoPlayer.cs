@@ -90,7 +90,21 @@ public unsafe static class FFmpegVideoPlayer{
         [DllImport(PluginName)] public extern static void PlayVideo(
             string path, byte layer, ushort num, byte* pixels);
     }
-    public static void MatchFFmpegVersion(){
+#else
+    private const string PluginName = "FFmpegPlayer";
+    [DllImport(PluginName)] private extern static void Init();
+    [DllImport(PluginName)] private extern static void CleanUp();
+    [DllImport(PluginName)] private extern static bool GetVideoSize(
+        string path, ushort num, out int width, out int height);
+    [DllImport(PluginName)] public extern static void SetSpeed(
+        double speed = 1);
+    [DllImport(PluginName)] private extern static void SetVideoState(
+        byte layer, VideoState _ = VideoState.playing);
+    [DllImport(PluginName)] private extern static void PlayVideo(
+        string path, byte layer, ushort num, byte* pixels);
+#endif
+    static FFmpegVideoPlayer(){
+#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX
         const string PluginDir = "/lib/x86_64-linux-gnu/";
         if(File.Exists(PluginDir + "libavcodec.so.58")){//FFmpeg 4.x
             Init          = V4.Init;
@@ -114,21 +128,9 @@ public unsafe static class FFmpegVideoPlayer{
             SetVideoState = V6.SetVideoState;
             PlayVideo     = V6.PlayVideo;
         }else throw new DllNotFoundException("unknown libavcodec version");
+#endif
         Init();
     }
-#else
-    private const string PluginName = "FFmpegPlayer";
-    [DllImport(PluginName)] public extern static void Init();
-    [DllImport(PluginName)] private extern static void CleanUp();
-    [DllImport(PluginName)] private extern static bool GetVideoSize(
-        string path, ushort num, out int width, out int height);
-    [DllImport(PluginName)] public extern static void SetSpeed(
-        double speed = 1);
-    [DllImport(PluginName)] private extern static void SetVideoState(
-        byte layer, VideoState _ = VideoState.playing);
-    [DllImport(PluginName)] private extern static void PlayVideo(
-        string path, byte layer, ushort num, byte* pixels);
-#endif
     public static void PlayerStop(byte layer){
         if(layer >= threads.Length) return;
         if(threads[layer] != null){

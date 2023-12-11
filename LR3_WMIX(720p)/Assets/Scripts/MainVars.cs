@@ -63,7 +63,6 @@ public class MainVars : MonoBehaviour{// Game Manager
     public static Texture2D[] PMSLNsStartTex;
     public static Image[] PMSLNCenterForms;
     public static Texture2D[] PMSLNsEndTex;
-    public static RandomNumberGenerator rng = null;
     public static PlayMode playMode = PlayMode.AutoPlay | PlayMode.SingleSong | PlayMode.ExtraStage;
     public Sprite[] stage_sprites;
     public Sprite demo_play;
@@ -106,6 +105,5 @@ public class MainVars : MonoBehaviour{// Game Manager
         // FluidManager.Init(Application.streamingAssetsPath + "/FluidR3_GM.sf2");
         // FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 1000d, 3d);
         // FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 2.8d);
-        rng = RandomNumberGenerator.Create();
     }
 }

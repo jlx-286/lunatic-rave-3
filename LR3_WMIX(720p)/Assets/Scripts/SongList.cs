@@ -14,6 +14,9 @@ public class SongList : MonoBehaviour, IPointerClickHandler {
     public static bool loaded;
     public Button bmsItemForm;
     private string bmsFilename;
+    private static readonly Regex regex = new Regex(
+        @"\.([Bb][Mm][SsEeLl]|[Pp][Mm][Ss])$",
+        StaticClass.regexOption);
     private void Start(){
         loaded = false;
         if(string.CompareOrdinal(MainVars.cur_scene_name, "Start") == 0){
@@ -60,7 +63,7 @@ public class SongList : MonoBehaviour, IPointerClickHandler {
                 b.GetComponent<CustomFolderButton>().isFolder = true;
             }
             foreach(string s in Directory.GetFiles(MainVars.bms_file_path, "*.*", SearchOption.TopDirectoryOnly)){
-                if(Regex.IsMatch(s, @"\.(bms|bme|bml|pms)$", StaticClass.regexOption)){
+                if(regex.IsMatch(s)){
                     Button b = Instantiate(bmsItemForm, activeContent.transform);
                     b.GetComponentInChildren<Text>().text = Path.GetFileName(s);
                     b.GetComponent<Image>().enabled = true;

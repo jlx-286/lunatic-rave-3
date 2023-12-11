@@ -14,7 +14,7 @@ using System.Text.RegularExpressions;
 using Ude;
 using UnityEngine;
 public unsafe static class StaticClass{
-    public const RegexOptions regexOption = RegexOptions.ECMAScript | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
+    public const RegexOptions regexOption = RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.CultureInvariant;
 /*
     /// <summary>
     /// seconds
@@ -58,10 +58,9 @@ public unsafe static class StaticClass{
         }
         else return Shift_JIS;
     }
+    private static readonly Regex alnumIdx = new Regex(@"^[\da-zA-Z]+$", regexOption);
     public static ushort Convert36To10(string s){
-        if(s == null || !Regex.IsMatch(s, @"^[\d\w]+$", StaticClass.regexOption)){
-            return 0;
-        }
+        if(s == null || !alnumIdx.IsMatch(s)) return 0;
         s = s.ToLower();
         const string digits = "0123456789abcdefghijklmnopqrstuvwxyz";
         ushort result = 0;
@@ -151,7 +150,7 @@ public unsafe static class StaticClass{
         }
         return builder.ToString();
     }
-    public static bool TryParseDecimal(string s, out decimal m){
+    /*public static bool TryParseDecimal(string s, out decimal m){
         m = decimal.Zero;
         if(string.IsNullOrWhiteSpace(s)) return false;
         s = s.Trim();
@@ -190,21 +189,32 @@ public unsafe static class StaticClass{
             else res = decimal.TryParse(s, NumberStyles.Any & (~NumberStyles.AllowCurrencySymbol), NumberFormatInfo.InvariantInfo, out m);
         }
         return res;
-    }
+    }*/
     public static BigInteger NextBigInteger(this System.Random random, BigInteger max){
         if(max < 1) return 0;
         if(max == 1) return 1;
         byte[] src = max.ToByteArray();
-        // byte[] src = new byte[max.ToByteArray().Length];
         BigInteger result;
         do{
             random.NextBytes(src);
-            // randomNumberGenerator.GetBytes(src);
             result = new BigInteger(src);
         }while(result < 1 || result > max);
         return result;
     }
-    public static BigInteger NextBigInteger(this RandomNumberGenerator rng, BigInteger max){
+    private static RandomNumberGenerator rng = null;
+// #if UNITY_EDITOR || UNITY_STANDALONE
+    [RuntimeInitializeOnLoadMethod] static void Init
+// #else
+//     static StaticClass
+// #endif
+    (){
+        rng = RandomNumberGenerator.Create();
+        Application.quitting += ()=>{
+            rng.Dispose();
+            Debug.Log("rng.Dispose");
+        };
+    }
+    public static BigInteger NextBigInteger(BigInteger max){
         if(max < 1) return 0;
         if(max == 1) return 1;
         byte[] src = max.ToByteArray();

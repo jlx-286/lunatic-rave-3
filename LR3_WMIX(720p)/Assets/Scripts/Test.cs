@@ -118,12 +118,6 @@ public unsafe class Test : MonoBehaviour{
             s = d.RateToSubstring();
         sw.Stop();
         Debug.Log(sw.ElapsedTicks);*/
-#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || PLATFORM_STANDALONE_LINUX
-        FFmpegPlugins.MatchFFmpegVersion();
-        FFmpegVideoPlayer.MatchFFmpegVersion();
-#else
-        FFmpegVideoPlayer.Init();
-#endif
         FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2");
         AudioClip clip = null;
         int channels, frequency, length, lengthSamples;

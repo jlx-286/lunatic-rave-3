@@ -5,8 +5,8 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 public class BMSPlayer : MonoBehaviour {
     public Text title_text;
-    [HideInInspector] public long playingTimeAsNanoseconds { get; internal set; } = 0;
-    [HideInInspector] public long fixedDeltaTimeAsNanoseconds { get; internal set; }
+    [HideInInspector] public long playingTimeAsNanoseconds { get; private set; } = 0;
+    [HideInInspector] public long fixedDeltaTimeAsNanoseconds { get; private set; }
     public Slider[] sliders;
     public Sprite[] diffs;
     public Image diff;
@@ -16,7 +16,7 @@ public class BMSPlayer : MonoBehaviour {
         (uint)(BMSInfo.totalTimeAsNanoseconds % ns_per_sec == 0 ? 0 : 1);
     public Text timeLeftText;
     public Image stage;
-    [HideInInspector] public bool escaped { get; internal set; } = false;
+    [HideInInspector] public bool escaped { get; private set; } = false;
     // [HideInInspector] public int stop_table_row = 0;
     private void Awake(){
         MainVars.cur_scene_name = BMSInfo.playing_scene_name;

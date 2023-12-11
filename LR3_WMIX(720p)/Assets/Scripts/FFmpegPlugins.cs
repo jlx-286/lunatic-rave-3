@@ -48,7 +48,7 @@ public unsafe static class FFmpegPlugins{
             void* addr, int width, int height, bool isBitmap, bool strech = false);
         [DllImport(PluginName)] public extern static void CleanUp();
     }
-    public static void MatchFFmpegVersion(){
+    static FFmpegPlugins(){
         const string PluginDir = "/lib/x86_64-linux-gnu/";
         if(File.Exists(PluginDir + "libavcodec.so.58")){//FFmpeg 4.x
             GetAudioInfo     = V4.GetAudioInfo;
@@ -92,7 +92,7 @@ public unsafe static class FFmpegPlugins{
             if(length <= int.MaxValue) color32s = new Color32[length];
             fixed(void* p = color32s)
                 CopyPixels(p, width, height, isBitmap
-                || Regex.IsMatch(path, @"\.bmp$", StaticClass.regexOption));
+                || path.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase));
             width = height = max;
         }
         return color32s;

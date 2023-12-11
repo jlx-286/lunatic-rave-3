@@ -14,12 +14,6 @@ public class MainMenu : MonoBehaviour {
     public readonly static AudioSource[] audioSources = Enumerable.Repeat<AudioSource>(null, 36 * 36 + 1).ToArray();
     public AudioSource audioSource;
     private void Start(){
-#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || PLATFORM_STANDALONE_LINUX
-        FFmpegPlugins.MatchFFmpegVersion();
-        FFmpegVideoPlayer.MatchFFmpegVersion();
-#else
-        FFmpegVideoPlayer.Init();
-#endif
         exit_btn.onClick.AddListener(() => {
 #if UNITY_EDITOR
             EditorApplication.isPlaying = false;
@@ -70,7 +64,7 @@ public class MainMenu : MonoBehaviour {
         if(jObject[platform]["BMS_root_dir"] == null) return false;
         MainVars.Bms_root_dir = jObject[platform]["BMS_root_dir"].ToString();
         MainVars.Bms_root_dir = MainVars.Bms_root_dir.Replace('\\', '/');
-        if(Regex.IsMatch(MainVars.Bms_root_dir, @"^file://", StaticClass.regexOption))
+        if(MainVars.Bms_root_dir.StartsWith(@"file://", StringComparison.OrdinalIgnoreCase))
             MainVars.Bms_root_dir = MainVars.Bms_root_dir.Substring(7);
         MainVars.Bms_root_dir = MainVars.Bms_root_dir.TrimEnd('/') + '/';
         if(!Directory.Exists(MainVars.Bms_root_dir)) return false;
@@ -78,7 +72,6 @@ public class MainMenu : MonoBehaviour {
         return true;
     }
     private void OnApplicationQuit(){
-        MainVars.rng.Dispose();
         // FluidManager.CleanUp();
         FFmpegVideoPlayer.Release();
         FFmpegPlugins.CleanUp();

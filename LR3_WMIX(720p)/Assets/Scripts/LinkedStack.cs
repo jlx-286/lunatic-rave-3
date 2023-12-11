@@ -1,48 +1,44 @@
-public class StackNode<T>{
-    public T value;
-    public StackNode<T> next;
-}
-public class LinkedStack<T>{
-    public StackNode<T> top;
-    public long Count{
-        get;
-        private set;
-    }
-    public LinkedStack(){
-        Count = 0;
-        top = null;
-    }
-    public T Peek(){
-        if(top == null)
-            return default(T);
-        return top.value;
-    }
-    public void Push(T value){
-        if(top != null){
-            StackNode<T> node = new StackNode<T>();
-            node.value = value;
-            node.next = top;
-            top = node;
-        }else{
-            top = new StackNode<T>();
-            top.value = value;
-            top.next = null;
+using System;
+namespace System.Collections.Generic{
+    public sealed class LinkedStackNode<T>{
+        public T Value;
+        public readonly LinkedStackNode<T> Next;
+        public LinkedStackNode(T value, LinkedStackNode<T> next){
+            Value = value;
+            Next = next;
         }
-        Count++;
+        // ~LinkedStackNode(){
+        //     Console.WriteLine("remove a node");
+        // }
+        [Obsolete("NotImplemented", true)] private LinkedStackNode(){}
     }
-    public T Pop(){
-        if(top == null)
-            return default(T);
-        T result = top.value;
-        top = top.next;
-        Count--;
-        return result;
-    }
-    public void Clear(){
-        if(top != null)
-            while(top.next != null)
-                top = top.next;
-        top = null;
-        Count = 0;
+    public class LinkedStack<T>{
+        public LinkedStackNode<T> Top{ get; private set; }
+        public ulong Count{ get; private set; }
+        private static readonly Exception exception
+            = new OverflowException();
+        public LinkedStack(){
+            Count = 0;
+            Top = null;
+        }
+        public void Push(T value){
+            if(Count == ulong.MaxValue){
+                throw exception;
+                // return;
+            }
+            Top = new LinkedStackNode<T>(value, Top);
+            Count++;
+        }
+        public bool TryPop(){
+            if(Top == null) return false;
+            Top = Top.Next;
+            Count--;
+            return true;
+        }
+        public void Clear(){
+            while(Top != null)
+                Top = Top.Next;
+            Count = 0;
+        }
     }
 }
