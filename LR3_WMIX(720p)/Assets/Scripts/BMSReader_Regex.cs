@@ -1,5 +1,8 @@
 using System.Text.RegularExpressions;
 public partial class BMSReader{
+// #if CSHARP_11_OR_LATER || NET7_0_OR_GREATER
+// #else
+// #endif
     private const RegexOptions options = StaticClass.regexOption;
     private const string notLetter = @"([^a-zA-Z_]|$)";
     private const string floatLower = @"(\.\d+)?([Ee][\+\-]*\d+)?";

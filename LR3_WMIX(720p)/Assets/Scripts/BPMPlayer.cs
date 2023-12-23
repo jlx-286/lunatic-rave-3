@@ -25,12 +25,11 @@ public class BPMPlayer : MonoBehaviour{
     private void Update(){
         if(BMS_Player.escaped) return;
         if(BMS_Player.playingTimeAsNanoseconds <= BMSInfo.totalTimeAsNanoseconds){
-            while(bpm_table_row < BMSInfo.bpm_list_table.Count){
-                if(BMSInfo.bpm_list_table[bpm_table_row].time <= BMS_Player.playingTimeAsNanoseconds){
-                    now.text = BMSInfo.bpm_list_table[bpm_table_row].value;
-                    bpm_table_row++;
-                }
-                else break;
+            while(bpm_table_row < BMSInfo.bpm_list_table.Count &&
+                BMSInfo.bpm_list_table[bpm_table_row].time <= BMS_Player.playingTimeAsNanoseconds
+            ){
+                now.text = BMSInfo.bpm_list_table[bpm_table_row].value;
+                bpm_table_row++;
             }
         }
     }

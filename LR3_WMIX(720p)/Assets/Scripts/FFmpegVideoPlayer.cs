@@ -9,7 +9,7 @@ using UnityEngine;
 public unsafe static class FFmpegVideoPlayer{
     public enum VideoState : byte{
         stopped = 0,
-        [Obsolete("not enabled", true)]
+        [Obsolete("not implemented", true)]
         paused = 1,
         playing = 2,
     };
@@ -19,7 +19,7 @@ public unsafe static class FFmpegVideoPlayer{
     }
     public static double speed = 1;
     public static readonly Thread[] threads = Enumerable.Repeat<Thread>(null, 4).ToArray();
-    public static readonly Texture2D[] textures = Enumerable.Repeat<Texture2D>(null, 4).ToArray();
+    public static readonly Texture2D[] textures = new Texture2D[4];
     public static readonly byte*[] addrs = new byte*[4];
     public static readonly bool[] playing = Enumerable.Repeat(false, 4).ToArray();
     public static readonly bool[] toStop = Enumerable.Repeat(false, 4).ToArray();
@@ -103,6 +103,11 @@ public unsafe static class FFmpegVideoPlayer{
     [DllImport(PluginName)] private extern static void PlayVideo(
         string path, byte layer, ushort num, byte* pixels);
 #endif
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    private static void InitTextures(){
+        for(int i = textures.Length - 1; i >= 0; i--)
+            textures[i] = Texture2D.blackTexture;
+    }
     static FFmpegVideoPlayer(){
 #if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX
         const string PluginDir = "/lib/x86_64-linux-gnu/";
@@ -137,12 +142,12 @@ public unsafe static class FFmpegVideoPlayer{
             SetVideoState(layer, VideoState.stopped);
             while(threads[layer].IsAlive);
             threads[layer] = null;
-            textures[layer] = null;
+            textures[layer] = Texture2D.blackTexture;
             addrs[layer] = null;
         }
     }
 #if UNITY_EDITOR
-    [Obsolete("not enabled", false)]
+    [Obsolete("not implemented", false)]
     public static void PlayerSetPause(byte layer, UnityEditor.PauseState _){
         // if(layer >= threads.Length || threads[layer] == null) return;
         // switch(_){
@@ -155,7 +160,7 @@ public unsafe static class FFmpegVideoPlayer{
         // }
     }
 #endif
-    [Obsolete("not enabled", false)]
+    [Obsolete("not implemented", false)]
     public static void PlayerSetPause(byte layer, bool pause){
         // if(layer >= threads.Length || threads[layer] == null) return;
         // if(pause) SetVideoState(layer, VideoState.paused);

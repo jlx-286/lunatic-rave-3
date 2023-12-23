@@ -201,19 +201,20 @@ public unsafe static class StaticClass{
         }while(result < 1 || result > max);
         return result;
     }
-    private static RandomNumberGenerator rng = null;
+    private static readonly RandomNumberGenerator rng = RandomNumberGenerator.Create();
 // #if UNITY_EDITOR || UNITY_STANDALONE
-    [RuntimeInitializeOnLoadMethod] static void Init
-// #else
-//     static StaticClass
-// #endif
-    (){
-        rng = RandomNumberGenerator.Create();
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void Init(){
         Application.quitting += ()=>{
             rng.Dispose();
             Debug.Log("rng.Dispose");
         };
     }
+// #else
+//     static StaticClass(){
+//         rng.Dispose();
+//     }
+// #endif
     public static BigInteger NextBigInteger(BigInteger max){
         if(max < 1) return 0;
         if(max == 1) return 1;

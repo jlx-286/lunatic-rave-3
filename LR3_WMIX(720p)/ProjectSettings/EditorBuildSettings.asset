@@ -21,6 +21,9 @@ EditorBuildSettings:
     path: Assets/Scenes/7k_2P_Play.unity
     guid: 05ad5ff14974ed64399e1407135ac34e
   - enabled: 1
+    path: Assets/Scenes/10k_Play.unity
+    guid: 2978f9168f01634a78bb5deef3ba451d
+  - enabled: 1
     path: Assets/Scenes/14k_Play.unity
     guid: 2dc7c410de159314ab1d07c67ff658a5
   - enabled: 1

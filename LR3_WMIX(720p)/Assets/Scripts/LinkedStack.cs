@@ -1,4 +1,5 @@
 using System;
+// using UnityEngine;
 namespace System.Collections.Generic{
     public sealed class LinkedStackNode<T>{
         public T Value;
@@ -6,11 +7,12 @@ namespace System.Collections.Generic{
         public LinkedStackNode(T value, LinkedStackNode<T> next){
             Value = value;
             Next = next;
+            // Debug.Log("a new node");
         }
         // ~LinkedStackNode(){
-        //     Console.WriteLine("remove a node");
+        //     Debug.Log("remove a node");
         // }
-        [Obsolete("NotImplemented", true)] private LinkedStackNode(){}
+        [Obsolete("not enabled", true)] private LinkedStackNode(){}
     }
     public class LinkedStack<T>{
         public LinkedStackNode<T> Top{ get; private set; }

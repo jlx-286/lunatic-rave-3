@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &5513827623880950243
+--- !u!1 &590811140376356260
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5513827623880950240}
-  - component: {fileID: 5513827623880950246}
-  - component: {fileID: 5513827623880950241}
+  - component: {fileID: 590811140376356259}
+  - component: {fileID: 590811140376356257}
+  - component: {fileID: 590811140376356258}
   m_Layer: 5
   m_Name: bms black center
   m_TagString: Untagged
@@ -18,13 +18,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!224 &5513827623880950240
+--- !u!224 &590811140376356259
 RectTransform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5513827623880950243}
+  m_GameObject: {fileID: 590811140376356260}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
@@ -35,23 +35,23 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 26, y: 0}
+  m_SizeDelta: {x: 17, y: 0}
   m_Pivot: {x: 0, y: 1}
---- !u!222 &5513827623880950246
+--- !u!222 &590811140376356257
 CanvasRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5513827623880950243}
+  m_GameObject: {fileID: 590811140376356260}
   m_CullTransparentMesh: 0
---- !u!114 &5513827623880950241
+--- !u!114 &590811140376356258
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5513827623880950243}
+  m_GameObject: {fileID: 590811140376356260}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
@@ -63,9 +63,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
-      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-  m_Sprite: {fileID: 21300070, guid: 46ed47d36888e7d4ead65914f88cdc7e, type: 3}
+  m_Sprite: {fileID: 21300060, guid: e7d4d379cfb8d811e8228f54788861e6, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

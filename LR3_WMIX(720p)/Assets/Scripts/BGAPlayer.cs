@@ -35,29 +35,27 @@ public class BGAPlayer : MonoBehaviour {
     private void Update(){
         if(BMS_Player.escaped) return;
         if(BMS_Player.playingTimeAsNanoseconds <= BMSInfo.totalTimeAsNanoseconds){
-            while(bga_table_row < BMSInfo.bga_list_table.Count){
-                if(BMSInfo.bga_list_table[bga_table_row].time <= BMS_Player.playingTimeAsNanoseconds){
-                    bgi_num = BMSInfo.bga_list_table[bga_table_row].bgNum;
-                    switch(BMSInfo.bga_list_table[bga_table_row].channel){
-                        case BGAChannel.Base:
-                            ChannelCase(0);
-                            break;
-                        case BGAChannel.Layer1:
-                            ChannelCase(1);
-                            break;
-                        case BGAChannel.Layer2:
-                            ChannelCase(2);
-                            break;
-                        case BGAChannel.Poor:
-                            ChannelCase(3);
-                            break;
-                    }
-                    bga_table_row++;
-                }else break;
+            while(bga_table_row < BMSInfo.bga_list_table.Count &&
+                BMSInfo.bga_list_table[bga_table_row].time <= BMS_Player.playingTimeAsNanoseconds
+            ){
+                bgi_num = BMSInfo.bga_list_table[bga_table_row].bgNum;
+                switch(BMSInfo.bga_list_table[bga_table_row].channel){
+                    case BGAChannel.Base:
+                        ChannelCase(0);
+                        break;
+                    case BGAChannel.Layer1:
+                        ChannelCase(1);
+                        break;
+                    case BGAChannel.Layer2:
+                        ChannelCase(2);
+                        break;
+                    case BGAChannel.Poor:
+                        ChannelCase(3);
+                        break;
+                }
+                bga_table_row++;
             }
         }
-    }
-    private unsafe void LateUpdate(){
         for(byte layer = 0; layer < bgi_nums.Length; layer++){
             if(FFmpegVideoPlayer.playing[layer]){
                 if(FFmpegVideoPlayer.toStop[layer]){

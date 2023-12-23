@@ -46,20 +46,28 @@ public class MainVars : MonoBehaviour{// Game Manager
         new Color32(0xF3,0x23,0x37,0xFF),// another
         new Color32(0xE9,0x4A,0xEB,0xFF),// insane
     };
+    public Sprite[] bme_notes_tex;
+    public Sprite[] bme_lns_start_tex;
+    public Image[] bme_ln_center_forms;
+    public Sprite[] bme_lns_end_tex;
     public Sprite[] bms_notes_tex;
-    public Sprite[] pms_notes_tex;
     public Sprite[] bms_lns_start_tex;
     public Image[] bms_ln_center_forms;
     public Sprite[] bms_lns_end_tex;
+    public Sprite[] pms_notes_tex;
     public Sprite[] pms_lns_start_tex;
     public Image[] pms_ln_center_forms;
     public Sprite[] pms_lns_end_tex;
     public static Texture2D MeterLine;
+    public static Texture2D[] BMENotesTex;
+    public static Texture2D[] BMELNsStartTex;
+    public static Image[] BMELNCenterForms;
+    public static Texture2D[] BMELNsEndTex;
     public static Texture2D[] BMSNotesTex;
-    public static Texture2D[] PMSNotesTex;
     public static Texture2D[] BMSLNsStartTex;
     public static Image[] BMSLNCenterForms;
     public static Texture2D[] BMSLNsEndTex;
+    public static Texture2D[] PMSNotesTex;
     public static Texture2D[] PMSLNsStartTex;
     public static Image[] PMSLNCenterForms;
     public static Texture2D[] PMSLNsEndTex;
@@ -74,6 +82,14 @@ public class MainVars : MonoBehaviour{// Game Manager
             false){filterMode = FilterMode.Point};
         MeterLine.SetPixels32(Enumerable.Repeat(new Color32(255, 255, 255, 127), 2000).ToArray());
         MeterLine.Apply(false, true);
+        BMENotesTex = new Texture2D[bme_notes_tex.Length];
+        BMELNsStartTex = new Texture2D[bme_lns_start_tex.Length];
+        BMELNsEndTex = new Texture2D[bme_lns_end_tex.Length];
+        for(int i = 0; i < BMENotesTex.Length; i++){
+            BMENotesTex[i] = bme_notes_tex[i].ToTexture2D();
+            BMELNsStartTex[i] = bme_lns_start_tex[i].ToTexture2D();
+            BMELNsEndTex[i] = bme_lns_end_tex[i].ToTexture2D();
+        }
         BMSNotesTex = new Texture2D[bms_notes_tex.Length];
         BMSLNsStartTex = new Texture2D[bms_lns_start_tex.Length];
         BMSLNsEndTex = new Texture2D[bms_lns_end_tex.Length];
@@ -90,6 +106,7 @@ public class MainVars : MonoBehaviour{// Game Manager
             PMSLNsStartTex[i] = pms_lns_start_tex[i].ToTexture2D();
             PMSLNsEndTex[i] = pms_lns_end_tex[i].ToTexture2D();
         }
+        BMELNCenterForms = bme_ln_center_forms;
         BMSLNCenterForms = bms_ln_center_forms;
         PMSLNCenterForms = pms_ln_center_forms;
         StageSprites = stage_sprites;

@@ -42,10 +42,20 @@ public class NoteViewer : MonoBehaviour{
         yTime = (short)(Time.fixedDeltaTime * -1000);
         switch(BMSInfo.scriptType){
             case ScriptType.BMS:
-                NotesTex = MainVars.BMSNotesTex;
-                LNsStartTex = MainVars.BMSLNsStartTex;
-                LNsEndTex = MainVars.BMSLNsEndTex;
-                LNCenterForms = MainVars.BMSLNCenterForms;
+                switch(BMSInfo.playerType){
+                    case PlayerType.Keys7: case PlayerType.Keys14:
+                        NotesTex = MainVars.BMENotesTex;
+                        LNsStartTex = MainVars.BMELNsStartTex;
+                        LNsEndTex = MainVars.BMELNsEndTex;
+                        LNCenterForms = MainVars.BMELNCenterForms;
+                        break;
+                    case PlayerType.Keys5: case PlayerType.Keys10:
+                        NotesTex = MainVars.BMSNotesTex;
+                        LNsStartTex = MainVars.BMSLNsStartTex;
+                        LNsEndTex = MainVars.BMSLNsEndTex;
+                        LNCenterForms = MainVars.BMSLNCenterForms;
+                        break;
+                }
                 noteImgsLane[1] = noteImgsLane[3] = noteImgsLane[5] = noteImgsLane[7] = 0;
                 noteImgsLane[9] = noteImgsLane[11] = noteImgsLane[13] = noteImgsLane[15] = 0;
                 noteImgsLane[2] = noteImgsLane[4] = noteImgsLane[6] = 1;

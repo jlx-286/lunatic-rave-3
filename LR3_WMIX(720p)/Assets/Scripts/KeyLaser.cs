@@ -13,30 +13,76 @@ public class KeyLaser : MonoBehaviour{
     private bool[] passed;*/
     private void Awake(){
         if(BMSInfo.scriptType == ScriptType.BMS){
-            keyCodes = new KeyCode[]{
-                // KeyCode.Q, KeyCode.W,
-                KeyCode.Z, KeyCode.S,
-                KeyCode.X, KeyCode.D, KeyCode.C,
-                KeyCode.F, KeyCode.V, KeyCode.G, KeyCode.B,
-                KeyCode.N, KeyCode.J, KeyCode.M, KeyCode.K,
-                KeyCode.Comma, KeyCode.L, KeyCode.Period,
-                KeyCode.Semicolon, KeyCode.Slash,
-                // KeyCode.LeftBracket, KeyCode.RightBracket,
-            };
-            if(BMSInfo.playerType == PlayerType.Keys5 || BMSInfo.playerType == PlayerType.Keys7){
-                keyLanes = new byte[]{
-                    0, 0,
-                    1, 2, 3, 4, 5, 6, 7,
-                    1, 2, 3, 4, 5, 6, 7,
-                    0, 0,
-                };
-            }else{
-                keyLanes = new byte[]{
-                    0, 0,
-                    1, 2, 3, 4, 5, 6, 7,
-                    9, 10, 11, 12, 13, 14, 15,
-                    8, 8,
-                };
+            switch(BMSInfo.playerType){
+                case PlayerType.Keys7:
+                    keyCodes = new KeyCode[]{
+                        // KeyCode.Q, KeyCode.W,
+                        KeyCode.Z, KeyCode.S,
+                        KeyCode.X, KeyCode.D, KeyCode.C,
+                        KeyCode.F, KeyCode.V, KeyCode.G, KeyCode.B,
+                        KeyCode.N, KeyCode.J, KeyCode.M, KeyCode.K,
+                        KeyCode.Comma, KeyCode.L, KeyCode.Period,
+                        KeyCode.Semicolon, KeyCode.Slash,
+                        // KeyCode.LeftBracket, KeyCode.RightBracket,
+                    };
+                    keyLanes = new byte[]{
+                        0, 0,
+                        1, 2, 3, 4, 5, 6, 7,
+                        1, 2, 3, 4, 5, 6, 7,
+                        0, 0,
+                    };
+                    break;
+                case PlayerType.Keys14:
+                    keyCodes = new KeyCode[]{
+                        // KeyCode.Q, KeyCode.W,
+                        KeyCode.Z, KeyCode.S,
+                        KeyCode.X, KeyCode.D, KeyCode.C,
+                        KeyCode.F, KeyCode.V, KeyCode.G, KeyCode.B,
+                        KeyCode.N, KeyCode.J, KeyCode.M, KeyCode.K,
+                        KeyCode.Comma, KeyCode.L, KeyCode.Period,
+                        KeyCode.Semicolon, KeyCode.Slash,
+                        // KeyCode.LeftBracket, KeyCode.RightBracket,
+                    };
+                    keyLanes = new byte[]{
+                        0, 0,
+                        1, 2, 3, 4, 5, 6, 7,
+                        9, 10, 11, 12, 13, 14, 15,
+                        8, 8,
+                    };
+                    break;
+                case PlayerType.Keys10:
+                    keyCodes = new KeyCode[]{
+                        // KeyCode.Q, KeyCode.W,
+                        KeyCode.G, KeyCode.B,
+                        KeyCode.X, KeyCode.D, KeyCode.C, KeyCode.F, KeyCode.V,
+                        KeyCode.N, KeyCode.J, KeyCode.M, KeyCode.K, KeyCode.Comma,
+                        KeyCode.L, KeyCode.Period,
+                        // KeyCode.LeftBracket, KeyCode.RightBracket,
+                    };
+                    keyLanes = new byte[]{
+                        0, 0,
+                        1, 2, 3, 4, 5,
+                        9, 10, 11, 12, 13,
+                        8, 8,
+                    };
+                    break;
+                case PlayerType.Keys5:
+                    keyCodes = new KeyCode[]{
+                        // KeyCode.Q, KeyCode.W,
+                        KeyCode.G, KeyCode.B,
+                        KeyCode.X, KeyCode.D, KeyCode.C, KeyCode.F, KeyCode.V,
+                        KeyCode.N, KeyCode.J, KeyCode.M, KeyCode.K, KeyCode.Comma,
+                        KeyCode.L, KeyCode.Period,
+                        // KeyCode.LeftBracket, KeyCode.RightBracket,
+                    };
+                    keyLanes = new byte[]{
+                        0, 0,
+                        1, 2, 3, 4, 5,
+                        1, 2, 3, 4, 5,
+                        0, 0,
+                    };
+                    break;
+                default: break;
             }
         }else if(BMSInfo.scriptType == ScriptType.PMS){
             keyCodes = new KeyCode[]{

@@ -78,47 +78,46 @@ public class NotePlayer : MonoBehaviour {
         if(BMS_Player.escaped) return;
         if(BMS_Player.playingTimeAsNanoseconds <= BMSInfo.totalTimeAsNanoseconds){
             for(int i = 0; i < note_nums.Length; i++){
-                while(note_nums[i] < BMSInfo.note_list_lanes[i].Count){
-                    if(BMSInfo.note_list_lanes[i][note_nums[i]].time <= BMS_Player.playingTimeAsNanoseconds){
-                        switch(BMSInfo.note_list_lanes[i][note_nums[i]].noteType){
-                            case NoteType.LongnoteStart:
-                                // inLN[i] = true;
-                                clipNums[i] = BMSInfo.note_list_lanes[i][note_nums[i]].clipNum;
-                                MainMenu.audioSources[clipNums[i]].Play();
-                                toUpdateScore = true;
-                                judge_nums[(byte)NoteJudge.Perfect]++;
-                                currScore += 2; maxScore += 2;
-                                runningCombo++; maxCombo++;
-                                inc += BMSInfo.incr;
-                                break;
-                            case NoteType.LongnoteEnd:
-                                // inLN[i] = false;
-                                if(clipNums[i] != BMSInfo.note_list_lanes[i][note_nums[i]].clipNum){
-                                    MainMenu.audioSources[BMSInfo.note_list_lanes[i][note_nums[i]].clipNum].Play();
-                                    // clipNums[i] = BMSInfo.note_list_lanes[i][note_nums[i]].clipNum;
-                                }
-                                toUpdateScore = true;
-                                judge_nums[(byte)NoteJudge.Perfect]++;
-                                currScore += 2; maxScore += 2;
-                                runningCombo++; maxCombo++;
-                                inc += BMSInfo.incr;
-                                break;
-                            case NoteType.Default:
-                                // inLN[i] = false;
-                                clipNums[i] = BMSInfo.note_list_lanes[i][note_nums[i]].clipNum;
-                                MainMenu.audioSources[clipNums[i]].Play();
-                                toUpdateScore = true;
-                                judge_nums[(byte)NoteJudge.Perfect]++;
-                                currScore += 2; maxScore += 2;
-                                runningCombo++; maxCombo++;
-                                inc += BMSInfo.incr;
-                                break;
-                            default: break;
-                        }
-                        note_nums[i]++;
-                        // row_key++;
+                while(note_nums[i] < BMSInfo.note_list_lanes[i].Count &&
+                    BMSInfo.note_list_lanes[i][note_nums[i]].time <= BMS_Player.playingTimeAsNanoseconds
+                ){
+                    switch(BMSInfo.note_list_lanes[i][note_nums[i]].noteType){
+                        case NoteType.LongnoteStart:
+                            // inLN[i] = true;
+                            clipNums[i] = BMSInfo.note_list_lanes[i][note_nums[i]].clipNum;
+                            MainMenu.audioSources[clipNums[i]].Play();
+                            toUpdateScore = true;
+                            judge_nums[(byte)NoteJudge.Perfect]++;
+                            currScore += 2; maxScore += 2;
+                            runningCombo++; maxCombo++;
+                            inc += BMSInfo.incr;
+                            break;
+                        case NoteType.LongnoteEnd:
+                            // inLN[i] = false;
+                            if(clipNums[i] != BMSInfo.note_list_lanes[i][note_nums[i]].clipNum){
+                                MainMenu.audioSources[BMSInfo.note_list_lanes[i][note_nums[i]].clipNum].Play();
+                                // clipNums[i] = BMSInfo.note_list_lanes[i][note_nums[i]].clipNum;
+                            }
+                            toUpdateScore = true;
+                            judge_nums[(byte)NoteJudge.Perfect]++;
+                            currScore += 2; maxScore += 2;
+                            runningCombo++; maxCombo++;
+                            inc += BMSInfo.incr;
+                            break;
+                        case NoteType.Default:
+                            // inLN[i] = false;
+                            clipNums[i] = BMSInfo.note_list_lanes[i][note_nums[i]].clipNum;
+                            MainMenu.audioSources[clipNums[i]].Play();
+                            toUpdateScore = true;
+                            judge_nums[(byte)NoteJudge.Perfect]++;
+                            currScore += 2; maxScore += 2;
+                            runningCombo++; maxCombo++;
+                            inc += BMSInfo.incr;
+                            break;
+                        default: break;
                     }
-                    else break;
+                    note_nums[i]++;
+                    // row_key++;
                 }
             }
             if(toUpdateScore){

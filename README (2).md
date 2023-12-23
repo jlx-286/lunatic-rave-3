@@ -1,6 +1,6 @@
 ### known problem(s)
 - "sws_scale" crashes (in Windows) when (the video in) "[トルコ行進曲 (Hd-NRG mix)](https://manbow.nothing.sh/event/event.cgi?action=More_def&num=47&event=78)" is stopped
-- the second video in "[Grape.exe!](https://anonymous.nekokan.dyndns.info/data/BOFoonXV/grape_exe.zip)" is not shown sometimes;
+- the second video in "[Grape.exe!](https://anonymous.nekokan.dyndns.info/data/BOFoonXV/grape_exe.zip)" is not shown sometimes
 ### Unity Editor Version(s)
 + considering 2019.3 or newer version(s)
     - Windows: Fatal error in GC "GetThreadContext failed" (due to Unity with System.Threading?)
@@ -11,10 +11,10 @@
     - <https://learn.microsoft.com/dotnet/core/whats-new/dotnet-7#regular-expressions>
     - <https://docs.unity3d.com/2023.3/Documentation/Manual/CSharpCompiler.html>
 
-### Dependencies:
+### Dependencies
 - Windows (<https://learn.microsoft.com/windows-server/administration/windows-commands/path>)
     + FFmpeg (avcodec-58 + avformat-58 + avutil-56 + swresample-3 + swscale-5)
-        + [download FFmpeg](https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2023-04-30-12-46/ffmpeg-n4.4.4-win64-lgpl-shared-4.4.zip) and add the directory of "avcodec-58.dll" to "%path%"
+        * [download FFmpeg](https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2023-04-30-12-46/ffmpeg-n4.4.4-win64-lgpl-shared-4.4.zip) and add the directory of "avcodec-58.dll" to "%path%"
 - Linux (Debian or Ubuntu)
     + FluidSynth
         ```shell

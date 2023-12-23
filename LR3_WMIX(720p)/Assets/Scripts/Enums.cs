@@ -3,12 +3,13 @@
 public enum ScriptType : byte{
     Unknown = 0, PMS = 2,
     BMS = 1, BME = 1, BML = 1,
-    // BMSON = 3,
+    [Obsolete("not implemented", true)] BMSON = 3,
 }
 public enum PlayerType : byte{
     Keys5 = 0, Keys7 = 1, Keys10 = 2, Keys14 = 3,
     BMS_DP = 0, PMS_Standard = 0, BME_SP = 1,
-    BME_DP = 2, Keys18 = 2,
+    [Obsolete("not enabled", false)] BME_DP = 2,
+    [Obsolete("not enabled", false)] Keys18 = 2,
 }
 public enum Difficulty : byte{
     Unknown = 0, Beginner = 1, Easy = 1,
@@ -18,12 +19,11 @@ public enum Difficulty : byte{
 }
 #endregion
 #region BMS reader
-public enum ChannelEnum : byte{
-    Default = 0,// BMS:[135D][1-7], PMS:[135D][1-5]
+[Flags] public enum ChannelEnum : byte{
     Has_1P_7 = 1,// BMS:[135D][89]
     Has_2P_5 = 2,// BMS:[246E][1-7]
     Has_2P_7 = 4,// BMS:[246E][89]
-
+    Default = 0,// BMS:[135D][1-7], PMS:[135D][1-5]
     PMS_DP = 1,// PMS:[246E][2-5]
     BME_SP = 2,// PMS:[135D][6-9]
     BME_DP = 4,// PMS:[246E][16-9]

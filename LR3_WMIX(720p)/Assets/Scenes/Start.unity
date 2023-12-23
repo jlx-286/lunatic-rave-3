@@ -10430,25 +10430,41 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mixer: {fileID: 24100000, guid: e4a624e88480fae4cad3fbf455afa29e, type: 2}
   latency: 40
-  bms_notes_tex:
+  bme_notes_tex:
   - {fileID: 21300002, guid: 46ed47d36888e7d4ead65914f88cdc7e, type: 3}
   - {fileID: 21300004, guid: 46ed47d36888e7d4ead65914f88cdc7e, type: 3}
   - {fileID: 21300000, guid: 46ed47d36888e7d4ead65914f88cdc7e, type: 3}
-  pms_notes_tex:
-  - {fileID: 21300002, guid: 46ed47d36888e7d4ead65914f88cdc7e, type: 3}
-  - {fileID: 21300004, guid: 46ed47d36888e7d4ead65914f88cdc7e, type: 3}
-  bms_lns_start_tex:
+  bme_lns_start_tex:
   - {fileID: 21300060, guid: 46ed47d36888e7d4ead65914f88cdc7e, type: 3}
   - {fileID: 21300066, guid: 46ed47d36888e7d4ead65914f88cdc7e, type: 3}
   - {fileID: 21300054, guid: 46ed47d36888e7d4ead65914f88cdc7e, type: 3}
-  bms_ln_center_forms:
+  bme_ln_center_forms:
   - {fileID: 5283084728131820640, guid: 2a876acb203607a6f96add3a538c4a43, type: 3}
   - {fileID: 5513827623880950241, guid: 584b7da4d5115fea0b7e9c58590a10d4, type: 3}
   - {fileID: 2515653582952791368, guid: 35c99ef85f2b8def1b1649259017f497, type: 3}
-  bms_lns_end_tex:
+  bme_lns_end_tex:
   - {fileID: 21300062, guid: 46ed47d36888e7d4ead65914f88cdc7e, type: 3}
   - {fileID: 21300068, guid: 46ed47d36888e7d4ead65914f88cdc7e, type: 3}
   - {fileID: 21300056, guid: 46ed47d36888e7d4ead65914f88cdc7e, type: 3}
+  bms_notes_tex:
+  - {fileID: 21300040, guid: e7d4d379cfb8d811e8228f54788861e6, type: 3}
+  - {fileID: 21300042, guid: e7d4d379cfb8d811e8228f54788861e6, type: 3}
+  - {fileID: 21300044, guid: e7d4d379cfb8d811e8228f54788861e6, type: 3}
+  bms_lns_start_tex:
+  - {fileID: 21300052, guid: e7d4d379cfb8d811e8228f54788861e6, type: 3}
+  - {fileID: 21300058, guid: e7d4d379cfb8d811e8228f54788861e6, type: 3}
+  - {fileID: 21300046, guid: e7d4d379cfb8d811e8228f54788861e6, type: 3}
+  bms_ln_center_forms:
+  - {fileID: 644314868923978300, guid: 051acd0c567e11a419d01c8ec77e466e, type: 3}
+  - {fileID: 590811140376356258, guid: 059d36fee28e0cf44a999b6bebda7f42, type: 3}
+  - {fileID: 8122377473191678872, guid: 277e049a87068a4479e2887114321398, type: 3}
+  bms_lns_end_tex:
+  - {fileID: 21300056, guid: e7d4d379cfb8d811e8228f54788861e6, type: 3}
+  - {fileID: 21300062, guid: e7d4d379cfb8d811e8228f54788861e6, type: 3}
+  - {fileID: 21300048, guid: e7d4d379cfb8d811e8228f54788861e6, type: 3}
+  pms_notes_tex:
+  - {fileID: 21300002, guid: 46ed47d36888e7d4ead65914f88cdc7e, type: 3}
+  - {fileID: 21300004, guid: 46ed47d36888e7d4ead65914f88cdc7e, type: 3}
   pms_lns_start_tex:
   - {fileID: 21300060, guid: 46ed47d36888e7d4ead65914f88cdc7e, type: 3}
   - {fileID: 21300066, guid: 46ed47d36888e7d4ead65914f88cdc7e, type: 3}

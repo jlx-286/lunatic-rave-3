@@ -6,12 +6,11 @@ public class BGMPlayer : MonoBehaviour {
     private void FixedUpdate(){
         if(BMS_Player.escaped) return;
         if(BMS_Player.playingTimeAsNanoseconds <= BMSInfo.totalTimeAsNanoseconds){
-            while(bgm_table_row < BMSInfo.bgm_list_table.Count){
-                if(BMSInfo.bgm_list_table[bgm_table_row].time <= BMS_Player.playingTimeAsNanoseconds){
-                    MainMenu.audioSources[BMSInfo.bgm_list_table[bgm_table_row].clipNum].Play();
-                    bgm_table_row++;
-                }
-                else break;
+            while(bgm_table_row < BMSInfo.bgm_list_table.Count &&
+                BMSInfo.bgm_list_table[bgm_table_row].time <= BMS_Player.playingTimeAsNanoseconds
+            ){
+                MainMenu.audioSources[BMSInfo.bgm_list_table[bgm_table_row].clipNum].Play();
+                bgm_table_row++;
             }
         }
     }

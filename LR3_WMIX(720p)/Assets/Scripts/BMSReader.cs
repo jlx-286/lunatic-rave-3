@@ -1741,7 +1741,7 @@ public partial class BMSReader : MonoBehaviour{
             }
             else{
                 BMSInfo.playerType = PlayerType.Keys10;
-                BMSInfo.playing_scene_name = "14k_Play";
+                BMSInfo.playing_scene_name = "10k_Play";
             }
         }
         else if((channelEnum & ChannelEnum.Has_1P_7) == ChannelEnum.Has_1P_7){
@@ -1750,7 +1750,7 @@ public partial class BMSReader : MonoBehaviour{
         }
         else{
             BMSInfo.playerType = PlayerType.Keys5;
-            BMSInfo.playing_scene_name = "7k_1P_Play";
+            BMSInfo.playing_scene_name = "10k_Play";
         }
     }
     private void PMS_region(){

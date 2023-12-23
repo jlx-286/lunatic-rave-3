@@ -46,6 +46,8 @@ TextureImporter:
     21300082: in_1p
     21300084: hd_1p
     21300086: hy_1p
+    21300088: hs
+    21300090: hs_cst
   externalObjects: {}
   serializedVersion: 9
   mipmaps:
@@ -1025,6 +1027,46 @@ TextureImporter:
       tessellationDetail: 0
       bones: []
       spriteID: 0f6fb96c9e0a2909aae42fd573b95bf2
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: hs
+      rect:
+        serializedVersion: 2
+        x: 130
+        y: 941
+        width: 85
+        height: 15
+      alignment: 6
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ddac3b836feb977a3b5a924149a1f98a
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: hs_cst
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 740
+        width: 43
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0b65b3b6f464b51428c7c1cd9c95c917
       vertices: []
       indices: 
       edges: []
