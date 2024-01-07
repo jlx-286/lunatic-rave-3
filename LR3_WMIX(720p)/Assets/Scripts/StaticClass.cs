@@ -12,26 +12,15 @@ using System.Text;
 using System.Text.RegularExpressions;
 // using System.Threading.Tasks;
 using Ude;
+#if UNITY_5_3_OR_NEWER
 using UnityEngine;
+#endif
 public unsafe static class StaticClass{
     public const RegexOptions regexOption = RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.CultureInvariant;
-/*
-    /// <summary>
-    /// seconds
-    /// </summary>
-#if UNITY_2020_2_OR_NEWER
-    // public static readonly double OverFlowTime = 4.398046511E12;
-    // public static readonly double OverFlowTime = 4398046511104d;
-    public static readonly double OverFlowTime = Math.Pow(2, 42) - Math.Pow(2, -52) - 1;
-#else
-    public static readonly double OverFlowTime = Mathf.Pow(2, 13) - Mathf.Pow(2, -23) - 1;
-    // public static readonly double OverFlowTime = 2 * 3600 + 20 * 60;
-#endif
-*/
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || GODOT_WINDOWS
     private const string libc = "ucrtbase";
-#elif UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || PLATFORM_STANDALONE_LINUX
-    private const string libc = "libc";
+#elif UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || GODOT_X11
+    private const string libc = "libc.so.6";
 #else
     private const string libc = "libavcodec";
 #endif
@@ -96,6 +85,7 @@ public unsafe static class StaticClass{
         }
         return "0.00";
     }
+#if UNITY_5_3_OR_NEWER
     public static readonly WaitForFixedUpdate waitForFixedUpdate = new WaitForFixedUpdate();
     private static readonly string[] tmp_digits = new string[10]{
         "<sprite index=0>",
@@ -150,6 +140,7 @@ public unsafe static class StaticClass{
         }
         return builder.ToString();
     }
+#endif
     /*public static bool TryParseDecimal(string s, out decimal m){
         m = decimal.Zero;
         if(string.IsNullOrWhiteSpace(s)) return false;
@@ -202,19 +193,18 @@ public unsafe static class StaticClass{
         return result;
     }
     private static readonly RandomNumberGenerator rng = RandomNumberGenerator.Create();
-// #if UNITY_EDITOR || UNITY_STANDALONE
+#if UNITY_5_3_OR_NEWER
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Init(){
         Application.quitting += ()=>{
             rng.Dispose();
-            Debug.Log("rng.Dispose");
         };
     }
-// #else
-//     static StaticClass(){
-//         rng.Dispose();
-//     }
-// #endif
+#else
+    static StaticClass(){
+        rng.Dispose();
+    }
+#endif
     public static BigInteger NextBigInteger(BigInteger max){
         if(max < 1) return 0;
         if(max == 1) return 1;
@@ -226,6 +216,7 @@ public unsafe static class StaticClass{
         }while(result < 1 || result > max);
         return result;
     }
+#if UNITY_5_3_OR_NEWER
     public static Texture2D ToTexture2D(this Sprite sprite){
         Texture2D src = sprite.texture;
         Rect rect = sprite.rect;
@@ -237,6 +228,7 @@ public unsafe static class StaticClass{
             (int)rect.width, (int)rect.height , dst, 0, 0, 0, 0);
         return dst;
     }
+#endif
     public static ulong gcd(ulong a, ulong b){
         if(a == 0 || a == b) return b;
 		if(b == 0) return a;

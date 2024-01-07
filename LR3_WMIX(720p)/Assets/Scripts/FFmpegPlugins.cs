@@ -1,25 +1,53 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+#if UNITY_5_3_OR_NEWER
 using UnityEngine;
+using AudioSample = System.Single;
+#elif GODOT
+using Godot;
+using AudioSample = System.Byte;
+using Color32 = System.UInt32;
+using File = System.IO.File;
+using Thread = System.Threading.Thread;
+#else
+using AudioSample = System.Single;
+using Color32 = System.UInt32;
+#endif
 public unsafe static class FFmpegPlugins{
-#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || PLATFORM_STANDALONE_LINUX
-    public delegate bool GetAudioInfoFunc(string url, out int channels, out int frequency, out ulong length);
-    public delegate void CopyAudioSamplesFunc(float* addr);
-    public delegate bool GetPixelsInfoFunc(string url, out int width, out int height, out bool isBitmap);
-    public delegate void CopyPixelsFunc(void* addr, int width, int height, bool isBitmap, bool strech = false);
+    private enum AVSampleFormat : sbyte {
+        AV_SAMPLE_FMT_NONE = -1, 
+        AV_SAMPLE_FMT_U8, AV_SAMPLE_FMT_S16, AV_SAMPLE_FMT_S32,
+        AV_SAMPLE_FMT_FLT, AV_SAMPLE_FMT_DBL, 
+        AV_SAMPLE_FMT_U8P, AV_SAMPLE_FMT_S16P, AV_SAMPLE_FMT_S32P,
+        AV_SAMPLE_FMT_FLTP, AV_SAMPLE_FMT_DBLP,
+        AV_SAMPLE_FMT_S64, AV_SAMPLE_FMT_S64P,
+        AV_SAMPLE_FMT_NB // Number of sample formats. DO NOT USE if linking dynamically
+    };
+#if GODOT
+    private const string projLibPath = "Plugins/FFmpeg/";
+    private const AVSampleFormat format = AVSampleFormat.AV_SAMPLE_FMT_S16;
+#else //if UNITY_5_3_OR_NEWER
+    private const string projLibPath = "";
+    private const AVSampleFormat format = AVSampleFormat.AV_SAMPLE_FMT_FLT;
+#endif
+#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || GODOT_X11
+    private delegate bool GetAudioInfoFunc(string url, AVSampleFormat format, out int channels, out int frequency, out ulong length);
+    private delegate void CopyAudioSamplesFunc(void* addr);
+    private delegate bool GetPixelsInfoFunc(string url, out int width, out int height, out bool isBitmap);
+    private delegate void CopyPixelsFunc(void* addr, int width, int height, bool isBitmap, bool strech = false);
     public delegate void CleanUpFunc();
-    public static GetAudioInfoFunc GetAudioInfo = null;
-    public static CopyAudioSamplesFunc CopyAudioSamples = null;
-    public static GetPixelsInfoFunc GetPixelsInfo = null;
-    public static CopyPixelsFunc CopyPixels = null;
+    private static GetAudioInfoFunc GetAudioInfo = null;
+    private static CopyAudioSamplesFunc CopyAudioSamples = null;
+    private static GetPixelsInfoFunc GetPixelsInfo = null;
+    private static CopyPixelsFunc CopyPixels = null;
     public static CleanUpFunc CleanUp = null;
     private static class V4{
-        private const string PluginName = "FFmpegPlugin";
+        private const string PluginName = projLibPath + "FFmpegPlugin.so";
         [DllImport(PluginName)] public extern static bool GetAudioInfo(
-            string url, out int channels, out int frequency, out ulong length);
-        [DllImport(PluginName)] public extern static void CopyAudioSamples(float* addr);
+            string url, AVSampleFormat format, out int channels, out int frequency, out ulong length);
+        [DllImport(PluginName)] public extern static void CopyAudioSamples(void* addr);
         [DllImport(PluginName)] public extern static bool GetPixelsInfo(
             string url, out int width, out int height, out bool isBitmap);
         [DllImport(PluginName)] public extern static void CopyPixels(
@@ -27,10 +55,10 @@ public unsafe static class FFmpegPlugins{
         [DllImport(PluginName)] public extern static void CleanUp();
     }
     private static class V5{
-        private const string PluginName = "FFmpeg5Plugin";
+        private const string PluginName = projLibPath + "FFmpeg5Plugin.so";
         [DllImport(PluginName)] public extern static bool GetAudioInfo(
-            string url, out int channels, out int frequency, out ulong length);
-        [DllImport(PluginName)] public extern static void CopyAudioSamples(float* addr);
+            string url, AVSampleFormat format, out int channels, out int frequency, out ulong length);
+        [DllImport(PluginName)] public extern static void CopyAudioSamples(void* addr);
         [DllImport(PluginName)] public extern static bool GetPixelsInfo(
             string url, out int width, out int height, out bool isBitmap);
         [DllImport(PluginName)] public extern static void CopyPixels(
@@ -38,10 +66,10 @@ public unsafe static class FFmpegPlugins{
         [DllImport(PluginName)] public extern static void CleanUp();
     }
     private static class V6{
-        private const string PluginName = "FFmpeg6Plugin";
+        private const string PluginName = projLibPath + "FFmpeg6Plugin.so";
         [DllImport(PluginName)] public extern static bool GetAudioInfo(
-            string url, out int channels, out int frequency, out ulong length);
-        [DllImport(PluginName)] public extern static void CopyAudioSamples(float* addr);
+            string url, AVSampleFormat format, out int channels, out int frequency, out ulong length);
+        [DllImport(PluginName)] public extern static void CopyAudioSamples(void* addr);
         [DllImport(PluginName)] public extern static bool GetPixelsInfo(
             string url, out int width, out int height, out bool isBitmap);
         [DllImport(PluginName)] public extern static void CopyPixels(
@@ -71,10 +99,10 @@ public unsafe static class FFmpegPlugins{
         }else throw new DllNotFoundException("unknown FFmpeg version");
     }
 #else
-    private const string PluginName = "FFmpegPlugin";
+    private const string PluginName = projLibPath + "FFmpegPlugin";
     [DllImport(PluginName)] private extern static bool GetAudioInfo(
-        string url, out int channels, out int frequency, out ulong length);
-    [DllImport(PluginName)] private extern static void CopyAudioSamples(float* addr);
+        string url, AVSampleFormat format, out int channels, out int frequency, out ulong length);
+    [DllImport(PluginName)] private extern static void CopyAudioSamples(void* addr);
     [DllImport(PluginName)] private extern static bool GetPixelsInfo(
         string url, out int width, out int height, out bool isBitmap);
     [DllImport(PluginName)] private extern static void CopyPixels(
@@ -108,14 +136,18 @@ public unsafe static class FFmpegPlugins{
         }
         return color32s;
     }
-    public static float[] AudioToSamples(string path, out int channels, out int frequency){
+    public static AudioSample[] AudioToSamples(string path, out int channels, out int frequency){
         channels = frequency = 0;
         // if(!File.Exists(path)) return null;
-        float[] result = null;
-        if(GetAudioInfo(path, out channels, out frequency, out ulong length) && length <= int.MaxValue)
-            result = new float[length];
+        AudioSample[] result = null;
+        if(GetAudioInfo(path, format, out channels, out frequency, out ulong length) && length <= int.MaxValue)
+            result = new AudioSample[length / sizeof(AudioSample)];
+#if UNITY_5_3_OR_NEWER
         // else Debug.LogWarning(path + ":Invalid data or too long data");
-        fixed(float* p = result) CopyAudioSamples(p);
+#elif GODOT
+        // else GD.PushWarning(path + ":Invalid data or too long data");
+#endif
+        fixed(void* p = result) CopyAudioSamples(p);
         /*if(result == null){
             try{
                 channels = FluidManager.channels;

@@ -1,6 +1,8 @@
 ### known problem(s)
 - "sws_scale" crashes (in Windows) when (the video in) "[トルコ行進曲 (Hd-NRG mix)](https://manbow.nothing.sh/event/event.cgi?action=More_def&num=47&event=78)" is stopped
 - the second video in "[Grape.exe!](https://anonymous.nekokan.dyndns.info/data/BOFoonXV/grape_exe.zip)" is not shown sometimes
+- "[libfluidsynth](https://github.com/FluidSynth/fluidsynth/releases/)" fails to load a soundfont in "[Godot_v3.5.3-stable_mono_win64](https://github.com/godotengine/godot/releases/download/3.5.3-stable/Godot_v3.5.3-stable_mono_win64.zip)"
+- adding item(s) in "[System.Collections.Generic](https://learn.microsoft.com/dotnet/api/system.collections.generic?view=netstandard-2.0)" crashes(?) in "[Godot_v3.5.3-stable_mono_x11_64](https://github.com/godotengine/godot/releases/download/3.5.3-stable/Godot_v3.5.3-stable_mono_x11_64.zip)"
 ### Unity Editor Version(s)
 + considering 2019.3 or newer version(s)
     - Windows: Fatal error in GC "GetThreadContext failed" (due to Unity with System.Threading?)
@@ -14,13 +16,15 @@
 ### Dependencies
 - Windows (<https://learn.microsoft.com/windows-server/administration/windows-commands/path>)
     + FFmpeg (avcodec-58 + avformat-58 + avutil-56 + swresample-3 + swscale-5)
-        * [download FFmpeg](https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2023-04-30-12-46/ffmpeg-n4.4.4-win64-lgpl-shared-4.4.zip) and add the directory of "avcodec-58.dll" to "%path%"
+        1. [download FFmpeg](https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2023-04-30-12-46/ffmpeg-n4.4.4-win64-lgpl-shared-4.4.zip)
+        2. add (the absolute path of) the directory "bin" to "%path%"
+        3. reboot now or later
 - Linux (Debian or Ubuntu)
     + FluidSynth
         ```shell
-            sudo apt install libfluidsynth-dev
+            sudo apt install libfluidsynth2 || sudo apt install libfluidsynth3
             # apt download timgm6mb-soundfont fluid-soundfont-gm
-            # sudo apt install libfluidsynth2 || sudo apt install libfluidsynth3
+            # sudo apt install libfluidsynth-dev
             ## You can install the dependencies by Synaptic (in GUI):
             # sudo apt install synaptic
             ## considering plugins from snap store
@@ -29,16 +33,17 @@
         ```
 - [FluidSynth](https://www.fluidsynth.org)
     + The plugins are from [Unity Asset Store](https://assetstore.unity.com/packages/tools/audio/fluid-midi-player-173680).
-        (alternative:<https://github.com/FluidSynth/fluidsynth/releases/>)
-    + The soundfont in "[Application.streamingAssetsPath](https://docs.unity3d.com/2018.2/Documentation/ScriptReference/Application-streamingAssetsPath.html)" is from timgm6mb-soundfont.
+    + alternative plugin(s):<https://github.com/FluidSynth/fluidsynth/releases/>
+    + The soundfont in "[Application.streamingAssetsPath](https://docs.unity3d.com/2018.2/Documentation/ScriptReference/Application-streamingAssetsPath.html)" can be from <https://packages.debian.org/trixie/timgm6mb-soundfont>.
     + <https://github.com/FluidSynth/fluidsynth/wiki/Download#distributions>
 
 ### About .gitignore
 1. previous .gitignore (by owy787)
     + same as [C.gitignore](https://github.com/github/gitignore/blob/main/C.gitignore)
-2. current .gitignore (by jlx-286)
+2. current ".gitignore"s (by jlx-286)
     + from [Unity.gitignore](https://github.com/github/gitignore/blob/main/Unity.gitignore) and <https://www.it1352.com/1848876.html>
     ``` dockerfile
         /.out/
         /UWP/
     ```
+    + from [Godot.gitignore](https://github.com/github/gitignore/blob/main/Godot.gitignore)

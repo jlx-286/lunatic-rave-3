@@ -44,8 +44,8 @@ SwrContext* g_swr = NULL;
 AVPacket* g_pkt = NULL;
 AVFrame* g_frame = NULL;
 uint8_t* g_buf = NULL;
-std::deque<float> AudioSamples;
-extern "C" bool GetAudioInfo(const char* path, int* channels, int* frequency, size_t* length){
+std::deque<uint8_t> AudioSamples;
+extern "C" bool GetAudioInfo(const char* path, AVSampleFormat format, int* channels, int* frequency, size_t* length){
     *channels = *frequency = *length = 0;
 #if LIBAVCODEC_VERSION_MAJOR < 59
     AVCodecContext* cc = NULL;
@@ -68,7 +68,7 @@ extern "C" bool GetAudioInfo(const char* path, int* channels, int* frequency, si
     if(g_frame == NULL) goto cleanup;
     g_swr = swr_alloc_set_opts(NULL,
         //AV_CH_FRONT_LEFT | AV_CH_FRONT_RIGHT,
-        channel_layout, AV_SAMPLE_FMT_FLT, *frequency,
+        channel_layout, format, *frequency,
         //codec_ctx->channel_layout,
         channel_layout, cc->sample_fmt, *frequency,
         0, NULL);
@@ -78,7 +78,7 @@ extern "C" bool GetAudioInfo(const char* path, int* channels, int* frequency, si
         if(g_pkt->stream_index == stream && avcodec_send_packet(cc, g_pkt) == 0){
             while(avcodec_receive_frame(cc, g_frame) == 0){
                 buffer_size = av_samples_get_buffer_size(
-                    NULL, *channels, g_frame->nb_samples, AV_SAMPLE_FMT_FLT, 1);
+                    NULL, *channels, g_frame->nb_samples, format, 1);
                 if(buffer_size < 1) goto cleanup;
                 g_buf = (uint8_t*)av_malloc(buffer_size);
                 // buffer = new uint8_t[buffer_size];
@@ -89,12 +89,10 @@ extern "C" bool GetAudioInfo(const char* path, int* channels, int* frequency, si
                 if(got_samples < 0) goto cleanup;
                 while(got_samples > 0){
                     // buffer_size = av_samples_get_buffer_size(
-                    //     NULL, *channels, got_samples, AV_SAMPLE_FMT_FLT, 1);
+                    //     NULL, *channels, got_samples, format, 1);
                     // if(buffer_size < 1) goto cleanup;
-                    for(i = 0; i < buffer_size; i += sizeof(float)){
-                        // temp_sml = *(float*)(buffer + i);
-                        // if(!std::isnormal(temp_sml)) temp_sml = DBL_MIN / 2;
-                        AudioSamples.emplace_back(*(float*)(g_buf + i));
+                    for(i = 0; i < buffer_size; i++){
+                        AudioSamples.emplace_back(*(g_buf + i));
                     }
                     // g_buf = (uint8_t*)av_malloc(buffer_size);
                     // got_samples = swr_convert(g_swr, &g_buf, got_samples, NULL, 0);
@@ -121,7 +119,7 @@ extern "C" bool GetAudioInfo(const char* path, int* channels, int* frequency, si
     avformat_close_input(&g_fc);
     return *length > 0;
 }
-extern "C" void CopyAudioSamples(float* addr){
+extern "C" void CopyAudioSamples(uint8_t* addr){
     if(addr != NULL) std::copy(AudioSamples.begin(), AudioSamples.end(), addr);
     AudioSamples.clear();
 }

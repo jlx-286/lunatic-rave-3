@@ -118,7 +118,7 @@ public unsafe class Test : MonoBehaviour{
             s = d.RateToSubstring();
         sw.Stop();
         Debug.Log(sw.ElapsedTicks);*/
-        FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2");
+        FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 2);
         AudioClip clip = null;
         int channels, frequency, length, lengthSamples;
         float[] samples = FluidManager.MidiToSamples(Application.streamingAssetsPath + "/onestop.mid", out lengthSamples, out frequency);
