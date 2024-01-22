@@ -11,14 +11,14 @@ public class BPMPlayer : MonoBehaviour{
     public Text min_val;
     private int bpm_table_row = 0;
     private void Awake(){
-        now.text = (BMSInfo.start_bpm * MainVars.speed).ToString("G29");
+        now.text = (BMSInfo.start_bpm * FFmpegVideoPlayer.speedAsDecimal).ToString("G29");
         Debug.Log(now.text);
         if(BMSInfo.min_bpm < BMSInfo.max_bpm){
             min.SetActive(true);
-            try{ min_val.text = (BMSInfo.min_bpm * MainVars.speed).ToString("G29"); }
+            try{ min_val.text = (BMSInfo.min_bpm * FFmpegVideoPlayer.speedAsDecimal).ToString("G29"); }
             catch(OverflowException){ min_val.text = "Infinity"; }
             max.SetActive(true);
-            try{ max_val.text = (BMSInfo.max_bpm * MainVars.speed).ToString("G29"); }
+            try{ max_val.text = (BMSInfo.max_bpm * FFmpegVideoPlayer.speedAsDecimal).ToString("G29"); }
             catch(OverflowException){ max_val.text = "Infinity"; }
         }
     }

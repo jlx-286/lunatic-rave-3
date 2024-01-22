@@ -37,14 +37,18 @@ public unsafe static class FFmpegPlugins{
     private delegate void CopyAudioSamplesFunc(void* addr);
     private delegate bool GetPixelsInfoFunc(string url, out int width, out int height, out bool isBitmap);
     private delegate void CopyPixelsFunc(void* addr, int width, int height, bool isBitmap, bool strech = false);
-    public delegate void CleanUpFunc();
+#if GODOT
+    private const string ext = ".so";
+#else
+    private const string ext = "";
+#endif
     private static GetAudioInfoFunc GetAudioInfo = null;
     private static CopyAudioSamplesFunc CopyAudioSamples = null;
     private static GetPixelsInfoFunc GetPixelsInfo = null;
     private static CopyPixelsFunc CopyPixels = null;
-    public static CleanUpFunc CleanUp = null;
+    public static Action CleanUp = null;
     private static class V4{
-        private const string PluginName = projLibPath + "FFmpegPlugin.so";
+        private const string PluginName = projLibPath + "FFmpegPlugin" + ext;
         [DllImport(PluginName)] public extern static bool GetAudioInfo(
             string url, AVSampleFormat format, out int channels, out int frequency, out ulong length);
         [DllImport(PluginName)] public extern static void CopyAudioSamples(void* addr);
@@ -55,7 +59,7 @@ public unsafe static class FFmpegPlugins{
         [DllImport(PluginName)] public extern static void CleanUp();
     }
     private static class V5{
-        private const string PluginName = projLibPath + "FFmpeg5Plugin.so";
+        private const string PluginName = projLibPath + "FFmpeg5Plugin" + ext;
         [DllImport(PluginName)] public extern static bool GetAudioInfo(
             string url, AVSampleFormat format, out int channels, out int frequency, out ulong length);
         [DllImport(PluginName)] public extern static void CopyAudioSamples(void* addr);
@@ -66,7 +70,7 @@ public unsafe static class FFmpegPlugins{
         [DllImport(PluginName)] public extern static void CleanUp();
     }
     private static class V6{
-        private const string PluginName = projLibPath + "FFmpeg6Plugin.so";
+        private const string PluginName = projLibPath + "FFmpeg6Plugin" + ext;
         [DllImport(PluginName)] public extern static bool GetAudioInfo(
             string url, AVSampleFormat format, out int channels, out int frequency, out ulong length);
         [DllImport(PluginName)] public extern static void CopyAudioSamples(void* addr);
@@ -76,7 +80,7 @@ public unsafe static class FFmpegPlugins{
             void* addr, int width, int height, bool isBitmap, bool strech = false);
         [DllImport(PluginName)] public extern static void CleanUp();
     }
-    static FFmpegPlugins(){
+    private static void MatchVersion(){
         const string PluginDir = "/lib/x86_64-linux-gnu/";
         if(File.Exists(PluginDir + "libavcodec.so.58")){//FFmpeg 4.x
             GetAudioInfo     = V4.GetAudioInfo;
@@ -108,6 +112,20 @@ public unsafe static class FFmpegPlugins{
     [DllImport(PluginName)] private extern static void CopyPixels(
         void* addr, int width, int height, bool isBitmap, bool strech = false);
     [DllImport(PluginName)] public extern static void CleanUp();
+#endif
+    static FFmpegPlugins(){
+#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || GODOT_X11
+        MatchVersion();
+#endif
+// #if !UNITY_5_3_OR_NEWER
+//         Atexit
+// #endif
+    }
+#if UNITY_5_3_OR_NEWER
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    private static void _(){
+        Application.quitting += CleanUp;
+    }
 #endif
     public static Color32[] GetTextureInfo(string path, out int width, out int height){
         width = height = 0;

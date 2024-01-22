@@ -103,7 +103,7 @@ public unsafe static class FluidManager{
 	private static Func<UIntPtr,int> fluid_player_join = null;
 	private static Func<UIntPtr,int> fluid_player_stop = null;
 	// private static Func<UIntPtr,int,int> fluid_player_seek = null;
-	static FluidManager(){
+	private static void MatchVersion(){
 		const string path = "/lib/x86_64-linux-gnu/libfluidsynth.so.";
 		if(File.Exists(path + "2")){
 			new_fluid_settings = V2.new_fluid_settings;
@@ -248,4 +248,20 @@ public unsafe static class FluidManager{
 		ready = false;
 		// inThread = false;
 	}
+	static FluidManager(){
+#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || GODOT_X11
+		MatchVersion();
+#endif
+// #if GODOT
+// 		Init("TimGM6mb.sf2", 1.5);
+// 		Atexit
+// #endif
+	}
+#if UNITY_5_3_OR_NEWER
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    private static void _(){
+        Application.quitting += CleanUp;
+		Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 1.5);
+    }
+#endif
 }

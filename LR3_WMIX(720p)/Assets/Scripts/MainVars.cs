@@ -11,7 +11,6 @@ public class MainVars : MonoBehaviour{// Game Manager
     public static string cur_scene_name = "Start";
     public static byte master_vol = 100, bgm_vol = 100, key_vol = 100;
     public static sbyte freq = 0, pitch = 0;
-    public static decimal speed = 1;
     public static byte delay_d, decay_r;
     public static byte lowpass_c, lowpass_Q;
     public static byte hipass_c, hipass_Q;

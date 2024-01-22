@@ -1,5 +1,9 @@
 using System;
+#if UNITY_5_3_OR_NEWER
 // using UnityEngine;
+#elif GODOT
+using Godot;
+#endif
 namespace System.Collections.Generic{
     public sealed class LinkedStackNode<T>{
         public T Value;
@@ -7,10 +11,24 @@ namespace System.Collections.Generic{
         public LinkedStackNode(T value, LinkedStackNode<T> next){
             Value = value;
             Next = next;
-            // Debug.Log("a new node");
+// #if UNITY_5_3_OR_NEWER
+//             Debug.Log
+// #elif GODOT
+//             GD.Print
+// #else
+//             Console.WriteLine
+// #endif
+//             ("a new node");
         }
         // ~LinkedStackNode(){
-        //     Debug.Log("remove a node");
+        //     #if UNITY_5_3_OR_NEWER
+        //     Debug.Log
+        //     #elif GODOT
+        //     GD.Print
+        //     #else
+        //     Console.WriteLine
+        //     #endif
+        //     ("remove a node");
         // }
         [Obsolete("not enabled", true)] private LinkedStackNode(){}
     }

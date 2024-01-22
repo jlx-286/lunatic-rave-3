@@ -192,7 +192,7 @@ public unsafe static class StaticClass{
         }while(result < 1 || result > max);
         return result;
     }
-    private static readonly RandomNumberGenerator rng = RandomNumberGenerator.Create();
+    public static readonly RandomNumberGenerator rng = RandomNumberGenerator.Create();
 #if UNITY_5_3_OR_NEWER
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Init(){
@@ -200,7 +200,7 @@ public unsafe static class StaticClass{
             rng.Dispose();
         };
     }
-#else
+#elif !GODOT
     static StaticClass(){
         rng.Dispose();
     }

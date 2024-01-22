@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+#if UNITY_5_3_OR_NEWER
 using UnityEngine;
+#endif
 /// <summary>
 /// also supports PMS files
 /// </summary>
@@ -33,8 +35,10 @@ public static class BMSInfo {
 	public static long totalTimeAsNanoseconds = 0;
     public static string playing_scene_name = string.Empty;
 #region medias
+#if UNITY_5_3_OR_NEWER
 	public static readonly Texture2D[] textures = Enumerable.Repeat<Texture2D>(null, 36*36).ToArray();
 	// public static Texture2D backBMP = null;
+#endif
 #endregion
 #region time table
 	public static List<NoteTimeRow>[] note_list_lanes;
@@ -70,10 +74,19 @@ public static class BMSInfo {
 		fixed(void* p = track_end_time_as_ns)
 			StaticClass.memset(p, -1, (IntPtr)(track_end_time_as_ns.LongLength * sizeof(long)));
 	}
+#if UNITY_5_3_OR_NEWER
 	public static void CleanUpTex(){
 		Array.Clear(textures, 0, textures.Length);
 		// backBMP = null;
 	}
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+	private static void _(){
+		Application.quitting += ()=>{
+			CleanUp();
+			CleanUpTex();
+		};
+	}
+#endif
 	public static void Init(){
 		CleanUp();
 		judge_rank = 2;

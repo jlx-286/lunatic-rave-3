@@ -53,10 +53,10 @@ public partial class BMSReader : MonoBehaviour{
     private long ConvertStopTime(int stopIndex, ushort track, decimal bpm)
         => Convert.ToInt64(Math.Round(ns_per_min * 4 *
             stop_dict[stop_measure_list[track][stopIndex].key]
-            / bpm / MainVars.speed, MidpointRounding.ToEven));
+            / bpm / FFmpegVideoPlayer.speedAsDecimal, MidpointRounding.ToEven));
     private long ConvertOffset(ushort track, decimal bpm, ulong num, ulong den)
         => Convert.ToInt64(Math.Round(ns_per_min * 4m * num *
-            beats_tracks[track] / bpm / MainVars.speed / den,
+            beats_tracks[track] / bpm / FFmpegVideoPlayer.speedAsDecimal / den,
             MidpointRounding.ToEven));
     private long ConvertOffset(ushort track, decimal bpm, Fraction64 measure)
         => ConvertOffset(track, bpm, measure.numerator, measure.denominator);

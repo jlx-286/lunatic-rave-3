@@ -118,10 +118,13 @@ public unsafe class Test : MonoBehaviour{
             s = d.RateToSubstring();
         sw.Stop();
         Debug.Log(sw.ElapsedTicks);*/
-        FluidManager.Init(Application.streamingAssetsPath + "/TimGM6mb.sf2", 2);
         AudioClip clip = null;
         int channels, frequency, length, lengthSamples;
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN 
+        float[] samples = FluidManager.MidiToSamples("C:/Windows/Media/onestop.mid", out lengthSamples, out frequency);
+#else 
         float[] samples = FluidManager.MidiToSamples(Application.streamingAssetsPath + "/onestop.mid", out lengthSamples, out frequency);
+#endif
         if(samples != null){
             clip = AudioClip.Create("midi", samples.Length / FluidManager.channels, FluidManager.channels, frequency, false);
             clip.SetData(samples, 0);
@@ -157,10 +160,6 @@ public unsafe class Test : MonoBehaviour{
         ms++;
     }*/
     private void OnApplicationQuit(){
-        // StaticClass.rng.Dispose();
-        FluidManager.CleanUp();
-        FFmpegVideoPlayer.Release();
-        FFmpegPlugins.CleanUp();
         Resources.UnloadUnusedAssets();
         // AssetBundle.UnloadAllAssetBundles(true);
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, false);

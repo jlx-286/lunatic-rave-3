@@ -50,9 +50,9 @@ using System.Runtime.InteropServices;
     public BPMTimeRow(long t, decimal v, bool ex){
         try{
             // value = Math.Min(999, Math.Round(
-            //     Math.Abs(v) * MainVars.speed,
+            //     Math.Abs(v) * FFmpegVideoPlayer.speedAsDecimal,
             //     MidpointRounding.AwayFromZero)).ToString();
-            value = (Math.Abs(v) * MainVars.speed).ToString(
+            value = (Math.Abs(v) * FFmpegVideoPlayer.speedAsDecimal).ToString(
                 "G29", NumberFormatInfo.InvariantInfo);
         }catch(OverflowException){
             // value = "999";

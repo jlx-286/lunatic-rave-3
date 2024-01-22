@@ -37,13 +37,13 @@ AVCodecContext* openCodecContext(AVFormatContext* fc, int* stream, enum AVMediaT
     return cc;
 #endif
 }
-#if _WIN32 || _WIN64
+// #if _WIN32 || _WIN64
 const uint8_t pixel_size = 4;
-const enum AVPixelFormat pf = AV_PIX_FMT_BGRA;
-#else
-const uint8_t pixel_size = 3;
-const enum AVPixelFormat pf = AV_PIX_FMT_RGB24;
-#endif
+const enum AVPixelFormat pf = AV_PIX_FMT_RGBA;
+// #else
+// const uint8_t pixel_size = 3;
+// const enum AVPixelFormat pf = AV_PIX_FMT_RGB24;
+// #endif
 const uint16_t ZZ = 36*36;
 enum VideoState:uint8_t{
     stopped = 0,
@@ -95,7 +95,7 @@ extern "C" void SetSpeed(double _ = 1){
 extern "C" void SetVideoState(uint8_t layer, VideoState _ = VideoState::playing){
     states[layer] = _;
 }
-extern "C" void PlayVideo(const char* url, uint8_t layer, uint16_t num, uint8_t* pixels){
+extern "C" void PlayVideo(const char* url, uint8_t layer, uint16_t num, void* pixels){
     int64_t startTime, sleepTime, frameTime;
     startTime = av_gettime_relative();
     uint8_t* data[AV_NUM_DATA_POINTERS];// = {NULL};
