@@ -5,7 +5,7 @@ public class GrooveGauge : MonoBehaviour {
     public RawImage[] digits;
     Transform[] gauge_bars = new Transform[50];
     private GaugeType gaugeType;
-	private void Start(){
+    private void Start(){
         switch(gaugeType){
             case GaugeType.AssistedEasy:
                 break;
@@ -26,6 +26,6 @@ public class GrooveGauge : MonoBehaviour {
             default:
                 break;
         }
-	}
-	//private void Update(){}
+    }
+    //private void Update(){}
 }

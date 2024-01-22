@@ -61,6 +61,6 @@ public class FX_switch : MonoBehaviour {
                     break;
             }
         });
-	}
-	//private void Update(){}
+    }
+    //private void Update(){}
 }

@@ -8,8 +8,8 @@ public class SetNumImg : MonoBehaviour{
     //public Sprite point;
     public Sprite eImg;
     public Image[] target;
-	//private void Start(){}
-	//private void Update(){}
+    //private void Start(){}
+    //private void Update(){}
     public void SetNum(int num, bool filled){
         num = HalveNum(num);
     }

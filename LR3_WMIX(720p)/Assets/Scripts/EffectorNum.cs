@@ -27,7 +27,7 @@ public class EffectorNum : MonoBehaviour {
         ReverbDecayTime = 23, ReverbLevel = 24,
     };
     public FXname fx_name;
-	private void Start(){
+    private void Start(){
         isPercent = true;
         slider = this.GetComponent<Slider>();
         tmp_images.AddRange(target.GetComponentsInChildren<Image>());
@@ -190,6 +190,6 @@ public class EffectorNum : MonoBehaviour {
             case FXname.ReverbDecayTime:slider.value = MainVars.reverb_dt; break;
             case FXname.ReverbLevel:slider.value = MainVars.reverb_level; break;
         }
-	}
-	//private void Update(){}
+    }
+    //private void Update(){}
 }

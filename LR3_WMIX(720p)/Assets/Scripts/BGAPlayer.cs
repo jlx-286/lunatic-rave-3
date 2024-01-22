@@ -11,7 +11,7 @@ public class BGAPlayer : MonoBehaviour {
     private Image[] images;
     private int bga_table_row = 0;
     private readonly ushort[] bgi_nums = new ushort[]{0,0,0,0};
-	private void Awake(){
+    private void Awake(){
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.pauseStateChanged += _ => {
             for(byte layer = 0; layer < bgi_nums.Length; layer++)
@@ -31,7 +31,7 @@ public class BGAPlayer : MonoBehaviour {
             }
         }
     }
-	//private void FixedUpdate(){}
+    //private void FixedUpdate(){}
     private void Update(){
         if(BMS_Player.escaped) return;
         if(BMS_Player.playingTimeAsNanoseconds <= BMSInfo.totalTimeAsNanoseconds){

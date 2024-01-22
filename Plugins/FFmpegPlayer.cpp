@@ -54,11 +54,11 @@ static VideoState states[4] = {VideoState::stopped};
 SwsContext* sws_cxts[ZZ] = {NULL};
 extern "C" void Init(){
     memset(states, VideoState::stopped, 4 * sizeof(VideoState));
-	memset(sws_cxts, 0, ZZ * sizeof(size_t));
+    memset(sws_cxts, 0, ZZ * sizeof(size_t));
 }
 extern "C" void CleanUp(){
-	for(uint16_t i = 0; i < ZZ; i++)
-		sws_freeContext(sws_cxts[i]);
+    for(uint16_t i = 0; i < ZZ; i++)
+        sws_freeContext(sws_cxts[i]);
     Init();
 }
 extern "C" bool GetVideoSize(const char* url, uint16_t num, int* width, int* height){
@@ -164,7 +164,7 @@ extern "C" void PlayVideo(const char* url, uint8_t layer, uint16_t num, void* pi
             break;
         }
     }
-	cleanup:
+    cleanup:
     free(data[0]);
     av_frame_free(&frame);
     av_packet_free(&packet);

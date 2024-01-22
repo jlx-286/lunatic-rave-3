@@ -8,7 +8,7 @@
     - Windows: Fatal error in GC "GetThreadContext failed" (due to Unity with System.Threading?)
 + considering 2020.2.0 or newer version(s)
     - <https://docs.unity3d.com/2020.2/Documentation/ScriptReference/Time.html>
-	- [What happens when Time.time gets very large in Unity?](https://gamedev.stackexchange.com/questions/141807/what-happens-when-time-time-gets-very-large-in-unity)
+    - [What happens when Time.time gets very large in Unity?](https://gamedev.stackexchange.com/questions/141807/what-happens-when-time-time-gets-very-large-in-unity)
 + considering the version(s) using .NET 7 (C# 11) or later
     - <https://learn.microsoft.com/dotnet/core/whats-new/dotnet-7#regular-expressions>
     - <https://docs.unity3d.com/2023.3/Documentation/Manual/CSharpCompiler.html>

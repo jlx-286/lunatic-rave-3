@@ -21,24 +21,24 @@ using System.Runtime.InteropServices;
     // }
 }
 [StructLayout(LayoutKind.Explicit)] public struct NoteTimeRow{
-	[FieldOffset(0)] public long time;
-	[FieldOffset(sizeof(long))] public ushort clipNum;
-	[FieldOffset(sizeof(long) + sizeof(ushort))] public NoteType noteType;
+    [FieldOffset(0)] public long time;
+    [FieldOffset(sizeof(long))] public ushort clipNum;
+    [FieldOffset(sizeof(long) + sizeof(ushort))] public NoteType noteType;
     public NoteTimeRow(long t, ushort num, NoteType tp){
         time = t; clipNum = num; noteType = tp;
     }
 }
 [StructLayout(LayoutKind.Explicit)] public struct BGMTimeRow{
-	[FieldOffset(0)] public long time;
-	[FieldOffset(sizeof(long))] public ushort clipNum;
+    [FieldOffset(0)] public long time;
+    [FieldOffset(sizeof(long))] public ushort clipNum;
     public BGMTimeRow(long t, ushort num){
         time = t; clipNum = num;
     }
 }
 [StructLayout(LayoutKind.Explicit)] public struct BGATimeRow{
-	[FieldOffset(0)] public long time;
-	[FieldOffset(sizeof(long))] public ushort bgNum;
-	[FieldOffset(sizeof(long) + sizeof(ushort))] public BGAChannel channel;
+    [FieldOffset(0)] public long time;
+    [FieldOffset(sizeof(long))] public ushort bgNum;
+    [FieldOffset(sizeof(long) + sizeof(ushort))] public BGAChannel channel;
     public BGATimeRow(long t, ushort num, byte ch){
         time = t; bgNum = num; channel = (BGAChannel)ch;
     }

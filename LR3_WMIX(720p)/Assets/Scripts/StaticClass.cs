@@ -231,27 +231,27 @@ public unsafe static class StaticClass{
 #endif
     public static ulong gcd(ulong a, ulong b){
         if(a == 0 || a == b) return b;
-		if(b == 0) return a;
-		byte c = 0;
-		while(((a & 1) == 0) && ((b & 1) == 0)){
-			a >>= 1; b >>= 1; c++;
-		}
-		while(((a & 1) == 0)) a >>= 1;
-		while(((b & 1) == 0)) b >>= 1;
-		while(true){
-			if(a == 0 || a == b) return b << c;
-			if(b == 0) return a << c;
-			if(a < b){
-				b = (b - a) >> 1;
-				// b -= a;
-				while(((b & 1) == 0)) b >>= 1;
-			}
-			else if(a > b){
-				a = (a - b) >> 1;
-				// a -= b;
-				while(((a & 1) == 0)) a >>= 1;
-			}
-		}
+        if(b == 0) return a;
+        byte c = 0;
+        while(((a & 1) == 0) && ((b & 1) == 0)){
+            a >>= 1; b >>= 1; c++;
+        }
+        while(((a & 1) == 0)) a >>= 1;
+        while(((b & 1) == 0)) b >>= 1;
+        while(true){
+            if(a == 0 || a == b) return b << c;
+            if(b == 0) return a << c;
+            if(a < b){
+                b = (b - a) >> 1;
+                // b -= a;
+                while(((b & 1) == 0)) b >>= 1;
+            }
+            else if(a > b){
+                a = (a - b) >> 1;
+                // a -= b;
+                while(((a & 1) == 0)) a >>= 1;
+            }
+        }
     }
     private struct EqualityComparer<T> : IEqualityComparer<T> where T : struct{
         private readonly Func<T, T, bool> _func;

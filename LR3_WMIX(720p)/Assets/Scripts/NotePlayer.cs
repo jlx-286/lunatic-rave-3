@@ -73,7 +73,7 @@ public class NotePlayer : MonoBehaviour {
         StopCoroutine(showJudge);
         judgeCanvas.enabled = false;
     }
-	//private void Update(){}
+    //private void Update(){}
     private void FixedUpdate(){
         if(BMS_Player.escaped) return;
         if(BMS_Player.playingTimeAsNanoseconds <= BMSInfo.totalTimeAsNanoseconds){
