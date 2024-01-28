@@ -119,11 +119,11 @@ public unsafe class Test : MonoBehaviour{
         sw.Stop();
         Debug.Log(sw.ElapsedTicks);*/
         AudioClip clip = null;
-        int channels, frequency, length, lengthSamples;
+        int channels, frequency = FluidManager.frequency;
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN 
-        float[] samples = FluidManager.MidiToSamples("C:/Windows/Media/onestop.mid", out lengthSamples, out frequency);
+        float[] samples = FluidManager.MidiToSamples("C:/Windows/Media/onestop.mid");
 #else 
-        float[] samples = FluidManager.MidiToSamples(Application.streamingAssetsPath + "/onestop.mid", out lengthSamples, out frequency);
+        float[] samples = FluidManager.MidiToSamples(Application.streamingAssetsPath + "/onestop.mid");
 #endif
         if(samples != null){
             clip = AudioClip.Create("midi", samples.Length / FluidManager.channels, FluidManager.channels, frequency, false);

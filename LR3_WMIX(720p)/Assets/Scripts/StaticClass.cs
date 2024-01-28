@@ -19,15 +19,21 @@ public unsafe static class StaticClass{
     public const RegexOptions regexOption = RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.CultureInvariant;
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || GODOT_WINDOWS
     private const string libc = "ucrtbase";
-#elif UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || GODOT_X11
+#elif UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || GODOT_X11 || GODOT_LINUXBSD
     private const string libc = "libc.so.6";
 #else
     private const string libc = "libavcodec";
 #endif
     [DllImport(libc)] public extern static void* memset(void* src, int val, UIntPtr count);
     [DllImport(libc)] public extern static void* memset(void* src, int val, IntPtr count);
+#if NETCOREAPP //|| NET || NETCOREAPP1_1_OR_GREATER || NET5_0_OR_GREATER || (UNITY_2023_3_OR_NEWER && !UNITY_2023_3)
+    private static readonly EncodingProvider provider = CodePagesEncodingProvider.Instance;
+    private static readonly Encoding Shift_JIS = provider.GetEncoding("shift_jis");
+    private static readonly Encoding GB18030 = provider.GetEncoding("GB18030");
+#else
     private static readonly Encoding Shift_JIS = Encoding.GetEncoding("shift_jis");
     private static readonly Encoding GB18030 = Encoding.GetEncoding("GB18030");
+#endif
     public static Encoding GetEncodingByFilePath(string path){
         CharsetDetector detector = new CharsetDetector();
         using(FileStream fileStream = File.OpenRead(path)){
@@ -38,7 +44,12 @@ public unsafe static class StaticClass{
         }
         if(!string.IsNullOrWhiteSpace(detector.Charset)){
             try{
-                Encoding encoding = Encoding.GetEncoding(detector.Charset);
+                Encoding encoding;
+#if NETCOREAPP //|| NET || NETCOREAPP1_1_OR_GREATER || NET5_0_OR_GREATER || (UNITY_2023_3_OR_NEWER && !UNITY_2023_3)
+                encoding = provider.GetEncoding(detector.Charset);
+                if(encoding == null)
+#endif
+                    encoding = Encoding.GetEncoding(detector.Charset);
                 if(encoding != Shift_JIS && detector.Confidence <= 0.7f
                     && detector.Confidence > 0.6f) return GB18030;
                 else if(detector.Confidence <= 0.6f) return Shift_JIS;

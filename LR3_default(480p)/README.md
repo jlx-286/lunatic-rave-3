@@ -1,0 +1,2 @@
+### known problem(s)
+- "[libfluidsynth](https://github.com/FluidSynth/fluidsynth/releases/)" fails to load a soundfont in "[Godot_v3.5.3-stable_mono_win64](https://github.com/godotengine/godot/releases/download/3.5.3-stable/Godot_v3.5.3-stable_mono_win64.zip)"

@@ -2,22 +2,26 @@ using Godot;
 using System;
 using System.Runtime.InteropServices;
 using Path = System.IO.Path;
-
-public class Test : AudioStreamPlayer{
+#if GODOT4_OR_GREATER
+using AudioStreamSample = Godot.AudioStreamWav;
+#endif
+public partial class Test : AudioStreamPlayer{
     private AudioStreamSample sample;
     private const string sf = "TimGM6mb.sf2";
     public override void _Ready(){
-        int channels, frequency, lengthSamples;// ulong length;
+        int channels, frequency;
         FluidManager.Init(sf, 1.5);
+        // FluidManager.Init(ProjectSettings.GlobalizePath("res://"+sf), 1.5);
         // byte[] data = FFmpegPlugins.AudioToSamples("song.mod", out channels, out frequency);
 #if GODOT_WINDOWS
-        byte[] data = FluidManager.MidiToSamples("C:/Windows/Media/onestop.mid", out lengthSamples, out frequency);
+        byte[] data = FluidManager.MidiToSamples("C:/Windows/Media/onestop.mid");
 #elif GODOT
         string s = Path.GetFullPath("onestop.mid");
         GD.Print(s);
-        byte[] data = FluidManager.MidiToSamples(s, out lengthSamples, out frequency);
+        byte[] data = FluidManager.MidiToSamples(s);
 #endif
         channels = FluidManager.channels;
+        frequency = FluidManager.frequency;
         GD.Print(frequency);
         if(data != null && data.Length > 0){
             sample = new AudioStreamSample(){
@@ -28,7 +32,7 @@ public class Test : AudioStreamPlayer{
             };
             this.Stream = sample;
             this.Play();
-            // GD.Print(data.Length);
+            GD.Print(sample.GetLength());
         }
         GD.Print(this.Playing);
     }
@@ -37,7 +41,11 @@ public class Test : AudioStreamPlayer{
     //     if(Input.IsKeyPressed((int)KeyList.Escape));
     // }
     public override void _Notification(int what){
+#if GODOT4_OR_GREATER
+        if(what == NotificationWMCloseRequest){
+#else
         if(what == MainLoop.NotificationWmQuitRequest){
+#endif
             if(sample != null) sample.Dispose();
             FluidManager.CleanUp();
             FFmpegPlugins.CleanUp();

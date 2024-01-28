@@ -32,7 +32,7 @@ public unsafe static class FFmpegPlugins{
     private const string projLibPath = "";
     private const AVSampleFormat format = AVSampleFormat.AV_SAMPLE_FMT_FLT;
 #endif
-#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || GODOT_X11
+#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || GODOT_X11 || GODOT_LINUXBSD
     private delegate bool GetAudioInfoFunc(string url, AVSampleFormat format, out int channels, out int frequency, out ulong length);
     private delegate void CopyAudioSamplesFunc(void* addr);
     private delegate bool GetPixelsInfoFunc(string url, out int width, out int height, out bool isBitmap);
@@ -114,7 +114,7 @@ public unsafe static class FFmpegPlugins{
     [DllImport(PluginName)] public extern static void CleanUp();
 #endif
     static FFmpegPlugins(){
-#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || GODOT_X11
+#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || GODOT_X11 || GODOT_LINUXBSD
         MatchVersion();
 #endif
 // #if !UNITY_5_3_OR_NEWER

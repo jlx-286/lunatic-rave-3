@@ -43,7 +43,7 @@ public unsafe static class FFmpegVideoPlayer{
 #else
     private const string pluginPath = "";
 #endif
-#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || GODOT_X11
+#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || GODOT_X11 || GODOT_LINUXBSD
 #if GODOT
     private const string ext = ".so";
 #else
@@ -124,7 +124,7 @@ public unsafe static class FFmpegVideoPlayer{
     }
 #endif
     static FFmpegVideoPlayer(){
-#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || GODOT_X11
+#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || GODOT_X11 || GODOT_LINUXBSD
         const string PluginDir = "/lib/x86_64-linux-gnu/";
         if(File.Exists(PluginDir + "libavcodec.so.58")){//FFmpeg 4.x
             Init          = V4.Init;

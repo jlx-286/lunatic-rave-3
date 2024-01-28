@@ -1,17 +1,7 @@
-### known problem(s)
-- "sws_scale" crashes (in Windows) when (the video in) "[トルコ行進曲 (Hd-NRG mix)](https://manbow.nothing.sh/event/event.cgi?action=More_def&num=47&event=78)" is stopped
-- the second video in "[Grape.exe!](https://anonymous.nekokan.dyndns.info/data/BOFoonXV/grape_exe.zip)" is not shown sometimes
-- "[libfluidsynth](https://github.com/FluidSynth/fluidsynth/releases/)" fails to load a soundfont in "[Godot_v3.5.3-stable_mono_win64](https://github.com/godotengine/godot/releases/download/3.5.3-stable/Godot_v3.5.3-stable_mono_win64.zip)"
-- adding item(s) in "[System.Collections.Generic](https://learn.microsoft.com/dotnet/api/system.collections.generic?view=netstandard-2.0)" crashes(?) in "[Godot_v3.5.3-stable_mono_x11_64](https://github.com/godotengine/godot/releases/download/3.5.3-stable/Godot_v3.5.3-stable_mono_x11_64.zip)"
-### Unity Editor Version(s)
-+ considering 2019.3 or newer version(s)
-    - Windows: Fatal error in GC "GetThreadContext failed" (due to Unity with System.Threading?)
-+ considering 2020.2.0 or newer version(s)
-    - <https://docs.unity3d.com/2020.2/Documentation/ScriptReference/Time.html>
-    - [What happens when Time.time gets very large in Unity?](https://gamedev.stackexchange.com/questions/141807/what-happens-when-time-time-gets-very-large-in-unity)
-+ considering the version(s) using .NET 7 (C# 11) or later
-    - <https://learn.microsoft.com/dotnet/core/whats-new/dotnet-7#regular-expressions>
-    - <https://docs.unity3d.com/2023.3/Documentation/Manual/CSharpCompiler.html>
+#### considering .NET 7 (C# 11) or newer version(s)
+- <https://learn.microsoft.com/dotnet/core/whats-new/dotnet-7#regular-expressions>
+- <https://docs.unity3d.com/2023.3/Documentation/Manual/CSharpCompiler.html>
+- <https://docs.godotengine.org/en/4.2/about/list_of_features.html#scripting>
 
 ### Dependencies
 - Windows (<https://learn.microsoft.com/windows-server/administration/windows-commands/path>)
