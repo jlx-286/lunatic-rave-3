@@ -4,20 +4,20 @@ using UnityEngine.UI;
 
 public class BPMPlayer : MonoBehaviour{
     public BMSPlayer BMS_Player;
-    public GameObject max;
+    public Canvas max;
     public Text max_val;
     public Text now;
-    public GameObject min;
+    public Canvas min;
     public Text min_val;
     private int bpm_table_row = 0;
     private void Awake(){
         now.text = (BMSInfo.start_bpm * FFmpegVideoPlayer.speedAsDecimal).ToString("G29");
         Debug.Log(now.text);
         if(BMSInfo.min_bpm < BMSInfo.max_bpm){
-            min.SetActive(true);
+            min.enabled = true;
             try{ min_val.text = (BMSInfo.min_bpm * FFmpegVideoPlayer.speedAsDecimal).ToString("G29"); }
             catch(OverflowException){ min_val.text = "Infinity"; }
-            max.SetActive(true);
+            max.enabled = true;
             try{ max_val.text = (BMSInfo.max_bpm * FFmpegVideoPlayer.speedAsDecimal).ToString("G29"); }
             catch(OverflowException){ max_val.text = "Infinity"; }
         }

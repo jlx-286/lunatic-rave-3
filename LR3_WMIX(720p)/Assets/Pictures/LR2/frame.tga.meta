@@ -14,10 +14,10 @@ TextureImporter:
     21300018: frame_0
     21300020: frame_1
     21300022: right_scr
-    21300024: left_gauge_bar
+    21300024: gauge_bar_left
     21300026: combo_1p
     21300028: frame_3
-    21300030: target
+    21300030: target_right
     21300032: time_bar_left
     21300034: time_bar_right
     21300036: time_bar_handle
@@ -34,8 +34,12 @@ TextureImporter:
     21300058: ln2_start
     21300060: ln2_center
     21300062: ln2_end
-    21300064: frame_2
+    21300064: 5k_left_keys
     21300066: turntable
+    21300068: target_left
+    21300070: 5k_right_keys
+    21300072: targets
+    21300076: gauge_bar_right
   externalObjects: {}
   serializedVersion: 9
   mipmaps:
@@ -238,7 +242,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: left_gauge_bar
+      name: gauge_bar_left
       rect:
         serializedVersion: 2
         x: 0
@@ -298,7 +302,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: target
+      name: target_right
       rect:
         serializedVersion: 2
         x: 539
@@ -633,6 +637,106 @@ TextureImporter:
       tessellationDetail: 0
       bones: []
       spriteID: 43f7a4b163c0de04ca17bf7040ecc576
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 5k_left_keys
+      rect:
+        serializedVersion: 2
+        x: 886
+        y: 1924
+        width: 174
+        height: 59
+      alignment: 6
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8302489968932bc47979223ac6388d9e
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 5k_right_keys
+      rect:
+        serializedVersion: 2
+        x: 711
+        y: 1924
+        width: 174
+        height: 59
+      alignment: 8
+      pivot: {x: 1, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2b1cbfab5c86d094d8365c47d9bb5061
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: target_left
+      rect:
+        serializedVersion: 2
+        x: 961
+        y: 895
+        width: 189
+        height: 392
+      alignment: 1
+      pivot: {x: 0, y: 1}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4b23d1c9960847d4a998bad0ce1bf9fd
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: targets
+      rect:
+        serializedVersion: 2
+        x: 1396
+        y: 1702
+        width: 182
+        height: 346
+      alignment: 2
+      pivot: {x: 0.5, y: 1}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 351af849152df5a45b4167e3b7df1d10
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: gauge_bar_right
+      rect:
+        serializedVersion: 2
+        x: 717
+        y: 1076
+        width: 243
+        height: 39
+      alignment: 3
+      pivot: {x: 1, y: 1}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8be0561bf28933f45a3f463cc6d146c7
       vertices: []
       indices: 
       edges: []

@@ -232,7 +232,7 @@ public unsafe static class FFmpegVideoPlayer{
         if(media_sizes[num].width <= media_sizes[num].height)
             offsets[num] = 0;
         else// if(media_sizes[num].width > media_sizes[num].height)
-            offsets[num] = (media_sizes[num].width - media_sizes[num].height) / 2 * media_sizes[num].width * pixelBytes;
+            offsets[num] = (media_sizes[num].width - media_sizes[num].height) / 2 * media_sizes[num].width;
         return true;
     }
     public static void Release(){

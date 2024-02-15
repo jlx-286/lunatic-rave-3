@@ -4,31 +4,27 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-using System.Threading;
-using UnityEngine;
-using UnityEngine.Events;
 public partial class BMSReader{
     // threading
-    private Thread thread;
+    private System.Threading.Thread thread;
     private bool inThread = true;
     private bool sorting = false;
     private bool isDone = false;
-    private UnityAction action;
-    private ConcurrentQueue<UnityAction> unityActions = new ConcurrentQueue<UnityAction>();
+    private readonly ConcurrentQueue<Action> actions = new ConcurrentQueue<Action>();
     // other files
-    [HideInInspector] public string bms_directory;
-    private StringBuilder file_names = new StringBuilder();
+    private string bms_directory;
+    private readonly StringBuilder file_names = new StringBuilder();
     private ushort total_medias_count = 0;
     private ushort loaded_medias_count = 0;
     private readonly string[] wav_names = Enumerable.Repeat<string>(null, 36*36).ToArray();
     private readonly string[] bmp_names = Enumerable.Repeat<string>(null, 36*36).ToArray();
     // random
     private BigInteger k = 0;
-    private LinkedStack<BigInteger> random_nums = new LinkedStack<BigInteger>();
-    private LinkedStack<ulong> ifs_count = new LinkedStack<ulong>();
+    private readonly LinkedStack<BigInteger> random_nums = new LinkedStack<BigInteger>();
+    private readonly LinkedStack<ulong> ifs_count = new LinkedStack<ulong>();
     // this file
     private string[] file_lines = null;
-    [HideInInspector] public string bms_file_name;
+    private string bms_file_name;
     // 
     private decimal curr_bpm;
     private bool hasScroll = false;
@@ -48,10 +44,10 @@ public partial class BMSReader{
     private long trackOffset_ns = 0;
     private long stopLen = 0;
     private int stopIndex = 0;
-    private Dictionary<ushort, decimal> exbpm_dict = new Dictionary<ushort, decimal>();
+    private readonly Dictionary<ushort, decimal> exbpm_dict = new Dictionary<ushort, decimal>();
     private readonly decimal[] beats_tracks = Enumerable.Repeat(1m, 1000).ToArray();
     private readonly bool[] lnobj = Enumerable.Repeat(false, 36*36-1).ToArray();
-    private Dictionary<ushort, decimal> stop_dict = new Dictionary<ushort, decimal>();
+    private readonly Dictionary<ushort, decimal> stop_dict = new Dictionary<ushort, decimal>();
     private readonly List<StopMeasureRow>[] stop_measure_list = Enumerable.Repeat<List<StopMeasureRow>>(null, 1000).ToArray();
     private readonly List<BPMMeasureRow>[] bpm_index_lists = Enumerable.Repeat<List<BPMMeasureRow>>(null, 1000).ToArray();
     private List<BPMMeasureRow> temp_bpm_index;

@@ -15,6 +15,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Decide.unity
     guid: 717bb9320f953844c9976df9b41ec56f
   - enabled: 1
+    path: Assets/Scenes/5k_Play.unity
+    guid: 3f6d9c31b7d71c7a0be8c0bd4c70a732
+  - enabled: 1
     path: Assets/Scenes/7k_1P_Play.unity
     guid: 4e96ba7104ebfec4698a78216d6780b3
   - enabled: 1
