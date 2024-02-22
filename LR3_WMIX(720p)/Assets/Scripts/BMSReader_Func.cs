@@ -288,7 +288,7 @@ public partial class BMSReader{
         }
         else if((channelEnum & ChannelEnum.Has_1P_7) == ChannelEnum.Has_1P_7){
             BMSInfo.playerType = PlayerType.Keys7;
-            BMSInfo.playing_scene_name = "7k_1P_Play";
+            BMSInfo.playing_scene_name = "7k_Play";
         }
         else{
             BMSInfo.playerType = PlayerType.Keys5;

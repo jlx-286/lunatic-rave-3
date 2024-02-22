@@ -16,10 +16,10 @@ using AudioSample = System.Single;
 public unsafe static class FluidManager{
     private static UIntPtr settings = UIntPtr.Zero;
     private static UIntPtr synth = UIntPtr.Zero;
-    private static bool ready = false;
     private static int frames = 0;
     public const int channels = 2;
     public static int frequency { get; private set; } = 0;
+    public static Func<string, AudioSample[]> MidiToSamples { get; private set; } = _=>null;
     public static bool inThread = true;
     private enum PlayerStatus : byte{
         READY,    // Player is ready
@@ -196,10 +196,10 @@ public unsafe static class FluidManager{
     // [DllImport(PluginName)] private extern static int fluid_player_seek(UIntPtr player, int ticks);
 #endif
     public static void Init(string sfpath, double gain = double.NaN, double overflow_vol = double.NaN){
-        if((Func<UIntPtr>)new_fluid_settings == null || !File.Exists(sfpath)){ ready = false; return; }
+        if((Func<UIntPtr>)new_fluid_settings == null || !File.Exists(sfpath)) return;
         CleanUp();
         settings = new_fluid_settings();
-        if(settings == UIntPtr.Zero){ ready = false; return; }
+        if(settings == UIntPtr.Zero) return;
         synth = new_fluid_synth(settings);
         if(synth == UIntPtr.Zero) goto cleanup;
         if(fluid_synth_sfload(synth, sfpath, 0) == -1) goto cleanup;
@@ -216,41 +216,41 @@ public unsafe static class FluidManager{
             fluid_settings_setnum(settings, "synth.overflow.volume", overflow_vol);// default:500
         if(!double.IsNaN(gain) && !double.IsInfinity(gain) && gain >= double.Epsilon)
             fluid_settings_setnum(settings, "synth.gain", gain);// default:0.2
-        ready = true; return;
-        cleanup: CleanUp(); return;
-    }
-    public static AudioSample[] MidiToSamples(string midipath){
-        if(!ready || !File.Exists(midipath)) return null;
-        UIntPtr player = new_fluid_player(synth);
-        if(player == UIntPtr.Zero) return null;
-        List<AudioSample> total_samples = new List<AudioSample>();
+        MidiToSamples = midipath => {
+            if(!File.Exists(midipath)) return null;
+            UIntPtr player = new_fluid_player(synth);
+            if(player == UIntPtr.Zero) return null;
+            List<AudioSample> total_samples = new List<AudioSample>();
 #if GODOT
-        byte[] samples = new byte[frames * channels * sizeof(short)];
+            byte[] samples = new byte[frames * channels * sizeof(short)];
 #else
-        float[] samples = new float[frames * channels];
+            float[] samples = new float[frames * channels];
 #endif
-        fluid_player_add(player, midipath);
-        fixed(void* temp = samples){
-            /*fluid_player_set_playback_callback(player, (data, e) => {
-                if(fluid_synth_write(synth, frames, temp, 0, channels, temp, 1, channels) == 0){
-                    total_samples.AddRange(samples);
-                }
-                return 0;
-            }, synth);*/
-            fluid_player_play(player);
-            while(inThread && 
-                fluid_player_get_status(player) == PlayerStatus.PLAYING &&
-                fluid_synth_write(synth, frames, temp, 0, channels, temp, 1, channels) == 0
-            ){ total_samples.AddRange(samples); }
-        }
-        fluid_player_stop(player);
-        fluid_player_join(player);
-        delete_fluid_player(player);
-        return total_samples.ToArray();
+            fluid_player_add(player, midipath);
+            fixed(void* temp = samples){
+                /*fluid_player_set_playback_callback(player, (data, e) => {
+                    if(fluid_synth_write(synth, frames, temp, 0, channels, temp, 1, channels) == 0){
+                        total_samples.AddRange(samples);
+                    }
+                    return 0;
+                }, synth);*/
+                fluid_player_play(player);
+                while(inThread && 
+                    fluid_player_get_status(player) == PlayerStatus.PLAYING &&
+                    fluid_synth_write(synth, frames, temp, 0, channels, temp, 1, channels) == 0
+                ){ total_samples.AddRange(samples); }
+            }
+            fluid_player_stop(player);
+            fluid_player_join(player);
+            delete_fluid_player(player);
+            return total_samples.ToArray();
+        };
+        return;
+        cleanup: CleanUp(); return;
     }
     public static void CleanUp(){
         frequency = frames = 0;
-        ready = false;
+        MidiToSamples = _=>null;
         // inThread = false;
         if((Action<UIntPtr>)delete_fluid_synth == null) return;
         if(synth != UIntPtr.Zero) delete_fluid_synth(synth);

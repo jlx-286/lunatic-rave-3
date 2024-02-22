@@ -11,16 +11,15 @@
         3. reboot now or later
 - Linux (Debian or Ubuntu)
     + FluidSynth
-        ```shell
-            sudo apt install libfluidsynth2 || sudo apt install libfluidsynth3
-            # apt download timgm6mb-soundfont fluid-soundfont-gm
-            # sudo apt install libfluidsynth-dev
-            ## You can install the dependencies by Synaptic (in GUI):
-            # sudo apt install synaptic
-            ## considering plugins from snap store
-            # sudo apt install patchelf || sudo snap install patchelf
-            # snap download minuet
-        ```
+    ```shell
+        sudo apt install libfluidsynth2 || sudo apt install libfluidsynth3
+        # apt download timgm6mb-soundfont fluid-soundfont-gm
+        ## You can install the dependencies by Synaptic (in GUI):
+        # sudo apt install synaptic
+        ## considering plugins from snap store
+        # sudo apt install patchelf || sudo snap install patchelf
+        # snap download minuet
+    ```
 - [FluidSynth](https://www.fluidsynth.org)
     + The plugins are from [Unity Asset Store](https://assetstore.unity.com/packages/tools/audio/fluid-midi-player-173680).
     + alternative plugin(s):<https://github.com/FluidSynth/fluidsynth/releases/>

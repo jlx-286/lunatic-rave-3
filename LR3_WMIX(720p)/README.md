@@ -1,6 +1,6 @@
 ### known problem(s)
-- "sws_scale" crashes (in Windows) when (the video in) "[トルコ行進曲 (Hd-NRG mix)](https://manbow.nothing.sh/event/event.cgi?action=More_def&num=47&event=78)" is stopped
-- the second video in "[Grape.exe!](https://anonymous.nekokan.dyndns.info/data/BOFoonXV/grape_exe.zip)" is not shown sometimes
+- `sws_scale` crashes in Windows when (the video in) "[トルコ行進曲 (Hd-NRG mix)](https://manbow.nothing.sh/event/event.cgi?action=More_def&num=47&event=78)" is stopped
+- the second video in "[Grape.exe](https://anonymous.nekokan.dyndns.info/data/BOFoonXV/grape_exe.zip)" is not shown sometimes
 
 ### Unity Editor version(s)
 + considering 2020.2.0 or newer version(s)

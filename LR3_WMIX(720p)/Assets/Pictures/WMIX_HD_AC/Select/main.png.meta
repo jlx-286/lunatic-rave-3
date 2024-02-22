@@ -107,7 +107,7 @@ TextureImporter:
     21300204: main_136
     21300206: main_137
     21300208: main_138
-    21300210: main_139
+    21300210: keys7
     21300212: main_140
     21300214: main_141
     21300216: main_142
@@ -117,7 +117,7 @@ TextureImporter:
     21300224: main_146
     21300226: main_147
     21300228: main_148
-    21300230: main_149
+    21300230: keys14
     21300232: main_150
     21300234: main_151
     21300236: main_152
@@ -126,9 +126,9 @@ TextureImporter:
     21300242: main_155
     21300244: main_156
     21300246: main_157
-    21300248: main_158
-    21300250: main_159
-    21300252: main_160
+    21300248: keys5
+    21300250: keys10
+    21300252: keys9
     21300254: main_161
     21300256: main_162
     21300258: main_163
@@ -2393,15 +2393,15 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: main_139
+      name: keys7
       rect:
         serializedVersion: 2
         x: 899
         y: 598
         width: 209
         height: 48
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      alignment: 8
+      pivot: {x: 1, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -2593,15 +2593,15 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: main_149
+      name: keys14
       rect:
         serializedVersion: 2
         x: 899
         y: 550
         width: 209
         height: 48
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      alignment: 8
+      pivot: {x: 1, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -2773,15 +2773,15 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: main_158
+      name: keys5
       rect:
         serializedVersion: 2
         x: 899
         y: 502
         width: 209
         height: 48
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      alignment: 8
+      pivot: {x: 1, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -2793,15 +2793,15 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: main_159
+      name: keys10
       rect:
         serializedVersion: 2
         x: 899
         y: 454
         width: 209
         height: 48
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      alignment: 8
+      pivot: {x: 1, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -2813,15 +2813,15 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: main_160
+      name: keys9
       rect:
         serializedVersion: 2
         x: 899
         y: 406
         width: 209
         height: 48
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      alignment: 8
+      pivot: {x: 1, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []

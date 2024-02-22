@@ -29,6 +29,8 @@ public partial class BMSReader : MonoBehaviour{
     public Text sub_title;
     public Text artist;
     public RawImage stageFile;
+    public Sprite[] keyTypes;
+    public Image keyType;
     private void Start(){
         thread = new Thread(ReadScript){ IsBackground = true };
         thread.Start();
@@ -62,8 +64,10 @@ public partial class BMSReader : MonoBehaviour{
         bms_file_name = Path.GetFileName(MainVars.bms_file_path);
         if(bmsExt.IsMatch(bms_file_name))
             BMSInfo.scriptType = ScriptType.BMS;
-        else if(bms_file_name.EndsWith(".pms", StringComparison.OrdinalIgnoreCase))
+        else if(bms_file_name.EndsWith(".pms", StringComparison.OrdinalIgnoreCase)){
             BMSInfo.scriptType = ScriptType.PMS;
+            actions.Enqueue(()=>{ keyType.sprite = keyTypes[4]; });
+        }
         using(IEnumerator<string> item = Directory.EnumerateFiles(bms_directory,"*",SearchOption.AllDirectories).GetEnumerator()){
             while(inThread && item.MoveNext()){
                 file_names.Append(item.Current);
@@ -1269,7 +1273,8 @@ public partial class BMSReader : MonoBehaviour{
         if(!inThread) return;
         exbpm_dict.Clear();
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
-        if(BMSInfo.scriptType == ScriptType.BMS) BMS_region();
+        if(BMSInfo.scriptType == ScriptType.BMS){ BMS_region();
+            actions.Enqueue(()=>{ keyType.sprite = keyTypes[(byte)BMSInfo.playerType]; }); }
         else if(BMSInfo.scriptType == ScriptType.PMS) PMS_region();
         stop_dict.Clear();
         for(ushort i = 0; inThread && i <= BMSInfo.max_tracks; i++){
