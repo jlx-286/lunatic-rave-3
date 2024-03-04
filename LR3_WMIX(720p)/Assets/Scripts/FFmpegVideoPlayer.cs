@@ -63,7 +63,7 @@ public unsafe static class FFmpegVideoPlayer{
     public static SetVideoStateFunc SetVideoState = null;
     private static PlayVideoFunc PlayVideo = null;
     private static class V4{
-        private const string PluginName = pluginPath + "FFmpegPlayer" + ext;
+        private const string PluginName = pluginPath + "FFmpegPlayer.4" + ext;
         [DllImport(PluginName)] public extern static void Init();
         [DllImport(PluginName)] public extern static void CleanUp();
         [DllImport(PluginName)] public extern static bool GetVideoSize(
@@ -76,7 +76,7 @@ public unsafe static class FFmpegVideoPlayer{
             string path, byte layer, ushort num, void* pixels);
     }
     private static class V5{
-        private const string PluginName = pluginPath + "FFmpeg5Player" + ext;
+        private const string PluginName = pluginPath + "FFmpegPlayer.5" + ext;
         [DllImport(PluginName)] public extern static void Init();
         [DllImport(PluginName)] public extern static void CleanUp();
         [DllImport(PluginName)] public extern static bool GetVideoSize(
@@ -89,7 +89,7 @@ public unsafe static class FFmpegVideoPlayer{
             string path, byte layer, ushort num, void* pixels);
     }
     private static class V6{
-        private const string PluginName = pluginPath + "FFmpeg6Player" + ext;
+        private const string PluginName = pluginPath + "FFmpegPlayer.6" + ext;
         [DllImport(PluginName)] public extern static void Init();
         [DllImport(PluginName)] public extern static void CleanUp();
         [DllImport(PluginName)] public extern static bool GetVideoSize(
@@ -102,7 +102,7 @@ public unsafe static class FFmpegVideoPlayer{
             string path, byte layer, ushort num, void* pixels);
     }
 #else
-    private const string PluginName = pluginPath + "FFmpegPlayer";
+    private const string PluginName = pluginPath + "FFmpegPlayer.4";
     [DllImport(PluginName)] private extern static void Init();
     [DllImport(PluginName)] private extern static void CleanUp();
     [DllImport(PluginName)] private extern static bool GetVideoSize(

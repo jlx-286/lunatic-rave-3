@@ -11,13 +11,18 @@ extern "C" {
 #include <libswresample/swresample.h>
 #include <libswscale/swscale.h>
 };
+#if LIBAVCODEC_VERSION_MAJOR == 60
+// g++ -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpegPlugin.6.so FFmpegPlugin.cpp -lavcodec -lavformat -lavutil -lswresample -lswscale
+// g++ -O3 -fPIC -shared -Wall -I"./include" -L"." -o FFmpegPlugin.6.dll FFmpegPlugin.cpp -lavcodec-60 -lavformat-60 -lavutil-58 -lswresample-4 -lswscale-7
+#elif LIBAVCODEC_VERSION_MAJOR == 59
+// g++ -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpegPlugin.5.so FFmpegPlugin.cpp -lavcodec -lavformat -lavutil -lswresample -lswscale
+// g++ -O3 -fPIC -shared -Wall -I"./include" -L"." -o FFmpegPlugin.5.dll FFmpegPlugin.cpp -lavcodec-59 -lavformat-59 -lavutil-57 -lswresample-4 -lswscale-6
+#elif LIBAVCODEC_VERSION_MAJOR == 58
+// g++-9 -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpegPlugin.4.so FFmpegPlugin.cpp -lavcodec -lavformat -lavutil -lswresample -lswscale
+// g++ -O3 -fPIC -shared -Wall -I"./include" -L"." -o FFmpegPlugin.4.dll FFmpegPlugin.cpp -lavcodec-58 -lavformat-58 -lavutil-56 -lswresample-3 -lswscale-5
+#endif
 #if LIBAVCODEC_VERSION_MAJOR > 58
-// g++ -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpeg5Plugin.so FFmpeg5Plugin.cpp -lavcodec -lavformat -lavutil -lswresample -lswscale
-// g++ -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpeg6Plugin.so FFmpeg6Plugin.cpp -lavcodec -lavformat -lavutil -lswresample -lswscale
 AVCodecContext* cc = NULL;
-#else
-// g++-9 -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpegPlugin.so FFmpegPlugin.cpp -lavcodec -lavformat -lavutil -lswresample -lswscale
-// g++ -O3 -fPIC -shared -Wall -I"./include" -L"." -o FFmpegPlugin.dll FFmpegPlugin.cpp -lavcodec-58 -lavformat-58 -lavutil-56 -lswresample-3 -lswscale-5
 #endif
 AVCodecContext* openCodecContext(AVFormatContext* fc, int* stream, enum AVMediaType type){
     if(fc == NULL || avformat_find_stream_info(fc, NULL) < 0) return NULL;

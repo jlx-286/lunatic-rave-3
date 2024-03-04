@@ -10,12 +10,15 @@ extern "C" {
 #include <libavutil/time.h>
 #include <libswscale/swscale.h>
 };
-#if LIBAVCODEC_VERSION_MAJOR > 58
-// g++ -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpeg5Player.so FFmpeg5Player.cpp -lavcodec -lavformat -lavutil -lswscale
-// g++ -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpeg6Player.so FFmpeg6Player.cpp -lavcodec -lavformat -lavutil -lswscale
-#else
-// g++-9 -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpegPlayer.so FFmpegPlayer.cpp -lavcodec -lavformat -lavutil -lswscale
-// g++ -O3 -fPIC -shared -Wall -I"./include" -L"." -o FFmpegPlayer.dll FFmpegPlayer.cpp -lavcodec-58 -lavformat-58 -lavutil-56 -lswscale-5
+#if LIBAVCODEC_VERSION_MAJOR == 60
+// g++ -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpegPlayer.6.so FFmpegPlayer.cpp -lavcodec -lavformat -lavutil -lswscale
+// g++ -O3 -fPIC -shared -Wall -I"./include" -L"." -o FFmpegPlayer.6.dll FFmpegPlayer.cpp -lavcodec-60 -lavformat-60 -lavutil-58 -lswscale-7
+#elif LIBAVCODEC_VERSION_MAJOR == 59
+// g++ -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpegPlayer.5.so FFmpegPlayer.cpp -lavcodec -lavformat -lavutil -lswscale
+// g++ -O3 -fPIC -shared -Wall -I"./include" -L"." -o FFmpegPlayer.5.dll FFmpegPlayer.cpp -lavcodec-59 -lavformat-59 -lavutil-57 -lswscale-6
+#elif LIBAVCODEC_VERSION_MAJOR == 58
+// g++-9 -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpegPlayer.4.so FFmpegPlayer.cpp -lavcodec -lavformat -lavutil -lswscale
+// g++ -O3 -fPIC -shared -Wall -I"./include" -L"." -o FFmpegPlayer.4.dll FFmpegPlayer.cpp -lavcodec-58 -lavformat-58 -lavutil-56 -lswscale-5
 #endif
 AVCodecContext* openCodecContext(AVFormatContext* fc, int* stream, enum AVMediaType type){
     if(fc == NULL || avformat_find_stream_info(fc, NULL) < 0) return NULL;
@@ -98,10 +101,8 @@ extern "C" void SetVideoState(uint8_t layer, VideoState _ = VideoState::playing)
 extern "C" void PlayVideo(const char* url, uint8_t layer, uint16_t num, void* pixels){
     int64_t startTime, sleepTime, frameTime;
     startTime = av_gettime_relative();
-    uint8_t* data[AV_NUM_DATA_POINTERS];// = {NULL};
-    int linesize[AV_NUM_DATA_POINTERS];// = {0};
     bool firstFrame = true; int ret;
-    double timeBase; AVPacket* packet = NULL; AVFrame *frame = NULL;
+    double timeBase; AVPacket* packet = NULL; AVFrame *frame = NULL, *target = NULL;
     AVFormatContext* fc = NULL; AVCodecContext* cc = NULL; int stream = -1;
     if(pixels == NULL || avformat_open_input(&fc, url, NULL, NULL)
         != 0 || fc == NULL) goto cleanup;
@@ -109,20 +110,17 @@ extern "C" void PlayVideo(const char* url, uint8_t layer, uint16_t num, void* pi
     if(cc == NULL || stream < 0 || cc->width < 1 || cc->height < 1) goto cleanup;
     frame = av_frame_alloc();
     if(frame == NULL) goto cleanup;
-    frame->width = cc->width;
-    frame->height = cc->height;
-    frame->format = cc->pix_fmt;
-    if(av_frame_get_buffer(frame, 1) != 0) goto cleanup;
+    target = av_frame_alloc();
+    if(target == NULL) goto cleanup;
+    target->width = cc->width;
+    target->height = cc->height;
+    target->format = pf;
+    if(av_frame_get_buffer(target, 1) != 0) goto cleanup;
     timeBase = fc->streams[stream]->time_base.num == 0 ?
         AV_TIME_BASE : av_q2d(av_inv_q(fc->streams[stream]->time_base));
     packet = av_packet_alloc();
     if(packet == NULL) goto cleanup;
     packet->data = NULL; packet->size = 0;
-    memset(data, 0, AV_NUM_DATA_POINTERS * sizeof(size_t));
-    memset(linesize, 0, AV_NUM_DATA_POINTERS * sizeof(int));
-    linesize[0] = cc->width * pixel_size;
-    data[0] = (uint8_t*)malloc(cc->height * linesize[0]);
-    if(data[0] == NULL) goto cleanup;
     while(states[layer] != VideoState::stopped){
         if(states[layer] == VideoState::paused) continue;
         else if(states[layer] == VideoState::playing && av_read_frame(fc, packet) == 0){
@@ -130,7 +128,7 @@ extern "C" void PlayVideo(const char* url, uint8_t layer, uint16_t num, void* pi
                 avcodec_send_packet(cc, packet);
                 ret = avcodec_receive_frame(cc, frame);
                 if(ret < 0){
-                    if(ret == AVERROR(EAGAIN)){
+                    if(ret == AVERROR(EAGAIN) || (ret & (AVERROR_INPUT_CHANGED | AVERROR_OUTPUT_CHANGED)) != 0){
                         av_frame_unref(frame);
                         av_packet_unref(packet);
                         continue;
@@ -139,15 +137,19 @@ extern "C" void PlayVideo(const char* url, uint8_t layer, uint16_t num, void* pi
                 }
                 if(frame->best_effort_timestamp >= 0){
                     frameTime = (int64_t)(std::round(frame->best_effort_timestamp / timeBase * AV_TIME_BASE / speed));
-                    if(firstFrame){
+                    if((frame->flags & (AV_FRAME_FLAG_DISCARD | AV_FRAME_FLAG_CORRUPT)) != 0){
+                        av_frame_unref(frame);
+                        av_packet_unref(packet);
+                        continue;
+                    }else if(firstFrame){
                         firstFrame = false;
                         startTime -= frameTime;
                     }else{
-                        ret = sws_scale(sws_cxts[num], frame->data, frame->linesize, 0, cc->height, data, linesize);
-                        if(ret >= 0 && ret <= cc->height){
+                        ret = sws_scale(sws_cxts[num], frame->data, frame->linesize, 0, cc->height, target->data, target->linesize);
+                        if(ret > 0 && ret <= cc->height){
                             for(int h = 0; h < cc->height; h++)
                                 memcpy(pixels + (cc->height - 1 - h) * cc->width * pixel_size,
-                                    data[0] + h * cc->width * pixel_size, cc->width * pixel_size);
+                                    target->data[0] + h * cc->width * pixel_size, cc->width * pixel_size);
                             sleepTime = frameTime - (av_gettime_relative() - startTime);
                             if(sleepTime <= 0 || sleepTime > UINT32_MAX);
                             else if(av_usleep((unsigned int)sleepTime) == 0);
@@ -160,12 +162,14 @@ extern "C" void PlayVideo(const char* url, uint8_t layer, uint16_t num, void* pi
             }
             av_packet_unref(packet);
         }else{
-            states[layer] = VideoState::stopped;
             break;
         }
     }
     cleanup:
-    free(data[0]);
+    states[layer] = VideoState::stopped;
+    avcodec_send_packet(cc, NULL);
+    avcodec_receive_frame(cc, frame);
+    av_frame_free(&target);
     av_frame_free(&frame);
     av_packet_free(&packet);
 #if LIBAVCODEC_VERSION_MAJOR > 58

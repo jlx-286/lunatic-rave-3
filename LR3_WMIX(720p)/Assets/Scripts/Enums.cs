@@ -43,6 +43,7 @@ public enum NoteType : byte{
     LongnoteStart, LongnoteEnd,
     LNChannel, LNOBJ,// Longnote, HCN,
 }
+public enum Scratch : byte{ None, Clock, Anti }
 /*public enum NoteChannel : byte{
     BMS_P1_Key1 = 0x11, BMS_P1_Key2 = 0x12, BMS_P1_Key3 = 0x13, BMS_P1_Key4 = 0x14,
     BMS_P1_Key5 = 0x15, BMS_P1_Scratch = 0x16, BMS_P1_Key6 = 0x18, BMS_P1_Key7 = 0x19,

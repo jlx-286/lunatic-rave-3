@@ -48,7 +48,7 @@ public unsafe static class FFmpegPlugins{
     private static CopyPixelsFunc CopyPixels = null;
     public static Action CleanUp = null;
     private static class V4{
-        private const string PluginName = projLibPath + "FFmpegPlugin" + ext;
+        private const string PluginName = projLibPath + "FFmpegPlugin.4" + ext;
         [DllImport(PluginName)] public extern static bool GetAudioInfo(
             string url, AVSampleFormat format, out int channels, out int frequency, out ulong length);
         [DllImport(PluginName)] public extern static void CopyAudioSamples(void* addr);
@@ -59,7 +59,7 @@ public unsafe static class FFmpegPlugins{
         [DllImport(PluginName)] public extern static void CleanUp();
     }
     private static class V5{
-        private const string PluginName = projLibPath + "FFmpeg5Plugin" + ext;
+        private const string PluginName = projLibPath + "FFmpegPlugin.5" + ext;
         [DllImport(PluginName)] public extern static bool GetAudioInfo(
             string url, AVSampleFormat format, out int channels, out int frequency, out ulong length);
         [DllImport(PluginName)] public extern static void CopyAudioSamples(void* addr);
@@ -70,7 +70,7 @@ public unsafe static class FFmpegPlugins{
         [DllImport(PluginName)] public extern static void CleanUp();
     }
     private static class V6{
-        private const string PluginName = projLibPath + "FFmpeg6Plugin" + ext;
+        private const string PluginName = projLibPath + "FFmpegPlugin.6" + ext;
         [DllImport(PluginName)] public extern static bool GetAudioInfo(
             string url, AVSampleFormat format, out int channels, out int frequency, out ulong length);
         [DllImport(PluginName)] public extern static void CopyAudioSamples(void* addr);
@@ -103,7 +103,7 @@ public unsafe static class FFmpegPlugins{
         }else throw new DllNotFoundException("unknown FFmpeg version");
     }
 #else
-    private const string PluginName = projLibPath + "FFmpegPlugin";
+    private const string PluginName = projLibPath + "FFmpegPlugin.4";
     [DllImport(PluginName)] private extern static bool GetAudioInfo(
         string url, AVSampleFormat format, out int channels, out int frequency, out ulong length);
     [DllImport(PluginName)] private extern static void CopyAudioSamples(void* addr);

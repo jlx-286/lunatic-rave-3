@@ -13,11 +13,10 @@
     + FluidSynth
     ```shell
         sudo apt install libfluidsynth2 || sudo apt install libfluidsynth3
-        # apt download timgm6mb-soundfont fluid-soundfont-gm
         ## You can install the dependencies by Synaptic (in GUI):
         # sudo apt install synaptic
-        ## considering plugins from snap store
-        # sudo apt install patchelf || sudo snap install patchelf
+        ## soundfonts
+        # apt download timgm6mb-soundfont fluid-soundfont-gm
         # snap download minuet
     ```
 - [FluidSynth](https://www.fluidsynth.org)
