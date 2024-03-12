@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 #if UNITY_5_3_OR_NEWER
 using UnityEngine;
@@ -8,6 +9,7 @@ using AudioSample = System.Single;
 #elif GODOT
 using Godot;
 using AudioSample = System.Byte;
+using Environment = System.Environment;
 using File = System.IO.File;
 using Path = System.IO.Path;
 #else
@@ -28,15 +30,34 @@ public unsafe static class FluidManager{
         DONE      // Player is finished playing
     };
     // private delegate int HandleMidiEventFunc(UIntPtr data, UIntPtr e);
+    private delegate int FluidSynthWriteFunc(UIntPtr synth, int len, void* lout, int loff, int lincr, void* rout, int roff, int rincr);
+    private delegate int FluidSettingsGetintFunc(UIntPtr settings, string name, out int val);
+    private delegate int FluidSettingsGetnumFunc(UIntPtr settings, string name, out double val);
+    private static Func<UIntPtr> new_fluid_settings = null;
+    private static Func<UIntPtr,UIntPtr> new_fluid_synth = null;
+    private static Func<UIntPtr,string,int,int> fluid_synth_sfload = null;
+    private static FluidSettingsGetintFunc fluid_settings_getint = null;
+    private static FluidSettingsGetnumFunc fluid_settings_getnum = null;
+    private static Func<UIntPtr,string,int,int> fluid_settings_setint = null;
+    private static Func<UIntPtr,string,double,int> fluid_settings_setnum = null;
+    private static Action<UIntPtr> delete_fluid_synth = null;
+    private static Action<UIntPtr> delete_fluid_settings = null;
+    private static Func<UIntPtr,UIntPtr> new_fluid_player = null;
+    private static Func<UIntPtr,string,int> fluid_player_add = null;
+    private static Func<UIntPtr,int> fluid_player_play = null;
+    private static Func<UIntPtr,PlayerStatus> fluid_player_get_status = null;
+    private static FluidSynthWriteFunc fluid_synth_write = null;
+    private static Action<UIntPtr> delete_fluid_player = null;
+    // private static Func<UIntPtr,HandleMidiEventFunc,UIntPtr,int> fluid_player_set_playback_callback = null;
+    private static Func<UIntPtr,int> fluid_player_join = null;
+    private static Func<UIntPtr,int> fluid_player_stop = null;
+    // private static Func<UIntPtr,int,int> fluid_player_seek = null;
 #if GODOT
     private const string format = "fluid_synth_write_s16";
 #else
     private const string format = "fluid_synth_write_float";
 #endif
 #if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || GODOT_X11 || GODOT_LINUXBSD
-    private delegate int FluidSynthWriteFunc(UIntPtr synth, int len, void* lout, int loff, int lincr, void* rout, int roff, int rincr);
-    private delegate int FluidSettingsGetintFunc(UIntPtr settings, string name, out int val);
-    private delegate int FluidSettingsGetnumFunc(UIntPtr settings, string name, out double val);
     private static class V2{
         private const string PluginName = "libfluidsynth.so.2";
         [DllImport(PluginName)] public extern static UIntPtr new_fluid_settings();
@@ -95,25 +116,6 @@ public unsafe static class FluidManager{
         [DllImport(PluginName)] public extern static int fluid_player_stop(UIntPtr player);
         // [DllImport(PluginName)] public extern static int fluid_player_seek(UIntPtr player, int ticks);
     }
-    private static Func<UIntPtr> new_fluid_settings = null;
-    private static Func<UIntPtr,UIntPtr> new_fluid_synth = null;
-    private static Func<UIntPtr,string,int,int> fluid_synth_sfload = null;
-    private static FluidSettingsGetintFunc fluid_settings_getint = null;
-    private static FluidSettingsGetnumFunc fluid_settings_getnum = null;
-    private static Func<UIntPtr,string,int,int> fluid_settings_setint = null;
-    private static Func<UIntPtr,string,double,int> fluid_settings_setnum = null;
-    private static Action<UIntPtr> delete_fluid_synth = null;
-    private static Action<UIntPtr> delete_fluid_settings = null;
-    private static Func<UIntPtr,UIntPtr> new_fluid_player = null;
-    private static Func<UIntPtr,string,int> fluid_player_add = null;
-    private static Func<UIntPtr,int> fluid_player_play = null;
-    private static Func<UIntPtr,PlayerStatus> fluid_player_get_status = null;
-    private static FluidSynthWriteFunc fluid_synth_write = null;
-    private static Action<UIntPtr> delete_fluid_player = null;
-    // private static Func<UIntPtr,HandleMidiEventFunc,UIntPtr,int> fluid_player_set_playback_callback = null;
-    private static Func<UIntPtr,int> fluid_player_join = null;
-    private static Func<UIntPtr,int> fluid_player_stop = null;
-    // private static Func<UIntPtr,int,int> fluid_player_seek = null;
     private static void MatchVersion(){
         const string path = "/lib/x86_64-linux-gnu/libfluidsynth.so.";
         if(File.Exists(path + "2")){
@@ -158,45 +160,73 @@ public unsafe static class FluidManager{
             fluid_player_stop = V3.fluid_player_stop;
             // fluid_player_seek = V3.fluid_player_seek;
         }
-        // else throw new DllNotFoundException("libfluidsynth 2 or 3 required");
     }
 #else //if UNITY_5_3_OR_NEWER || GODOT
+    private static class V3{
 #if GODOT
-    // private const string PluginName = "Plugins/FluidSynth/libfluidsynth-3";
-    private const string PluginName = "Plugins/FluidSynth/audioplugin-fluidsynth-3";
+        private const string PluginName = "Plugins/libfluidsynth/audioplugin-fluidsynth-3";
 #else
-    // private const string PluginName = "libfluidsynth-3";
-    private const string PluginName = "audioplugin-fluidsynth-3";
+        private const string PluginName = "libfluidsynth-3";
 #endif
-    [DllImport(PluginName)] private extern static UIntPtr new_fluid_settings();
-    [DllImport(PluginName)] private extern static UIntPtr new_fluid_synth(UIntPtr settings);
-    [DllImport(PluginName)] private extern static int fluid_synth_sfload(
-        UIntPtr synth, string sfpath, int reset_presets);
-    [DllImport(PluginName)] private extern static int fluid_settings_getint(
-        UIntPtr settings, string name, out int val);
-    [DllImport(PluginName)] private extern static int fluid_settings_getnum(
-        UIntPtr settings, string name, out double val);
-    [DllImport(PluginName)] private extern static int fluid_settings_setint(
-        UIntPtr settings, string name, int val);
-    [DllImport(PluginName)] private extern static int fluid_settings_setnum(
-        UIntPtr settings, string name, double val);
-    [DllImport(PluginName)] private extern static void delete_fluid_synth(UIntPtr synth);
-    [DllImport(PluginName)] private extern static void delete_fluid_settings(UIntPtr settings);
-    [DllImport(PluginName)] private extern static UIntPtr new_fluid_player(UIntPtr synth);
-    [DllImport(PluginName)] private extern static int fluid_player_add(UIntPtr player, string path);
-    [DllImport(PluginName)] private extern static int fluid_player_play(UIntPtr player);
-    [DllImport(PluginName)] private extern static PlayerStatus fluid_player_get_status(UIntPtr player);
-    [DllImport(PluginName, EntryPoint = format)] private extern static int fluid_synth_write(
-        UIntPtr synth, int len, void* lout, int loff, int lincr, void* rout, int roff, int rincr);
-    [DllImport(PluginName)] private extern static void delete_fluid_player(UIntPtr player);
-    // [DllImport(PluginName, CallingConvention = CallingConvention.StdCall)]
-    // private extern static int fluid_player_set_playback_callback(UIntPtr player, HandleMidiEventFunc handler, UIntPtr data);
-    [DllImport(PluginName)] private extern static int fluid_player_join(UIntPtr player);
-    [DllImport(PluginName)] private extern static int fluid_player_stop(UIntPtr player);
-    // [DllImport(PluginName)] private extern static int fluid_player_seek(UIntPtr player, int ticks);
+        [DllImport(PluginName)] public extern static UIntPtr new_fluid_settings();
+        [DllImport(PluginName)] public extern static UIntPtr new_fluid_synth(UIntPtr settings);
+        [DllImport(PluginName)] public extern static int fluid_synth_sfload(
+            UIntPtr synth, string sfpath, int reset_presets);
+        [DllImport(PluginName)] public extern static int fluid_settings_getint(
+            UIntPtr settings, string name, out int val);
+        [DllImport(PluginName)] public extern static int fluid_settings_getnum(
+            UIntPtr settings, string name, out double val);
+        [DllImport(PluginName)] public extern static int fluid_settings_setint(
+            UIntPtr settings, string name, int val);
+        [DllImport(PluginName)] public extern static int fluid_settings_setnum(
+            UIntPtr settings, string name, double val);
+        [DllImport(PluginName)] public extern static void delete_fluid_synth(UIntPtr synth);
+        [DllImport(PluginName)] public extern static void delete_fluid_settings(UIntPtr settings);
+        [DllImport(PluginName)] public extern static UIntPtr new_fluid_player(UIntPtr synth);
+        [DllImport(PluginName)] public extern static int fluid_player_add(UIntPtr player, string path);
+        [DllImport(PluginName)] public extern static int fluid_player_play(UIntPtr player);
+        [DllImport(PluginName)] public extern static PlayerStatus fluid_player_get_status(UIntPtr player);
+        [DllImport(PluginName, EntryPoint = format)] public extern static int fluid_synth_write(
+            UIntPtr synth, int len, void* lout, int loff, int lincr, void* rout, int roff, int rincr);
+        [DllImport(PluginName)] public extern static void delete_fluid_player(UIntPtr player);
+        // [DllImport(PluginName, CallingConvention = CallingConvention.StdCall)]
+        // public extern static int fluid_player_set_playback_callback(UIntPtr player, HandleMidiEventFunc handler, UIntPtr data);
+        [DllImport(PluginName)] public extern static int fluid_player_join(UIntPtr player);
+        [DllImport(PluginName)] public extern static int fluid_player_stop(UIntPtr player);
+        // [DllImport(PluginName)] public extern static int fluid_player_seek(UIntPtr player, int ticks);
+    }
+    private static void MatchVersion(){
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || GODOT_WINDOWS
+        string path = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
+        // if(string.IsNullOrWhiteSpace(path)) return;
+        if(path.Split(';').Any(_ => !string.IsNullOrWhiteSpace(_) && File.Exists(_.Trim().TrimEnd('/', '\\') + "/libfluidsynth-3.dll"))){
+            new_fluid_settings = V3.new_fluid_settings;
+            new_fluid_synth = V3.new_fluid_synth;
+            fluid_synth_sfload = V3.fluid_synth_sfload;
+            fluid_settings_getint = V3.fluid_settings_getint;
+            fluid_settings_getnum = V3.fluid_settings_getnum;
+            fluid_settings_setint = V3.fluid_settings_setint;
+            fluid_settings_setnum = V3.fluid_settings_setnum;
+            delete_fluid_synth = V3.delete_fluid_synth;
+            delete_fluid_settings = V3.delete_fluid_settings;
+            new_fluid_player = V3.new_fluid_player;
+            fluid_player_add = V3.fluid_player_add;
+            fluid_player_play = V3.fluid_player_play;
+            fluid_player_get_status = V3.fluid_player_get_status;
+            fluid_synth_write = V3.fluid_synth_write;
+            delete_fluid_player = V3.delete_fluid_player;
+            // fluid_player_set_playback_callback = V3.fluid_player_set_playback_callback;
+            fluid_player_join = V3.fluid_player_join;
+            fluid_player_stop = V3.fluid_player_stop;
+            // fluid_player_seek = V3.fluid_player_seek;
+        }
+// #elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || GODOT_OSX || GODOT_MACOS
+// #else
+#endif
+    }
 #endif
     public static void Init(string sfpath, double gain = double.NaN, double overflow_vol = double.NaN){
-        if((Func<UIntPtr>)new_fluid_settings == null || !File.Exists(sfpath)) return;
+        if(new_fluid_settings == null || !File.Exists(sfpath)) return;
         CleanUp();
         settings = new_fluid_settings();
         if(settings == UIntPtr.Zero) return;
@@ -252,15 +282,13 @@ public unsafe static class FluidManager{
         frequency = frames = 0;
         MidiToSamples = _=>null;
         // inThread = false;
-        if((Action<UIntPtr>)delete_fluid_synth == null) return;
+        if(delete_fluid_synth == null) return;
         if(synth != UIntPtr.Zero) delete_fluid_synth(synth);
         if(settings != UIntPtr.Zero) delete_fluid_settings(settings);
         settings = synth = UIntPtr.Zero;
     }
     static FluidManager(){
-#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || GODOT_X11 || GODOT_LINUXBSD
         MatchVersion();
-#endif
 // #if GODOT
 //         Init("TimGM6mb.sf2", 1.5);
 //         Atexit

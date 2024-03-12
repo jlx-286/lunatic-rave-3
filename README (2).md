@@ -7,7 +7,11 @@
 - Windows (<https://learn.microsoft.com/windows-server/administration/windows-commands/path>)
     + FFmpeg (avcodec-58 + avformat-58 + avutil-56 + swresample-3 + swscale-5)
         1. [download FFmpeg](https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2023-04-30-12-46/ffmpeg-n4.4.4-win64-lgpl-shared-4.4.zip)
-        2. add (the absolute path of) the directory "bin" to "%path%"
+        2. add (the absolute path of) the directory "bin" to "`%path%`"
+        3. reboot now or later
+    + FluidSynth
+        1. [download FluidSynth](https://github.com/FluidSynth/fluidsynth/releases/latest)
+        2. add (the absolute path of) the directory "bin" to "`%path%`"
         3. reboot now or later
 - Linux (Debian or Ubuntu)
     + FluidSynth
@@ -20,8 +24,7 @@
         # snap download minuet
     ```
 - [FluidSynth](https://www.fluidsynth.org)
-    + The plugins are from [Unity Asset Store](https://assetstore.unity.com/packages/tools/audio/fluid-midi-player-173680).
-    + alternative plugin(s):<https://github.com/FluidSynth/fluidsynth/releases/>
+    + "audioplugin-fluidsynth-3.dll" is from "<https://assetstore.unity.com/packages/tools/audio/fluid-midi-player-173680>"
     + The soundfont in "[Application.streamingAssetsPath](https://docs.unity3d.com/2018.2/Documentation/ScriptReference/Application-streamingAssetsPath.html)" can be from <https://packages.debian.org/trixie/timgm6mb-soundfont>.
     + <https://github.com/FluidSynth/fluidsynth/wiki/Download#distributions>
 

@@ -42,10 +42,11 @@ public partial class Test : AudioStreamPlayer{
     // }
     public override void _Notification(int what){
 #if GODOT4_OR_GREATER
-        if(what == NotificationWMCloseRequest){
+        if(what == NotificationWMCloseRequest)
 #else
-        if(what == MainLoop.NotificationWmQuitRequest){
+        if(what == MainLoop.NotificationWmQuitRequest)
 #endif
+        {
             if(sample != null) sample.Dispose();
             FluidManager.CleanUp();
             FFmpegPlugins.CleanUp();
@@ -54,5 +55,6 @@ public partial class Test : AudioStreamPlayer{
             BMSInfo.CleanUp();
             // Atexit.exit(0);
         }
+        else if(what != 25) GD.Print($"what:{what}");
     }
 }
