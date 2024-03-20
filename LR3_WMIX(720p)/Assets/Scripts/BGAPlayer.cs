@@ -6,10 +6,10 @@ using UnityEngine.UI;
 public class BGAPlayer : MonoBehaviour {
     public BMSPlayer BMS_Player;
     public RawImage[] rawImages;
-    private ushort bgi_num;
+    private ushort bgi_num = 0;
     public GameObject[] poors;
     private Image[] images;
-    private int bga_table_row = 0;
+    private ulong bga_table_row = 0;
     private readonly ushort[] bgi_nums = new ushort[]{0,0,0,0};
     private void Awake(){
 #if UNITY_EDITOR
@@ -21,7 +21,7 @@ public class BGAPlayer : MonoBehaviour {
         images = new Image[poors.Length];
         for(byte i = 0; i < poors.Length; i++)
             images[i] = poors[i].GetComponent<Image>();
-        if(BMSInfo.bga_list_table.Any(v => v.channel == BGAChannel.Poor)){
+        if(BMSInfo.textures[0] != null || BMSInfo.bga_list_table.Any(v => v.channel == BGAChannel.Poor)){
             for(byte i = 0; i < poors.Length; i++)
                 images[i].enabled = true;
         }else{
@@ -31,11 +31,12 @@ public class BGAPlayer : MonoBehaviour {
             }
         }
     }
+    private void Start(){ ChannelCase(3); }
     //private void FixedUpdate(){}
     private void Update(){
         if(BMS_Player.escaped) return;
         if(BMS_Player.playingTimeAsNanoseconds <= BMSInfo.totalTimeAsNanoseconds){
-            while(bga_table_row < BMSInfo.bga_list_table.Count &&
+            while(bga_table_row < BMSInfo.bgaCount &&
                 BMSInfo.bga_list_table[bga_table_row].time <= BMS_Player.playingTimeAsNanoseconds
             ){
                 bgi_num = BMSInfo.bga_list_table[bga_table_row].bgNum;

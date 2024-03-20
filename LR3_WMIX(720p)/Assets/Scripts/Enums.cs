@@ -1,5 +1,4 @@
 ﻿using System;
-#region BMS info
 public enum ScriptType : byte{
     Unknown = 0, PMS = 2,
     BMS = 1, BME = 1, BML = 1,
@@ -17,8 +16,6 @@ public enum Difficulty : byte{
     Another = 4, Insane = 5, // Hard = 3,
     Leggendaria = 5, BlackAnother = 5,
 }
-#endregion
-#region BMS reader
 [Flags] public enum ChannelEnum : byte{
     Has_1P_7 = 1,// BMS:[135D][89]
     Has_2P_5 = 2,// BMS:[246E][1-7]
@@ -29,38 +26,35 @@ public enum Difficulty : byte{
     BME_DP = 4,// PMS:[246E][16-9]
 }
 public enum ChannelType : byte{
-    Default = 0, Longnote = 1, Landmine = 2, 
+    Default = 0, Longnote = 1, Landmine = 2,
+    Invisible = 3, None = byte.MaxValue,
 }
 public enum BGAChannel : byte{
     Base = 4, // Video,
     Layer = 7, Layer1 = 7, Layer2 = 0xA,
     Miss = 6, Bad = 6, Poor = 6,
 }
-#endregion
-#region BMS player
 public enum NoteType : byte{
-    Default = 0, Landmine, 
+    Default = 0, Landmine, Invisible,
     LongnoteStart, LongnoteEnd,
     LNChannel, LNOBJ,// Longnote, HCN,
 }
 public enum Scratch : byte{ None, Clock, Anti }
-/*public enum NoteChannel : byte{
-    BMS_P1_Key1 = 0x11, BMS_P1_Key2 = 0x12, BMS_P1_Key3 = 0x13, BMS_P1_Key4 = 0x14,
-    BMS_P1_Key5 = 0x15, BMS_P1_Scratch = 0x16, BMS_P1_Key6 = 0x18, BMS_P1_Key7 = 0x19,
-    BMS_P1_Pedal = 0x17, BMS_P1_FreeZone = 0x17, BMS_P2_Pedal = 0x27, BMS_P2_FreeZone = 0x17,
-    BMS_P2_Key1 = 0x21, BMS_P2_Key2 = 0x22, BMS_P2_Key3 = 0x23, BMS_P2_Key4 = 0x24,
-    BMS_P2_Key5 = 0x25, BMS_P2_Scratch = 0x26, BMS_P2_Key6 = 0x28, BMS_P2_Key7 = 0x29,
+public enum BMSChannel : byte{
+    BMS_P1 = 0x10, BMS_P2 = 0x20, PMS_P1 = BMS_P1, PMS_P2 = BMS_P2,
+    Key1 = 1, Key2 = 2, Key3 = 3, Key4 = 4, Key5 = 5, Scratch = 6,
+    Pedal = 7, FreeZone = 7, Key6 = 8, Key7 = 9, Key8 = 6, Key9 = 7,
     Invisible = 0x20, LongNote = 0x40, LandMine = 0xC0,
-    PMS_P1_Key1 = 0x11, PMS_P1_Key2 = 0x12, PMS_P1_Key3 = 0x13, PMS_P1_Key4 = 0x14, PMS_P1_Key5 = 0x15,
-    PMS_P1_Key6 = 0x18, PMS_P1_Key7 = 0x19, PMS_P1_Key8 = 0x16, PMS_P1_Key9 = 0x17,
-    PMS_P2_Key1 = 0x21, PMS_P2_Key2 = 0x22, PMS_P2_Key3 = 0x23, PMS_P2_Key4 = 0x24, PMS_P2_Key5 = 0x25,
-    PMS_P2_Key6 = 0x28, PMS_P2_Key7 = 0x29, PMS_P2_Key8 = 0x26, PMS_P2_Key9 = 0x27,
-}*/
+    BGA_base = 2, BGA_layer = 3, BGA_layer2 = 4, BGA_poor = 5,
+    BGM = 1, BPM3 = 0xF0, BPM8 = 0xF1, Stop = 0xF4,
+    [Obsolete("beatoraja & bemuse only", false)] Scroll = 0xF2,
+    [Obsolete("bemuse only", true)] Speed = 0xF3,
+}
 public enum GaugeType : byte{
     Assisted = 0, AssistedEasy = 0, Easy = 1,
     Normal = 2, Off = 2, Groove = 2,
     Hard = 3, Survival = 3, EXHard = 4,
-    Hazard = 5, Death = 5, PAttack = 6, 
+    Hazard = 5, Death = 5, PAttack = 6,
     Grade = 7, EX_Grade = 8, EXHard_Grade = 9,
     Course = 10,
     [Obsolete("LR2 only?", false)] GAttack = 11,
@@ -80,4 +74,3 @@ public enum PlayMode : byte{
     // Stage8, Stage9, Stage10, Stage11,
     // Stage12, Stage13, Stage14, Stage15,
 }
-#endregion

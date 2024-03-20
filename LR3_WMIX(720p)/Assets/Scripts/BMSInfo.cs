@@ -41,36 +41,47 @@ public static class BMSInfo {
 #endif
 #endregion
 #region time table
-    public static List<NoteTimeRow>[] note_list_lanes;
-    public static List<BGMTimeRow> bgm_list_table = new List<BGMTimeRow>();
-    public static List<BGATimeRow> bga_list_table = new List<BGATimeRow>();
-    public static List<BPMTimeRow> bpm_list_table = new List<BPMTimeRow>();
+    public static NoteTimeRow[][] note_list_lanes;
+    public static BGMTimeRow[] bgm_list_table;
+    public static BGATimeRow[] bga_list_table;
+    public static BPMTime[] bpm_list_table;
     public static readonly long[] track_end_time_as_ns = Enumerable.Repeat(-1L, 1000).ToArray();
-    public static List<StopTimeRow> stop_list_table = new List<StopTimeRow>();
+    // public static StopTimeRow[] stop_list_table;
+    public static ulong bgaCount = 0, bgmCount = 0, bpmCount = 0;
+    public static readonly ulong[] noteCounts = Enumerable.Repeat(0UL,18).ToArray();
+    public static readonly Dictionary<ushort, string> exBPMDict = new Dictionary<ushort, string>();
+    public static readonly string[] hexBPMDict = Enumerable.Repeat<string>(null, byte.MaxValue).ToArray();
 #endregion
+    public static void NewBPMDict(){
+        start_bpm = 130 * FFmpegVideoPlayer.speedAsDecimal;
+        for(byte i = byte.MaxValue; i > 0; i--)
+            hexBPMDict[i - 1] = (i * FFmpegVideoPlayer.speedAsDecimal).ToString("G29",
+                System.Globalization.NumberFormatInfo.InvariantInfo);
+    }
     public unsafe static void CleanUp(){
-        genre = string.Empty;
-        bpm = string.Empty;
-        title = string.Empty;
-        artist = string.Empty;
-        playing_scene_name = string.Empty;
+        genre = bpm = title = artist = playing_scene_name = "";
         sub_title.Clear();
         sub_artist.Clear();
         comment.Clear();
         playerType = PlayerType.Keys5;
-        if(note_list_lanes != null){
-            for(int i = 0; i < note_list_lanes.Length; i++)
-                if(note_list_lanes[i] != null){
-                    note_list_lanes[i].Clear();
-                    note_list_lanes[i] = null;
-                }
-            note_list_lanes = null;
-        }
-        note_count = 0;
-        bgm_list_table.Clear();
-        bga_list_table.Clear();
-        bpm_list_table.Clear();
-        stop_list_table.Clear();
+        note_list_lanes = null;
+        Array.Clear(noteCounts, 0, noteCounts.Length);
+        scriptType = ScriptType.Unknown;
+        difficulty = Difficulty.Unknown;
+        exBPMDict.Clear();
+        judge_rank = 2;
+        max_tracks = 0;
+        min_bpm = decimal.MaxValue;
+        max_bpm = 0;
+        total = 160;
+        play_level = 0;
+        totalTimeAsNanoseconds = 0;
+        note_count = bgaCount = bgmCount = bpmCount = 0;
+        bgm_list_table = null;
+        bga_list_table = null;
+        bpm_list_table = null;
+        // stop_list_table = null;
+        GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, false);
         fixed(void* p = track_end_time_as_ns)
             StaticClass.memset(p, -1, (IntPtr)(track_end_time_as_ns.LongLength * sizeof(long)));
     }
@@ -87,18 +98,4 @@ public static class BMSInfo {
         };
     }
 #endif
-    public static void Init(){
-        CleanUp();
-        judge_rank = 2;
-        max_tracks = 0;
-        start_bpm = 130;
-        min_bpm = decimal.MaxValue;
-        max_bpm = 0;
-        total = 160;
-        play_level = 0;
-        scriptType = ScriptType.Unknown;
-        difficulty = Difficulty.Unknown;
-        totalTimeAsNanoseconds = 0;
-        playing_scene_name = string.Empty;
-    }
 }

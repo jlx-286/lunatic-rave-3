@@ -29,14 +29,14 @@ public class ManualNotePlayer : MonoBehaviour{
         for(int i = 0; i < BGA_Player.poors.Length; i++)
             BGA_Player.poors[i].SetActive(false);
         for(int i = 0; i < keyLaser.keyLanes.Length; i++)
-            if(BMSInfo.note_list_lanes[keyLaser.keyLanes[i]].Count > 0)
+            if(BMSInfo.noteCounts[keyLaser.keyLanes[i]] > 0)
                 keyDownClips[keyLaser.keyLanes[i]] = BMSInfo.note_list_lanes[keyLaser.keyLanes[i]][notePlayer.note_nums[keyLaser.keyLanes[i]]].clipNum;
     }
     private void FixedUpdate(){
         if(BMS_Player.escaped) return;
         if(BMS_Player.playingTimeAsNanoseconds <= BMSInfo.totalTimeAsNanoseconds){
             for(int i = 0; i < keyLaser.keyCodes.Length; i++){
-                while(notePlayer.note_nums[keyLaser.keyLanes[i]] < BMSInfo.note_list_lanes[keyLaser.keyLanes[i]].Count){
+                while(notePlayer.note_nums[keyLaser.keyLanes[i]] < BMSInfo.noteCounts[keyLaser.keyLanes[i]]){
                     if((BMSInfo.note_list_lanes[keyLaser.keyLanes[i]][notePlayer.note_nums[keyLaser.keyLanes[i]]].noteType == NoteType.Default
                         || BMSInfo.note_list_lanes[keyLaser.keyLanes[i]][notePlayer.note_nums[keyLaser.keyLanes[i]]].noteType == NoteType.LongnoteStart
                         || BMSInfo.note_list_lanes[keyLaser.keyLanes[i]][notePlayer.note_nums[keyLaser.keyLanes[i]]].noteType == NoteType.LongnoteEnd) &&
@@ -58,7 +58,7 @@ public class ManualNotePlayer : MonoBehaviour{
                 }
                 // if(!keyLaser.pressed[i] && Input.GetKey(keyLaser.keyCodes[i])){// key down
                 if(!keyLaser.pressed[i] && Input.GetKeyDown(keyLaser.keyCodes[i])){// key down
-                    if(notePlayer.note_nums[keyLaser.keyLanes[i]] >= BMSInfo.note_list_lanes[keyLaser.keyLanes[i]].Count
+                    if(notePlayer.note_nums[keyLaser.keyLanes[i]] >= BMSInfo.noteCounts[keyLaser.keyLanes[i]]
                         || (BMSInfo.note_list_lanes[keyLaser.keyLanes[i]][notePlayer.note_nums[keyLaser.keyLanes[i]]].noteType == NoteType.Default
                         || BMSInfo.note_list_lanes[keyLaser.keyLanes[i]][notePlayer.note_nums[keyLaser.keyLanes[i]]].noteType == NoteType.LongnoteStart)
                     ){
@@ -75,7 +75,7 @@ public class ManualNotePlayer : MonoBehaviour{
                             }
                             notePlayer.judge_nums[(byte)noteJudges[keyLaser.keyLanes[i]]]++;
                             notePlayer.inc += notePlayer.increases[(byte)GaugeType.Groove][(byte)noteJudges[keyLaser.keyLanes[i]]];
-                            if(notePlayer.note_nums[keyLaser.keyLanes[i]] < BMSInfo.note_list_lanes[keyLaser.keyLanes[i]].Count){
+                            if(notePlayer.note_nums[keyLaser.keyLanes[i]] < BMSInfo.noteCounts[keyLaser.keyLanes[i]]){
                                 keyDownClips[keyLaser.keyLanes[i]] = BMSInfo.note_list_lanes[keyLaser.keyLanes[i]][notePlayer.note_nums[keyLaser.keyLanes[i]]].clipNum;
                                 if(noteJudges[keyLaser.keyLanes[i]] >= NoteJudge.Miss && noteJudges[keyLaser.keyLanes[i]] <= NoteJudge.Perfect){
                                     notePlayer.maxScore += 2;
@@ -90,7 +90,7 @@ public class ManualNotePlayer : MonoBehaviour{
                 }
                 // else if(keyLaser.pressed[i] && !Input.GetKey(keyLaser.keyCodes[i])){// key up
                 else if(keyLaser.pressed[i] && Input.GetKeyUp(keyLaser.keyCodes[i])){// key up
-                    if(notePlayer.note_nums[keyLaser.keyLanes[i]] < BMSInfo.note_list_lanes[keyLaser.keyLanes[i]].Count &&
+                    if(notePlayer.note_nums[keyLaser.keyLanes[i]] < BMSInfo.noteCounts[keyLaser.keyLanes[i]] &&
                         BMSInfo.note_list_lanes[keyLaser.keyLanes[i]][notePlayer.note_nums[keyLaser.keyLanes[i]]].noteType == NoteType.LongnoteEnd
                     ){
                         CalcJudge(i, true);
@@ -106,7 +106,7 @@ public class ManualNotePlayer : MonoBehaviour{
                             }
                             notePlayer.judge_nums[(byte)noteJudges[keyLaser.keyLanes[i]]]++;
                             notePlayer.inc += notePlayer.increases[(byte)GaugeType.Groove][(byte)noteJudges[keyLaser.keyLanes[i]]];
-                            if(notePlayer.note_nums[keyLaser.keyLanes[i]] < BMSInfo.note_list_lanes[keyLaser.keyLanes[i]].Count){
+                            if(notePlayer.note_nums[keyLaser.keyLanes[i]] < BMSInfo.noteCounts[keyLaser.keyLanes[i]]){
                                 // keyUpClip = BMSInfo.note_list_lanes[keyLaser.keyLanes[i]][notePlayer.note_nums[keyLaser.keyLanes[i]]].clipNum;
                                 if(noteJudges[keyLaser.keyLanes[i]] >= NoteJudge.Miss && noteJudges[keyLaser.keyLanes[i]] <= NoteJudge.Perfect){
                                     notePlayer.maxScore += 2;
@@ -199,10 +199,10 @@ public class ManualNotePlayer : MonoBehaviour{
         }
     }
     private void CalcJudge(int i, bool earlyMiss = false){
-        if(BMSInfo.note_list_lanes[keyLaser.keyLanes[i]].Count < 1 || notePlayer.note_nums[keyLaser.keyLanes[i]] > BMSInfo.note_list_lanes[keyLaser.keyLanes[i]].Count){
+        if(BMSInfo.noteCounts[keyLaser.keyLanes[i]] < 1 || notePlayer.note_nums[keyLaser.keyLanes[i]] > BMSInfo.noteCounts[keyLaser.keyLanes[i]]){
             noteJudges[keyLaser.keyLanes[i]] = NoteJudge.None;
         }
-        else if(notePlayer.note_nums[keyLaser.keyLanes[i]] == BMSInfo.note_list_lanes[keyLaser.keyLanes[i]].Count){
+        else if(notePlayer.note_nums[keyLaser.keyLanes[i]] == BMSInfo.noteCounts[keyLaser.keyLanes[i]]){
             NoteTimeRow row = BMSInfo.note_list_lanes[keyLaser.keyLanes[i]].Last();
             if(BMS_Player.playingTimeAsNanoseconds <= row.time + offsets[2] + MainVars.Latency && row.noteType != NoteType.Landmine)
                 noteJudges[keyLaser.keyLanes[i]] = NoteJudge.ExcessivePoor;

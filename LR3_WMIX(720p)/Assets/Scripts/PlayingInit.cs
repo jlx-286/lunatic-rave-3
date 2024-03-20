@@ -39,8 +39,8 @@ public class PlayingInit : MonoBehaviour{
         if((MainVars.playMode & PlayMode.AutoPlay) != 0)
             note_player.enabled = true;
         else manualNotePlayer.enabled = true;
-        // DestroyImmediate(play.gameObject);
-        DestroyImmediate(this.gameObject);
+        // DestroyImmediate(play.gameObject, true);
+        DestroyImmediate(this.gameObject, true);
     }
     private void Awake() {
         play = this.GetComponent<Button>();

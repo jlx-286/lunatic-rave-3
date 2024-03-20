@@ -137,7 +137,7 @@ public unsafe class Test : MonoBehaviour{
         play_b.onClick.AddListener(() => {
             audioSource.Play();
             // Debug.Log(audioSource.isPlaying);
-            DestroyImmediate(gm);
+            DestroyImmediate(gm, true);
             Debug.Log(Time.deltaTime);
         });
     }

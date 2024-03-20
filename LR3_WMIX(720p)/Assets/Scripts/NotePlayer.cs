@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.UI;
 public class NotePlayer : MonoBehaviour {
     public BMSPlayer BMS_Player;
-    [HideInInspector] public int[] note_nums;
+    [HideInInspector] public ulong[] note_nums;
     public RectTransform[] lanes;
     private ushort[] clipNums;
     public Text[] judges;
@@ -33,14 +33,13 @@ public class NotePlayer : MonoBehaviour {
     [HideInInspector] public readonly StringBuilder builder = new StringBuilder();
     [HideInInspector] public decimal[][] increases;
     private decimal hardGaugeMul;
-    // private ulong row_key = 0;
     // private bool[] inLN;
     private void Awake(){
         // inLN = Enumerable.Repeat(false, lanes.Length).ToArray();
         clipNums = Enumerable.Repeat<ushort>(36*36, lanes.Length).ToArray();
         judge_nums = Enumerable.Repeat<ulong>(0, judges.Length).ToArray();
         gaugeBars = gauge_bars.GetComponentsInChildren<Image>(true);
-        note_nums = Enumerable.Repeat(0, BMSInfo.note_list_lanes.Length).ToArray();
+        note_nums = Enumerable.Repeat(0UL, BMSInfo.note_list_lanes.Length).ToArray();
         if(BMSInfo.note_count <= 20) hardGaugeMul = 10;
         else if(BMSInfo.note_count < 30) hardGaugeMul = 8 + (30 - BMSInfo.note_count) / 5m;
         else if(BMSInfo.note_count < 60) hardGaugeMul = 5 + (60 - BMSInfo.note_count) / 15m;
@@ -78,7 +77,7 @@ public class NotePlayer : MonoBehaviour {
         if(BMS_Player.escaped) return;
         if(BMS_Player.playingTimeAsNanoseconds <= BMSInfo.totalTimeAsNanoseconds){
             for(int i = 0; i < note_nums.Length; i++){
-                while(note_nums[i] < BMSInfo.note_list_lanes[i].Count &&
+                while(note_nums[i] < BMSInfo.noteCounts[i] &&
                     BMSInfo.note_list_lanes[i][note_nums[i]].time <= BMS_Player.playingTimeAsNanoseconds
                 ){
                     switch(BMSInfo.note_list_lanes[i][note_nums[i]].noteType){
@@ -117,7 +116,6 @@ public class NotePlayer : MonoBehaviour {
                         default: break;
                     }
                     note_nums[i]++;
-                    // row_key++;
                 }
             }
             if(toUpdateScore){

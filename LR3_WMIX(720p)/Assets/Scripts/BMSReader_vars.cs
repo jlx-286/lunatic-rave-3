@@ -32,7 +32,7 @@ public partial class BMSReader{
     private Fraction32 fraction32;
     private NoteType noteType;
     private ChannelType channelType;
-    private ChannelEnum channelEnum = ChannelEnum.Default;
+    private ChannelEnum channelEnum = ChannelEnum.Default, chEn = ChannelEnum.Default;
     private ushort track = 0;
     private string channel = string.Empty;
     private string message = string.Empty;
@@ -41,16 +41,21 @@ public partial class BMSReader{
     private ushort u = 0;
     private byte hex_digits;
     private const long ns_per_min = TimeSpan.TicksPerMinute * 100;
-    private long trackOffset_ns = 0;
-    private long stopLen = 0;
-    private int stopIndex = 0;
+    private LinkedListNode<MeasureRow> node;
+    private readonly LinkedList<MeasureRow>[] measures = Enumerable.Repeat<LinkedList<MeasureRow>>(null, 1000).ToArray();
     private readonly Dictionary<ushort, decimal> exbpm_dict = new Dictionary<ushort, decimal>();
     private readonly decimal[] beats_tracks = Enumerable.Repeat(1m, 1000).ToArray();
     private readonly bool[] lnobj = Enumerable.Repeat(false, 36*36-1).ToArray();
     private readonly Dictionary<ushort, decimal> stop_dict = new Dictionary<ushort, decimal>();
-    private readonly List<StopMeasureRow>[] stop_measure_list = Enumerable.Repeat<List<StopMeasureRow>>(null, 1000).ToArray();
-    private readonly List<BPMMeasureRow>[] bpm_index_lists = Enumerable.Repeat<List<BPMMeasureRow>>(null, 1000).ToArray();
-    private List<BPMMeasureRow> temp_bpm_index;
-    private readonly byte[] laneMap = Enumerable.Repeat(byte.MaxValue, byte.MaxValue).ToArray();
-    private readonly decimal[] track_end_bpms = Enumerable.Repeat(0m, 1000).ToArray();
+    private readonly Dictionary<byte, ulong> noteCounts = new Dictionary<byte, ulong>(18);
+    private readonly Dictionary<byte, NoteTimeRow[]> noteDict
+        = new Dictionary<byte, NoteTimeRow[]>(18);
+    private static readonly Dictionary<string, BMSChannel> channelMap
+        = new Dictionary<string, BMSChannel>(){
+        {"04",BMSChannel.BGA_base}, {"06",BMSChannel.BGA_poor},
+        {"07",BMSChannel.BGA_layer}, {"0A",BMSChannel.BGA_layer2},
+        {"03",BMSChannel.BPM3}, {"08",BMSChannel.BPM8},
+        {"09",BMSChannel.Stop}, {"SC",BMSChannel.Scroll},
+        // {"SP",BMSChannel.Speed},
+    };
 }

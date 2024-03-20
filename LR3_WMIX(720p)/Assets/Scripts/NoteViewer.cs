@@ -15,7 +15,7 @@ public class NoteViewer : MonoBehaviour{
     private Texture2D[] LNsEndTex;
     private Image[] LNCenterForms;
     private LinkedList<Image>[] lanes_notes;
-    private int[] v_note_ids;
+    private ulong[] v_note_ids;
     private bool[] inLN;
     private const uint ns_per_ms = 1000000u;
     [HideInInspector] public long offset;
@@ -72,7 +72,7 @@ public class NoteViewer : MonoBehaviour{
                 noteImgsLane[1] = noteImgsLane[3] = noteImgsLane[5] = noteImgsLane[7] = 1;
                 break;
         }
-        v_note_ids = Enumerable.Repeat(0, lanes_notes.Length).ToArray();
+        v_note_ids = Enumerable.Repeat(0UL, lanes_notes.Length).ToArray();
         pageXOffsets = new short[notePlayer.lanes.Length];
         for(int i = 0; i < pageXOffsets.Length; i++)
             pageXOffsets[i] = (short)notePlayer.lanes[i].anchoredPosition.x;
@@ -99,7 +99,7 @@ public class NoteViewer : MonoBehaviour{
         }
         for(int i = 0; i < lanes_notes.Length; i++){
             lanes_notes[i] = new LinkedList<Image>();
-            while(v_note_ids[i] < BMSInfo.note_list_lanes[i].Count && BMSInfo.note_list_lanes[i][v_note_ids[i]].time < offset){
+            while(v_note_ids[i] < BMSInfo.noteCounts[i] && BMSInfo.note_list_lanes[i][v_note_ids[i]].time < offset){
                 pageYOffset = BMSInfo.note_list_lanes[i][v_note_ids[i]].time * maskHeight / offset;
                 switch(BMSInfo.note_list_lanes[i][v_note_ids[i]].noteType){
                     case NoteType.Default:
@@ -156,7 +156,7 @@ public class NoteViewer : MonoBehaviour{
                         trackNum++;
                     }
                     for(int i = 0; i < lanes_notes.Length; i++){
-                        while(v_note_ids[i] < BMSInfo.note_list_lanes[i].Count &&
+                        while(v_note_ids[i] < BMSInfo.noteCounts[i] &&
                             BMSInfo.note_list_lanes[i][v_note_ids[i]].time < BMS_Player.playingTimeAsNanoseconds + offset
                         ){
                             switch(BMSInfo.note_list_lanes[i][v_note_ids[i]].noteType){
@@ -196,14 +196,14 @@ public class NoteViewer : MonoBehaviour{
                             else note.Value.rectTransform.anchoredPosition += new Vector2(0, yTime * downSpeed);
                         }
                         while(lanes_notes[i].First != null && lanes_notes[i].First.Value.rectTransform.anchoredPosition.y < -maskHeight){
-                            DestroyImmediate(lanes_notes[i].First.Value.gameObject);
+                            DestroyImmediate(lanes_notes[i].First.Value.gameObject, true);
                             lanes_notes[i].RemoveFirst();
                         }
                     }
                 }
             }
             if(pages.First != null && pages.First.Value.rectTransform.anchoredPosition.y < -maskHeight * 2){
-                DestroyImmediate(pages.First.Value.gameObject);
+                DestroyImmediate(pages.First.Value.gameObject, true);
                 pages.RemoveFirst();
                 pages.AddLast(Instantiate<RawImage>(pageForm, pagePos, true));
                 lastPage = Instantiate<Texture2D>(pageTexForm);

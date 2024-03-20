@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 #if UNITY_5_3_OR_NEWER
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 #elif GODOT
 using Godot;
@@ -36,6 +37,10 @@ public partial class BMSReader
     public RawImage stageFile;
     public Sprite[] keyTypes;
     public Image keyType;
+    private void Back(){
+        SceneManager.UnloadSceneAsync(MainVars.cur_scene_name);
+        SceneManager.LoadScene("Select", LoadSceneMode.Additive);
+    }
     private void ShowKeytypePMS(){ keyType.sprite = keyTypes[4]; }
     private void ShowGenre(){ genre.text = BMSInfo.genre; }
     private void ShowTitle(){ title.text = BMSInfo.title; }
@@ -106,6 +111,7 @@ public partial class BMSReader
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, false);
     }
 #elif GODOT
+    private void Back(){}
     private void ShowKeytypePMS(){}
     private void ShowGenre(){}
     private void ShowTitle(){}

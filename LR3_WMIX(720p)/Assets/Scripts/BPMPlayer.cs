@@ -9,26 +9,27 @@ public class BPMPlayer : MonoBehaviour{
     public Text now;
     public Canvas min;
     public Text min_val;
-    private int bpm_table_row = 0;
+    private ulong bpm_table_row = 0;
+    private ushort key;
     private void Awake(){
-        now.text = (BMSInfo.start_bpm * FFmpegVideoPlayer.speedAsDecimal).ToString("G29");
+        now.text = BMSInfo.start_bpm.ToString("G29");
         Debug.Log(now.text);
         if(BMSInfo.min_bpm < BMSInfo.max_bpm){
             min.enabled = true;
-            try{ min_val.text = (BMSInfo.min_bpm * FFmpegVideoPlayer.speedAsDecimal).ToString("G29"); }
-            catch(OverflowException){ min_val.text = "Infinity"; }
+            min_val.text = BMSInfo.min_bpm.ToString("G29");
             max.enabled = true;
-            try{ max_val.text = (BMSInfo.max_bpm * FFmpegVideoPlayer.speedAsDecimal).ToString("G29"); }
-            catch(OverflowException){ max_val.text = "Infinity"; }
+            max_val.text = BMSInfo.max_bpm.ToString("G29");
         }
     }
     private void Update(){
         if(BMS_Player.escaped) return;
         if(BMS_Player.playingTimeAsNanoseconds <= BMSInfo.totalTimeAsNanoseconds){
-            while(bpm_table_row < BMSInfo.bpm_list_table.Count &&
+            while(bpm_table_row < BMSInfo.bpmCount &&
                 BMSInfo.bpm_list_table[bpm_table_row].time <= BMS_Player.playingTimeAsNanoseconds
             ){
-                now.text = BMSInfo.bpm_list_table[bpm_table_row].value;
+                key = BMSInfo.bpm_list_table[bpm_table_row].key;
+                if(BMSInfo.exBPMDict.ContainsKey(key)) now.text = BMSInfo.exBPMDict[key];
+                else now.text = BMSInfo.hexBPMDict[(key & 0x00FF) - 1];
                 bpm_table_row++;
             }
         }

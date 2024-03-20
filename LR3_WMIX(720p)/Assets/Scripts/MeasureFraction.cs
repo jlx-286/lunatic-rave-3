@@ -1,10 +1,10 @@
 using System;
 using System.Runtime.InteropServices;
 
-[StructLayout(LayoutKind.Explicit)] public struct Fraction32 :
+[StructLayout(LayoutKind.Sequential, Pack = sizeof(uint))]
+public struct Fraction32 :
 IComparable<Fraction32>, IEquatable<Fraction32>, IFormattable {
-    [FieldOffset(0)] public uint Numerator;
-    [FieldOffset(sizeof(uint))] public uint Denominator;
+    public uint Numerator; public uint Denominator;
     public static readonly Fraction32 One = new Fraction32(){
         Numerator = 1, Denominator = 1 };
     public static readonly Fraction32 Zero = new Fraction32(){
@@ -68,9 +68,9 @@ IComparable<Fraction32>, IEquatable<Fraction32>, IFormattable {
             lcm);
     }*/
 }
-[StructLayout(LayoutKind.Explicit)] public struct Fraction64{
-    [FieldOffset(0)] public ulong numerator;
-    [FieldOffset(sizeof(ulong))] public ulong denominator;
+[StructLayout(LayoutKind.Sequential, Pack = sizeof(ulong))]
+public struct Fraction64{
+    public ulong numerator; public ulong denominator;
     public Fraction64(ulong num, ulong den){
         if(den == 0) throw new DivideByZeroException();
         else if(num == 0){

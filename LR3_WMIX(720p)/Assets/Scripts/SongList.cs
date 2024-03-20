@@ -39,8 +39,8 @@ public class SongList : MonoBehaviour, IPointerClickHandler {
     }
     private void Update(){
         if(!isInCus && !loaded){
-            for(int i = 0; i < activeContent.transform.childCount; i++)
-                Destroy(activeContent.transform.GetChild(i).gameObject);
+            for(int i = activeContent.transform.childCount; i > 0; i--)
+                DestroyImmediate(activeContent.transform.GetChild(0).gameObject, true);
             Button[] initBtns = initialContent.gameObject.GetComponentsInChildren<Button>();
             for(int i = 0; i < initBtns.Length; i++){
                 Button b = Instantiate(initBtns[i], activeContent.transform);
@@ -52,8 +52,8 @@ public class SongList : MonoBehaviour, IPointerClickHandler {
             }
             loaded = true;
         }else if(isInCus && !loaded){
-            for(int i = 0; i < activeContent.transform.childCount; i++)
-                Destroy(activeContent.transform.GetChild(i).gameObject);
+            for(int i = activeContent.transform.childCount; i > 0; i--)
+                DestroyImmediate(activeContent.transform.GetChild(0).gameObject, true);
             foreach(string s in Directory.GetDirectories(MainVars.bms_file_path)){
                 Button b = Instantiate(buttonForm, activeContent.transform);
                 b.GetComponentInChildren<Text>().text = Path.GetFileName(s);
