@@ -38,40 +38,41 @@ public class SongList : MonoBehaviour, IPointerClickHandler {
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, false);
     }
     private void Update(){
-        if(!isInCus && !loaded){
+        if(!loaded){
             for(int i = activeContent.transform.childCount; i > 0; i--)
                 DestroyImmediate(activeContent.transform.GetChild(0).gameObject, true);
-            Button[] initBtns = initialContent.gameObject.GetComponentsInChildren<Button>();
-            for(int i = 0; i < initBtns.Length; i++){
-                Button b = Instantiate(initBtns[i], activeContent.transform);
-                if(b.gameObject.name.StartsWith("custom", StringComparison.Ordinal))
-                    b.onClick.AddListener(() => {
-                        isInCus = true;
-                        loaded = false;
-                    });
+            if(!isInCus){
+                Button[] initBtns = initialContent.gameObject.GetComponentsInChildren<Button>();
+                for(int i = 0; i < initBtns.Length; i++){
+                    Button b = Instantiate(initBtns[i], activeContent.transform);
+                    if(b.gameObject.name.StartsWith("custom", StringComparison.Ordinal))
+                        b.onClick.AddListener(() => {
+                            isInCus = true;
+                            loaded = false;
+                        });
+                }
             }
-            loaded = true;
-        }else if(isInCus && !loaded){
-            for(int i = activeContent.transform.childCount; i > 0; i--)
-                DestroyImmediate(activeContent.transform.GetChild(0).gameObject, true);
-            foreach(string s in Directory.GetDirectories(MainVars.bms_file_path)){
-                Button b = Instantiate(buttonForm, activeContent.transform);
-                b.GetComponentInChildren<Text>().text = Path.GetFileName(s);
-                b.GetComponent<Image>().enabled = true;
-                b.GetComponent<Button>().enabled = true;
-                b.GetComponent<CustomFolderButton>().enabled = true;
-                b.GetComponent<CustomFolderButton>().isFolder = true;
-            }
-            foreach(string s in Directory.GetFiles(MainVars.bms_file_path, "*.*", SearchOption.TopDirectoryOnly)){
-                if(regex.IsMatch(s)){
-                    Button b = Instantiate(bmsItemForm, activeContent.transform);
+            else{
+                foreach(string s in Directory.GetDirectories(MainVars.bms_file_path)){
+                    Button b = Instantiate(buttonForm, activeContent.transform);
                     b.GetComponentInChildren<Text>().text = Path.GetFileName(s);
                     b.GetComponent<Image>().enabled = true;
                     b.GetComponent<Button>().enabled = true;
                     b.GetComponent<CustomFolderButton>().enabled = true;
-                    b.GetComponent<CustomFolderButton>().isFolder = false;
+                    b.GetComponent<CustomFolderButton>().isFolder = true;
+                }
+                foreach(string s in Directory.GetFiles(MainVars.bms_file_path, "*.*", SearchOption.TopDirectoryOnly)){
+                    if(regex.IsMatch(s)){
+                        Button b = Instantiate(bmsItemForm, activeContent.transform);
+                        b.GetComponentInChildren<Text>().text = Path.GetFileName(s);
+                        b.GetComponent<Image>().enabled = true;
+                        b.GetComponent<Button>().enabled = true;
+                        b.GetComponent<CustomFolderButton>().enabled = true;
+                        b.GetComponent<CustomFolderButton>().isFolder = false;
+                    }
                 }
             }
+            Resources.UnloadUnusedAssets();
             loaded = true;
         }
     }

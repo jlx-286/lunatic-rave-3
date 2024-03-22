@@ -44,7 +44,6 @@ public class BMSPlayer : MonoBehaviour {
     }
     private void Start(){
         StartCoroutine(SetTimeLeft());
-        // StartCoroutine(Clean());
     }
     private void Update(){
         if(escaped) return;
@@ -80,13 +79,4 @@ public class BMSPlayer : MonoBehaviour {
         Debug.Log("this coroutine stopped");
         yield break;
     }
-    // private IEnumerator<YieldInstruction> Clean(){
-    //     while(timeLeft > 0){
-    //         for(uint i = 0; i < 5000u * 60u; i++)
-    //             yield return StaticClass.waitForFixedUpdate;
-    //         Resources.UnloadUnusedAssets();
-    //         GC.Collect(GC.MaxGeneration, GCCollectionMode.Optimized, false, false);
-    //     }
-    //     yield break;
-    // }
 }

@@ -197,6 +197,7 @@ public class NoteViewer : MonoBehaviour{
                         }
                         while(lanes_notes[i].First != null && lanes_notes[i].First.Value.rectTransform.anchoredPosition.y < -maskHeight){
                             DestroyImmediate(lanes_notes[i].First.Value.gameObject, true);
+                            DestroyImmediate(lanes_notes[i].First.Value, true);
                             lanes_notes[i].RemoveFirst();
                         }
                     }
@@ -204,6 +205,8 @@ public class NoteViewer : MonoBehaviour{
             }
             if(pages.First != null && pages.First.Value.rectTransform.anchoredPosition.y < -maskHeight * 2){
                 DestroyImmediate(pages.First.Value.gameObject, true);
+                DestroyImmediate(pages.First.Value.texture, true);
+                DestroyImmediate(pages.First.Value, true);
                 pages.RemoveFirst();
                 pages.AddLast(Instantiate<RawImage>(pageForm, pagePos, true));
                 lastPage = Instantiate<Texture2D>(pageTexForm);
