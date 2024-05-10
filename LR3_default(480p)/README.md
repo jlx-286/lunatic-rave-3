@@ -1,2 +1,2 @@
-### known problem(s)
-- "[libfluidsynth](https://github.com/FluidSynth/fluidsynth/releases/)" fails to load a soundfont in "[Godot_v3.5.3-stable_mono_win64](https://github.com/godotengine/godot/releases/download/3.5.3-stable/Godot_v3.5.3-stable_mono_win64.zip)"
++ "audioplugin-fluidsynth-3.dylib" is from "<https://assetstore.unity.com/packages/tools/audio/fluid-midi-player-173680>"
++ about "libfluidsynth-3.dll": <https://github.com/FluidSynth/fluidsynth/wiki/BuildingWithCMake#building-with-visual-studio-on-windows>

@@ -163,7 +163,9 @@ public unsafe static class FluidManager{
     }
 #else //if UNITY_5_3_OR_NEWER || GODOT
     private static class V3{
-#if GODOT
+#if GODOT_WINDOWS
+        private const string PluginName = "Plugins/libfluidsynth/libfluidsynth-3";
+#elif GODOT_MACOS || GODOT_OSX
         private const string PluginName = "Plugins/libfluidsynth/audioplugin-fluidsynth-3";
 #else
         private const string PluginName = "libfluidsynth-3";

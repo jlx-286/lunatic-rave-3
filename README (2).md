@@ -24,7 +24,6 @@
         # snap download minuet
     ```
 - [FluidSynth](https://www.fluidsynth.org)
-    + "audioplugin-fluidsynth-3.dll" is from "<https://assetstore.unity.com/packages/tools/audio/fluid-midi-player-173680>"
     + The soundfont in "[Application.streamingAssetsPath](https://docs.unity3d.com/2018.2/Documentation/ScriptReference/Application-streamingAssetsPath.html)" can be from <https://packages.debian.org/trixie/timgm6mb-soundfont>.
     + <https://github.com/FluidSynth/fluidsynth/wiki/Download#distributions>
 

@@ -13,6 +13,7 @@ public class NoteViewer : MonoBehaviour{
     private Texture2D[] NotesTex;
     private Texture2D[] LNsStartTex;
     private Texture2D[] LNsEndTex;
+    // private Texture2D[] LNsCenterTex;
     private Image[] LNCenterForms;
     private LinkedList<Image>[] lanes_notes;
     private ulong[] v_note_ids;
@@ -26,7 +27,8 @@ public class NoteViewer : MonoBehaviour{
     public RawImage pageForm;
     public RectTransform pagePos;
     private readonly LinkedList<RawImage> pages = new LinkedList<RawImage>();
-    private Texture2D pageTexForm, lastPage;
+    // private readonly LinkedList<RawImage> lnPages = new LinkedList<RawImage>();
+    private Texture2D pageTexForm, lastPage;//, lastLNPage;
     private short[] pageXOffsets;
     private float pageYOffset;
     private ushort trackNum = 0;
@@ -83,9 +85,11 @@ public class NoteViewer : MonoBehaviour{
         NativeArray<byte> arr = pageTexForm.GetRawTextureData<byte>();
         unsafe{StaticClass.memset(arr.GetUnsafePtr(), 0, (IntPtr)arr.Length);}
         pageTexForm.Apply(false);
-        lastPage = Instantiate<Texture2D>(pageTexForm);
-        lastPage.Apply(false, true);
-        pageForm.texture = lastPage;
+        // lastLNPage = Instantiate<Texture2D>(pageTexForm);
+        // lastLNPage.Apply(false, true);
+        // lnPages.AddLast(Instantiate<RawImage>(pageForm, pagePos, true));
+        // lnPages.Last.Value.texture = lastLNPage;
+        // lnPages.Last.Value.rectTransform.anchoredPosition -= new Vector2(0, maskHeight);
         pages.AddLast(Instantiate<RawImage>(pageForm, pagePos, true));
         lastPage = Instantiate<Texture2D>(pageTexForm);
         lastPage.Apply(false, true);
