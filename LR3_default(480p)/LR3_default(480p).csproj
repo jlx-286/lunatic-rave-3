@@ -12,9 +12,13 @@
     <Reference Include="Ude.NetStandard">
       <HintPath>".\Plugins\dotnet\Ude.NetStandard.dll"</HintPath>
     </Reference>
+    <Reference Include="NChardet">
+      <HintPath>".\Plugins\dotnet\NChardet.dll"</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
     <PackageReference Include="Ude.NetStandard" Version="1.2.0"/>
+    <PackageReference Include="NChardet" Version="1.0.1.6"/>
   </ItemGroup>
 </Project>

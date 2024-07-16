@@ -198,33 +198,62 @@ public unsafe static class FluidManager{
         // [DllImport(PluginName)] public extern static int fluid_player_seek(UIntPtr player, int ticks);
     }
     private static void MatchVersion(){
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || GODOT_WINDOWS
         string path = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
-        // if(string.IsNullOrWhiteSpace(path)) return;
-        if(path.Split(';').Any(_ => !string.IsNullOrWhiteSpace(_) && File.Exists(_.Trim().TrimEnd('/', '\\') + "/libfluidsynth-3.dll"))){
-            new_fluid_settings = V3.new_fluid_settings;
-            new_fluid_synth = V3.new_fluid_synth;
-            fluid_synth_sfload = V3.fluid_synth_sfload;
-            fluid_settings_getint = V3.fluid_settings_getint;
-            fluid_settings_getnum = V3.fluid_settings_getnum;
-            fluid_settings_setint = V3.fluid_settings_setint;
-            fluid_settings_setnum = V3.fluid_settings_setnum;
-            delete_fluid_synth = V3.delete_fluid_synth;
-            delete_fluid_settings = V3.delete_fluid_settings;
-            new_fluid_player = V3.new_fluid_player;
-            fluid_player_add = V3.fluid_player_add;
-            fluid_player_play = V3.fluid_player_play;
-            fluid_player_get_status = V3.fluid_player_get_status;
-            fluid_synth_write = V3.fluid_synth_write;
-            delete_fluid_player = V3.delete_fluid_player;
-            // fluid_player_set_playback_callback = V3.fluid_player_set_playback_callback;
-            fluid_player_join = V3.fluid_player_join;
-            fluid_player_stop = V3.fluid_player_stop;
-            // fluid_player_seek = V3.fluid_player_seek;
-        }
+        if(string.IsNullOrWhiteSpace(path)) return;
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || GODOT_WINDOWS
+        string[] paths = path.Split(';');
+        const string ext = ".dll";
+#elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || GODOT_OSX || GODOT_MACOS
+        string[] paths = path.Split(':');
+        const string ext = ".dylib";
+#else
+        string[] paths = path.Split(':');
+        const string ext = ".so";
+#endif
+        var files = new HashSet<string>(){
+#if GODOT//_WINDOWS || GODOT_OSX || GODOT_MACOS
+// #elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
+#else
+            "libfluidsynth-3" + ext,
+#endif
+            "libgcc_s_sjlj-1" + ext,
+            "libglib-2.0-0" + ext,
+            "libgobject-2.0-0" + ext,
+            "libgomp-1" + ext,
+            "libgthread-2.0-0" + ext,
+            "libinstpatch-2" + ext,
+            "libintl-8" + ext,
+            "libsndfile-1" + ext,
+            "libstdc++-6" + ext,
+            "libwinpthread-1" + ext,
+        };
+// #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || GODOT_WINDOWS
+        foreach(var file in files)
+            if(!paths.Any(p => !string.IsNullOrWhiteSpace(p) &&
+                File.Exists(p.Trim().TrimEnd('/','\\') + "/" + file)
+            )) return;
+        new_fluid_settings = V3.new_fluid_settings;
+        new_fluid_synth = V3.new_fluid_synth;
+        fluid_synth_sfload = V3.fluid_synth_sfload;
+        fluid_settings_getint = V3.fluid_settings_getint;
+        fluid_settings_getnum = V3.fluid_settings_getnum;
+        fluid_settings_setint = V3.fluid_settings_setint;
+        fluid_settings_setnum = V3.fluid_settings_setnum;
+        delete_fluid_synth = V3.delete_fluid_synth;
+        delete_fluid_settings = V3.delete_fluid_settings;
+        new_fluid_player = V3.new_fluid_player;
+        fluid_player_add = V3.fluid_player_add;
+        fluid_player_play = V3.fluid_player_play;
+        fluid_player_get_status = V3.fluid_player_get_status;
+        fluid_synth_write = V3.fluid_synth_write;
+        delete_fluid_player = V3.delete_fluid_player;
+        // fluid_player_set_playback_callback = V3.fluid_player_set_playback_callback;
+        fluid_player_join = V3.fluid_player_join;
+        fluid_player_stop = V3.fluid_player_stop;
+        // fluid_player_seek = V3.fluid_player_seek;
 // #elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || GODOT_OSX || GODOT_MACOS
 // #else
-#endif
+// #endif
     }
 #endif
     public static void Init(string sfpath, double gain = double.NaN, double overflow_vol = double.NaN){

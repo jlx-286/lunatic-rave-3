@@ -1,4 +1,5 @@
-﻿using System;
+using NChardet;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -14,6 +15,9 @@ using System.Text.RegularExpressions;
 using Ude;
 #if UNITY_5_3_OR_NEWER
 using UnityEngine;
+#elif GODOT
+using Godot;
+using File = System.IO.File;
 #endif
 public unsafe static class StaticClass{
     public const RegexOptions regexOption = RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.CultureInvariant;
@@ -34,29 +38,35 @@ public unsafe static class StaticClass{
     private static readonly Encoding Shift_JIS = Encoding.GetEncoding("shift_jis");
     private static readonly Encoding GB18030 = Encoding.GetEncoding("GB18030");
 #endif
-    public static Encoding GetEncodingByFilePath(string path){
+    public static byte[] GetEncodingByFilePath(out Encoding encoding, string path){
+        encoding = null;
+        if(!File.Exists(path)) return null;
         CharsetDetector detector = new CharsetDetector();
-        using(FileStream fileStream = File.OpenRead(path)){
-            detector.Feed(fileStream);
-            detector.DataEnd();
-            fileStream.Flush();
-            // fileStream.Close();
+        byte[] text = File.ReadAllBytes(path);
+        if(text == null || text.LongLength < 1) return null;
+        // skip first & comment line (including BOM)
+        if(text[0] != '#') text = text.SkipWhile(c => c != '\n' && c != '\r').SkipWhile(c => c == '\n' || c == '\r').ToArray();
+        if(!text.Any(c => c > sbyte.MaxValue)){
+            encoding = Encoding.ASCII;
+            return text;
         }
+        detector.Feed(text, 0, text.Length > 0 ? text.Length : int.MaxValue);
+        detector.DataEnd();
         if(!string.IsNullOrWhiteSpace(detector.Charset)){
             try{
-                Encoding encoding;
 #if NETCOREAPP //|| NET || NETCOREAPP1_1_OR_GREATER || NET5_0_OR_GREATER || (UNITY_2023_3_OR_NEWER && !UNITY_2023_3)
                 encoding = provider.GetEncoding(detector.Charset);
                 if(encoding == null)
 #endif
                     encoding = Encoding.GetEncoding(detector.Charset);
                 if(encoding != Shift_JIS && detector.Confidence <= 0.7f
-                    && detector.Confidence > 0.6f) return GB18030;
-                else if(detector.Confidence <= 0.6f) return Shift_JIS;
-                else return encoding;
-            }catch{ return Shift_JIS; }
+                    && detector.Confidence > 0.6f) encoding = GB18030;
+                else if(detector.Confidence <= 0.6f) encoding = Shift_JIS;
+                // else return encoding;
+            }catch{ encoding = Shift_JIS; }
         }
-        else return Shift_JIS;
+        else encoding = Shift_JIS;
+        return text;
     }
     private static readonly Regex alnumIdx = new Regex(@"^[\da-zA-Z]+$", regexOption);
     public static ushort Convert36To10(string s){
@@ -273,4 +283,86 @@ public unsafe static class StaticClass{
     public static IEnumerable<T> Distinct<T>(
         this IEnumerable<T> source, Func<T, T, bool> comparer)
         where T : struct => source.Distinct(new EqualityComparer<T>(comparer));
+    private class CDO : ICharsetDetectionObserver{
+        public string charset = null;
+        public void Notify(string charset){
+            this.charset = charset;
+        }
+    }
+    public static byte[] GetEncodingByFilePath(string path, out Encoding encoding){
+        encoding = null;
+        if(!File.Exists(path)) return null;
+        byte[] text = File.ReadAllBytes(path);
+        if(text == null || text.LongLength < 1) return null;
+        if(text[0] != '#') text = text.SkipWhile(c => c != '\n' && c != '\r').SkipWhile(c => c == '\n' || c == '\r').ToArray();
+        if(!text.Any(c => c > sbyte.MaxValue)){
+            encoding = Encoding.ASCII;
+            return text;
+        }
+        Detector detector = new Detector();//PSMDetector.JAPANESE | PSMDetector.SIMPLIFIED_CHINESE | PSMDetector.TRADITIONAL_CHINESE | PSMDetector.KOREAN
+        CDO cdo = new CDO();
+        detector.Init(cdo);
+//         if(detector.isAscii(text, text.Length > 0 ? text.Length : int.MaxValue)){
+// #if GODOT
+//             GD.Print
+// #elif UNITY_5_3_OR_NEWER
+//             Debug.Log
+// #else
+//             Console.WriteLine
+// #endif
+//             ("isAscii");
+//             encoding = Encoding.ASCII;
+//             return text;
+//         }
+        detector.DoIt(text, text.Length > 0 ? text.Length : int.MaxValue, false);
+        detector.DataEnd();
+        detector.Done();
+// #if GODOT
+//         GD.Print
+// #elif UNITY_5_3_OR_NEWER
+//         Debug.Log
+// #else
+//         Console.WriteLine
+// #endif
+//         (cdo.charset);
+        string[] ss = detector.getProbableCharsets();
+        // detector.Reset();
+        if(!string.IsNullOrWhiteSpace(cdo.charset)){
+            try{
+#if NETCOREAPP //|| NET || NETCOREAPP1_1_OR_GREATER || NET5_0_OR_GREATER || (UNITY_2023_3_OR_NEWER && !UNITY_2023_3)
+                encoding = provider.GetEncoding(cdo.charset);
+                if(encoding == null)
+#endif
+                    encoding = Encoding.GetEncoding(cdo.charset);
+            }catch{ encoding = Shift_JIS; }
+        }
+        else if(ss != null && ss.Length > 0){
+            for(int i = 0; i < ss.Length; i++){
+// #if GODOT
+//             GD.Print
+// #elif UNITY_5_3_OR_NEWER
+//             Debug.Log
+// #else
+//             Console.WriteLine
+// #endif
+//             (ss[i]);
+                if(ss[i].StartsWith("nomatch", StringComparison.OrdinalIgnoreCase)) continue;
+                if(ss[i].StartsWith("windows", StringComparison.OrdinalIgnoreCase)) continue;
+                if(ss[i].StartsWith("big5", StringComparison.OrdinalIgnoreCase)) continue;
+                if(ss[i].StartsWith("euc", StringComparison.OrdinalIgnoreCase)) continue;
+                if(ss[i].StartsWith("cp", StringComparison.OrdinalIgnoreCase)) continue;
+                if(ss[i].StartsWith("ko", StringComparison.OrdinalIgnoreCase)) continue;
+                if(ss[i].StartsWith("iso", StringComparison.OrdinalIgnoreCase)) continue;
+                if(ss[i].StartsWith("t", StringComparison.OrdinalIgnoreCase)) continue;
+#if NETCOREAPP //|| NET || NETCOREAPP1_1_OR_GREATER || NET5_0_OR_GREATER || (UNITY_2023_3_OR_NEWER && !UNITY_2023_3)
+                encoding = provider.GetEncoding(ss[i]);
+                if(encoding == null)
+#endif
+                    encoding = Encoding.GetEncoding(ss[i]);
+                break;
+            }
+        }
+        if(encoding == null) encoding = Shift_JIS;
+        return text;
+    }
 }

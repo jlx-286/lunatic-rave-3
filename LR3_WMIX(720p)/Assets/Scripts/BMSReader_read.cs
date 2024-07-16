@@ -46,8 +46,9 @@ public partial class BMSReader{
         if(!inThread) return;
         file_names.Replace('\\', '/');
         sorting = true;
-        Encoding encoding = StaticClass.GetEncodingByFilePath(bms_directory + bms_file_name);
-        file_lines = File.ReadAllLines(bms_directory + bms_file_name, encoding);
+        byte[] bytes = StaticClass.GetEncodingByFilePath(bms_directory + bms_file_name, out Encoding encoding);
+        if(bytes == null) return;
+        file_lines = encoding.GetString(bytes).Split('\r', '\n');
         sorting = false;
         ulong min_false_level = ulong.MaxValue, curr_level = 0;
         // Random random = new Random((int)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond) & int.MaxValue);
