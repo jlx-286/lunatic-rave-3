@@ -1,1 +1,0 @@
-../../LR3_WMIX(720p)/Assets/Scripts/BMSReader_Regex.cs

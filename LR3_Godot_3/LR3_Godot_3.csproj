@@ -1,0 +1,24 @@
+<Project Sdk="Godot.NET.Sdk/3.3.0">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>7.3</LangVersion>
+    <RootNamespace>LR3_Godot_3</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>".\Plugins\dotnet\Newtonsoft.Json.dll"</HintPath>
+    </Reference>
+    <Reference Include="Ude.NetStandard">
+      <HintPath>".\Plugins\dotnet\Ude.NetStandard.dll"</HintPath>
+    </Reference>
+    <Reference Include="NChardet">
+      <HintPath>".\Plugins\dotnet\NChardet.dll"</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
+    <PackageReference Include="Ude.NetStandard" Version="1.2.0"/>
+    <PackageReference Include="NChardet" Version="1.0.1.6"/>
+  </ItemGroup>
+</Project>
