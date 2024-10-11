@@ -16,7 +16,6 @@ public partial class BMSReader{
     private long ConvertOffset(ushort track, decimal bpm)
         => ConvertOffset(track, bpm, 1, 1);
     private void CleanUp(){
-        exbpm_dict.Clear();
         stop_dict.Clear();
         for(ushort i = 0; i <= BMSInfo.max_tracks; i++){
             if(measures[i] != null){
@@ -27,13 +26,10 @@ public partial class BMSReader{
         while(actions.TryDequeue(out Action action));
         random_nums.Clear();
         ifs_count.Clear();
-        file_names.Clear();
         if(file_lines != null){
             Array.Clear(file_lines, 0, file_lines.Length);
             file_lines = null;
         }
-        Array.Clear(wav_names, 0, wav_names.Length);
-        Array.Clear(bmp_names, 0, bmp_names.Length);
         noteCounts.Clear();
         noteDict.Clear();
         FFmpegPlugins.CleanUp();
@@ -109,6 +105,9 @@ public partial class BMSReader{
         }
     }
     private bool BMSMeasureRegion(){
+        string message; Fraction32 fraction32; NoteType noteType; ChannelType channelType;
+        ChannelEnum channelEnum = ChannelEnum.Default, chEn = ChannelEnum.Default;
+        ushort track = 0, u = 0; byte hex_digits;
         for(int j = 0, length = file_lines.Length; inThread && j < length; j++){
             if(file_lines[j] == null) continue;
             else if(noteChCmd.IsMatch(file_lines[j])){
@@ -317,6 +316,9 @@ public partial class BMSReader{
         return true;
     }
     private bool PMSMeasureRegion(){
+        string message; Fraction32 fraction32; NoteType noteType; ChannelType channelType;
+        ChannelEnum channelEnum = ChannelEnum.Default, chEn = ChannelEnum.Default;
+        ushort track = 0, u = 0; byte hex_digits;
         for(int j = 0, length = file_lines.Length; inThread && j < length; j++){
             if(file_lines[j] == null) continue;
             else if(noteChCmd.IsMatch(file_lines[j])){

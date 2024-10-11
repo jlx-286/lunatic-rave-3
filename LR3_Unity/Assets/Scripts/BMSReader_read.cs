@@ -22,7 +22,20 @@ using AudioSample = System.Single;
 using Color32 = System.UInt32;
 #endif
 public partial class BMSReader{
-    private void ReadScript(){
+    public void ReadScript(){
+        string bms_directory, bms_file_name, message; decimal curr_bpm, ld = 0;
+        string[] wav_names = Enumerable.Repeat<string>(null, 36*36).ToArray(),
+            bmp_names = Enumerable.Repeat<string>(null, 36*36).ToArray();
+        BigInteger k; Fraction32 fraction32; ushort track = 0, u = 0;
+        byte hex_digits; StringBuilder file_names = new StringBuilder();
+        Dictionary<ushort, decimal> exbpm_dict = new Dictionary<ushort, decimal>();
+        Dictionary<string, BMSChannel> channelMap = new Dictionary<string, BMSChannel>(){
+            {"04",BMSChannel.BGA_base}, {"06",BMSChannel.BGA_poor},
+            {"07",BMSChannel.BGA_layer}, {"0A",BMSChannel.BGA_layer2},
+            {"03",BMSChannel.BPM3}, {"08",BMSChannel.BPM8},
+            {"09",BMSChannel.Stop}, {"SC",BMSChannel.Scroll},
+            // {"SP",BMSChannel.Speed},
+        };
 #if UNITY_5_3_OR_NEWER
         MainVars.cur_scene_name = "Decide";
         back_btn.onClick.AddListener(Back);

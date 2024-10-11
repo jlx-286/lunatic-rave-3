@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 #if UNITY_5_3_OR_NEWER
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Debug = UnityEngine.Debug;
 #elif GODOT
 using Godot;
+using Thread = System.Threading.Thread;
 #endif
 /// <summary>
 /// also supports PMS files
@@ -90,12 +93,25 @@ public partial class BMSReader
         yield break;
     }
     private void Start(){
-        thread = new Thread(ReadScript){ IsBackground = true };
+// #if UNITY_2018_1_OR_NEWER && !UNITY_EDITOR_LINUX && !UNITY_STANDALONE_LINUX
+//         BMSReaderJobSystem.Start(this);
+// #else
+        thread = new Thread(()=>{
+            Stopwatch watch = new Stopwatch();
+            watch.Restart();
+            ReadScript();
+            watch.Stop();
+            Debug.Log(watch.ElapsedMilliseconds);
+        }){ IsBackground = true };
         thread.Start();
+// #endif
         StartCoroutine(DequeueLoop());
     }
     private void OnDestroy(){
         inThread = false;
+// #if UNITY_2018_1_OR_NEWER && !UNITY_EDITOR_LINUX && !UNITY_STANDALONE_LINUX
+//         BMSReaderJobSystem.Stop();
+// #else
         if(thread != null){
             if(sorting){
                 try{ thread.Abort(); }
@@ -106,6 +122,7 @@ public partial class BMSReader
             while(thread.IsAlive);
             thread = null;
         }
+// #endif
         StopAllCoroutines();
         CleanUp();
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, false);
@@ -133,6 +150,20 @@ public partial class BMSReader
         {}
         else GD.PushWarning("Unknown player type");
         isDone = true;
+    }
+    public override void _Ready(){
+        thread = new Thread(ReadScript){IsBackground = true};
+        thread.Start();
+    }
+    public override void _ExitTree(){
+        if(thread != null){
+            if(sorting){
+                try{ thread.Abort(); }
+                catch(Exception e){GD.Print(e.GetBaseException());}
+            }
+            while(thread.IsAlive);
+            thread = null;
+        }
     }
 #endif
 }
