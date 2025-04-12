@@ -5,8 +5,8 @@
         "SoundFont":"TimGM6mb.sf2",
     },
     "Linux":{
-        "BMS_root_dir":"/media/ltbk/P_10(2)/Programs/BMS/",
-        "General_BGA":"/media/ltbk/P_10(2)/Programs/LR2_20180924_Hakula/LR2files/Movie/Beeple.mpg",
+        "BMS_root_dir":"/media/ltbk/documents/Programs/BMS/",
+        "General_BGA":"/media/ltbk/documents/Programs/LR2_20180924_Hakula/LR2files/Movie/Beeple.mpg",
         "SoundFont":"TimGM6mb.sf2",
     },
     // "Mac":{

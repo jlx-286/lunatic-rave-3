@@ -10,7 +10,10 @@ extern "C" {
 #include <libavutil/time.h>
 #include <libswscale/swscale.h>
 };
-#if LIBAVCODEC_VERSION_MAJOR == 60
+#if LIBAVCODEC_VERSION_MAJOR == 61
+// g++ -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpegPlayer.7.so FFmpegPlayer.cpp -lavcodec -lavformat -lavutil -lswscale
+// g++ -O3 -fPIC -shared -Wall -I"./include" -L"." -o FFmpegPlayer.7.dll FFmpegPlayer.cpp -lavcodec-61 -lavformat-61 -lavutil-59 -lswscale-8
+#elif LIBAVCODEC_VERSION_MAJOR == 60
 // g++ -O3 -fPIC -shared -Wall -I"./include" -L"./lib" -o FFmpegPlayer.6.so FFmpegPlayer.cpp -lavcodec -lavformat -lavutil -lswscale
 // g++ -O3 -fPIC -shared -Wall -I"./include" -L"." -o FFmpegPlayer.6.dll FFmpegPlayer.cpp -lavcodec-60 -lavformat-60 -lavutil-58 -lswscale-7
 #elif LIBAVCODEC_VERSION_MAJOR == 59

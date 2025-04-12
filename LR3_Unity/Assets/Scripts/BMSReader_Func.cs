@@ -32,26 +32,25 @@ public partial class BMSReader{
         }
         noteCounts.Clear();
         noteDict.Clear();
-        FFmpegPlugins.CleanUp();
     }
     private void BMS_region(){
         BMSInfo.note_list_lanes = new NoteTimeRow[16][];
-        BMSInfo.note_list_lanes[1] = noteDict.ContainsKey(0x11) ? noteDict[0x11] : new NoteTimeRow[0];
-        BMSInfo.note_list_lanes[2] = noteDict.ContainsKey(0x12) ? noteDict[0x12] : new NoteTimeRow[0];
-        BMSInfo.note_list_lanes[3] = noteDict.ContainsKey(0x13) ? noteDict[0x13] : new NoteTimeRow[0];
-        BMSInfo.note_list_lanes[4] = noteDict.ContainsKey(0x14) ? noteDict[0x14] : new NoteTimeRow[0];
-        BMSInfo.note_list_lanes[5] = noteDict.ContainsKey(0x15) ? noteDict[0x15] : new NoteTimeRow[0];
-        BMSInfo.note_list_lanes[0] = noteDict.ContainsKey(0x16) ? noteDict[0x16] : new NoteTimeRow[0];
-        BMSInfo.note_list_lanes[6] = noteDict.ContainsKey(0x18) ? noteDict[0x18] : new NoteTimeRow[0];
-        BMSInfo.note_list_lanes[7] = noteDict.ContainsKey(0x19) ? noteDict[0x19] : new NoteTimeRow[0];
-        BMSInfo.note_list_lanes[9] = noteDict.ContainsKey(0x21) ? noteDict[0x21] : new NoteTimeRow[0];
-        BMSInfo.note_list_lanes[10] = noteDict.ContainsKey(0x22) ? noteDict[0x22] : new NoteTimeRow[0];
-        BMSInfo.note_list_lanes[11] = noteDict.ContainsKey(0x23) ? noteDict[0x23] : new NoteTimeRow[0];
-        BMSInfo.note_list_lanes[12] = noteDict.ContainsKey(0x24) ? noteDict[0x24] : new NoteTimeRow[0];
-        BMSInfo.note_list_lanes[13] = noteDict.ContainsKey(0x25) ? noteDict[0x25] : new NoteTimeRow[0];
-        BMSInfo.note_list_lanes[8] = noteDict.ContainsKey(0x26) ? noteDict[0x26] : new NoteTimeRow[0];
-        BMSInfo.note_list_lanes[14] = noteDict.ContainsKey(0x28) ? noteDict[0x28] : new NoteTimeRow[0];
-        BMSInfo.note_list_lanes[15] = noteDict.ContainsKey(0x29) ? noteDict[0x29] : new NoteTimeRow[0];
+        BMSInfo.note_list_lanes[1] = noteDict.ContainsKey(0x11) ? noteDict[0x11] : Array.Empty<NoteTimeRow>();
+        BMSInfo.note_list_lanes[2] = noteDict.ContainsKey(0x12) ? noteDict[0x12] : Array.Empty<NoteTimeRow>();
+        BMSInfo.note_list_lanes[3] = noteDict.ContainsKey(0x13) ? noteDict[0x13] : Array.Empty<NoteTimeRow>();
+        BMSInfo.note_list_lanes[4] = noteDict.ContainsKey(0x14) ? noteDict[0x14] : Array.Empty<NoteTimeRow>();
+        BMSInfo.note_list_lanes[5] = noteDict.ContainsKey(0x15) ? noteDict[0x15] : Array.Empty<NoteTimeRow>();
+        BMSInfo.note_list_lanes[0] = noteDict.ContainsKey(0x16) ? noteDict[0x16] : Array.Empty<NoteTimeRow>();
+        BMSInfo.note_list_lanes[6] = noteDict.ContainsKey(0x18) ? noteDict[0x18] : Array.Empty<NoteTimeRow>();
+        BMSInfo.note_list_lanes[7] = noteDict.ContainsKey(0x19) ? noteDict[0x19] : Array.Empty<NoteTimeRow>();
+        BMSInfo.note_list_lanes[9] = noteDict.ContainsKey(0x21) ? noteDict[0x21] : Array.Empty<NoteTimeRow>();
+        BMSInfo.note_list_lanes[10] = noteDict.ContainsKey(0x22) ? noteDict[0x22] : Array.Empty<NoteTimeRow>();
+        BMSInfo.note_list_lanes[11] = noteDict.ContainsKey(0x23) ? noteDict[0x23] : Array.Empty<NoteTimeRow>();
+        BMSInfo.note_list_lanes[12] = noteDict.ContainsKey(0x24) ? noteDict[0x24] : Array.Empty<NoteTimeRow>();
+        BMSInfo.note_list_lanes[13] = noteDict.ContainsKey(0x25) ? noteDict[0x25] : Array.Empty<NoteTimeRow>();
+        BMSInfo.note_list_lanes[8] = noteDict.ContainsKey(0x26) ? noteDict[0x26] : Array.Empty<NoteTimeRow>();
+        BMSInfo.note_list_lanes[14] = noteDict.ContainsKey(0x28) ? noteDict[0x28] : Array.Empty<NoteTimeRow>();
+        BMSInfo.note_list_lanes[15] = noteDict.ContainsKey(0x29) ? noteDict[0x29] : Array.Empty<NoteTimeRow>();
         BMSInfo.noteCounts[1] = noteCounts.ContainsKey(0x11) ? noteCounts[0x11] : 0;
         BMSInfo.noteCounts[2] = noteCounts.ContainsKey(0x12) ? noteCounts[0x12] : 0;
         BMSInfo.noteCounts[3] = noteCounts.ContainsKey(0x13) ? noteCounts[0x13] : 0;
@@ -71,11 +70,11 @@ public partial class BMSReader{
     }
     private void PMS_region(){
         BMSInfo.note_list_lanes = new NoteTimeRow[9][];
-        BMSInfo.note_list_lanes[0] = noteDict.ContainsKey(0x11) ? noteDict[0x11] : new NoteTimeRow[0];
-        BMSInfo.note_list_lanes[1] = noteDict.ContainsKey(0x12) ? noteDict[0x12] : new NoteTimeRow[0];
-        BMSInfo.note_list_lanes[2] = noteDict.ContainsKey(0x13) ? noteDict[0x13] : new NoteTimeRow[0];
-        BMSInfo.note_list_lanes[3] = noteDict.ContainsKey(0x14) ? noteDict[0x14] : new NoteTimeRow[0];
-        BMSInfo.note_list_lanes[4] = noteDict.ContainsKey(0x15) ? noteDict[0x15] : new NoteTimeRow[0];
+        BMSInfo.note_list_lanes[0] = noteDict.ContainsKey(0x11) ? noteDict[0x11] : Array.Empty<NoteTimeRow>();
+        BMSInfo.note_list_lanes[1] = noteDict.ContainsKey(0x12) ? noteDict[0x12] : Array.Empty<NoteTimeRow>();
+        BMSInfo.note_list_lanes[2] = noteDict.ContainsKey(0x13) ? noteDict[0x13] : Array.Empty<NoteTimeRow>();
+        BMSInfo.note_list_lanes[3] = noteDict.ContainsKey(0x14) ? noteDict[0x14] : Array.Empty<NoteTimeRow>();
+        BMSInfo.note_list_lanes[4] = noteDict.ContainsKey(0x15) ? noteDict[0x15] : Array.Empty<NoteTimeRow>();
         BMSInfo.noteCounts[0] = noteCounts.ContainsKey(0x11) ? noteCounts[0x11] : 0;
         BMSInfo.noteCounts[1] = noteCounts.ContainsKey(0x12) ? noteCounts[0x12] : 0;
         BMSInfo.noteCounts[2] = noteCounts.ContainsKey(0x13) ? noteCounts[0x13] : 0;
@@ -83,20 +82,20 @@ public partial class BMSReader{
         BMSInfo.noteCounts[4] = noteCounts.ContainsKey(0x15) ? noteCounts[0x15] : 0;
         switch(BMSInfo.playerType){
             case PlayerType.BME_SP:
-                BMSInfo.note_list_lanes[5] = noteDict.ContainsKey(0x18) ? noteDict[0x18] : new NoteTimeRow[0];
-                BMSInfo.note_list_lanes[6] = noteDict.ContainsKey(0x19) ? noteDict[0x19] : new NoteTimeRow[0];
-                BMSInfo.note_list_lanes[7] = noteDict.ContainsKey(0x16) ? noteDict[0x16] : new NoteTimeRow[0];
-                BMSInfo.note_list_lanes[8] = noteDict.ContainsKey(0x17) ? noteDict[0x17] : new NoteTimeRow[0];
+                BMSInfo.note_list_lanes[5] = noteDict.ContainsKey(0x18) ? noteDict[0x18] : Array.Empty<NoteTimeRow>();
+                BMSInfo.note_list_lanes[6] = noteDict.ContainsKey(0x19) ? noteDict[0x19] : Array.Empty<NoteTimeRow>();
+                BMSInfo.note_list_lanes[7] = noteDict.ContainsKey(0x16) ? noteDict[0x16] : Array.Empty<NoteTimeRow>();
+                BMSInfo.note_list_lanes[8] = noteDict.ContainsKey(0x17) ? noteDict[0x17] : Array.Empty<NoteTimeRow>();
                 BMSInfo.noteCounts[5] = noteCounts.ContainsKey(0x18) ? noteCounts[0x18] : 0;
                 BMSInfo.noteCounts[6] = noteCounts.ContainsKey(0x19) ? noteCounts[0x19] : 0;
                 BMSInfo.noteCounts[7] = noteCounts.ContainsKey(0x16) ? noteCounts[0x16] : 0;
                 BMSInfo.noteCounts[8] = noteCounts.ContainsKey(0x17) ? noteCounts[0x17] : 0;
                 break;
             case PlayerType.PMS_Standard:
-                BMSInfo.note_list_lanes[5] = noteDict.ContainsKey(0x22) ? noteDict[0x22] : new NoteTimeRow[0];
-                BMSInfo.note_list_lanes[6] = noteDict.ContainsKey(0x23) ? noteDict[0x23] : new NoteTimeRow[0];
-                BMSInfo.note_list_lanes[7] = noteDict.ContainsKey(0x24) ? noteDict[0x24] : new NoteTimeRow[0];
-                BMSInfo.note_list_lanes[8] = noteDict.ContainsKey(0x25) ? noteDict[0x25] : new NoteTimeRow[0];
+                BMSInfo.note_list_lanes[5] = noteDict.ContainsKey(0x22) ? noteDict[0x22] : Array.Empty<NoteTimeRow>();
+                BMSInfo.note_list_lanes[6] = noteDict.ContainsKey(0x23) ? noteDict[0x23] : Array.Empty<NoteTimeRow>();
+                BMSInfo.note_list_lanes[7] = noteDict.ContainsKey(0x24) ? noteDict[0x24] : Array.Empty<NoteTimeRow>();
+                BMSInfo.note_list_lanes[8] = noteDict.ContainsKey(0x25) ? noteDict[0x25] : Array.Empty<NoteTimeRow>();
                 BMSInfo.noteCounts[5] = noteCounts.ContainsKey(0x22) ? noteCounts[0x22] : 0;
                 BMSInfo.noteCounts[6] = noteCounts.ContainsKey(0x23) ? noteCounts[0x23] : 0;
                 BMSInfo.noteCounts[7] = noteCounts.ContainsKey(0x24) ? noteCounts[0x24] : 0;
